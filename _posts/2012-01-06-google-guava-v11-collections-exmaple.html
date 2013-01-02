@@ -1,0 +1,166 @@
+---
+comments: true
+date: 2012-01-06 22:50:21
+layout: post
+slug: google-guava-v11-collections%e7%a4%ba%e4%be%8b
+title: Google Guava v11 Collections示例
+wordpress_id: 730
+categories:
+- Java
+tag:
+- guava
+- Java
+---
+
+<p><a href="http://code.google.com/p/guava-libraries/" target="_blank">Guava</a> 中文是石榴的意思，该项目是 Google 的一个开源项目，包含许多 Google 核心的 Java 常用库。目前主要包含：</p>
+<ul style="padding-top: 0px; padding-right: 0px; padding-bottom: 0px; padding-left: 0px; margin-top: 20px; margin-right: 20px; margin-bottom: 20px; margin-left: 20px; list-style-position: inside; color: rgb(51, 51, 51); font-family: Verdana, Simsun, sans-serif; font-size: 13px; line-height: 20px; text-align: left; ">
+	<li>com.google.common.annotations</li>
+	<li>com.google.common.base</li>
+	<li>com.google.common.cache</li>
+	<li>com.google.common.collect</li>
+	<li>com.google.common.eventbus</li>
+	<li>com.google.common.io</li>
+	<li>com.google.common.net</li>
+	<li>com.google.common.primitives</li>
+	<li>com.google.common.util.concurrent</li>
+</ul>
+<p>这里先介绍一下最常用的<span style="color: rgb(51, 51, 51); font-family: Verdana, Simsun, sans-serif; font-size: 13px; line-height: 20px; text-align: left; ">com.google.common.collect包中的最常用的一些API，仅仅讨论一下API的使用方法，没有讨论到实现细节。</span></p>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 1：Collections的构造方法 </strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p>我们平时直接创建Collections对象的方法一般都是用new关键字，有泛型的情况下看起来会比较长：</p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p>Map&lt;String , Map&lt;String , String&gt;&gt; see = new HashMap&lt;String, Map&lt;String,String&gt;&gt;();</p>
+	</div>
+	<p>在java7中，这个初始化做了简化：</p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p>Map&lt;String , Map&lt;String , String&gt;&gt; see = new HashMap&lt;&gt;();</p>
+	</div>
+	<p>可以通过Guava的API来这样写：</p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p>Map&lt;String , Map&lt;String , String&gt;&gt; see = Maps.newHashMap();</p>
+	</div>
+	<p>得到一个有size的Map：</p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p>Map&lt;String , Map&lt;String , String&gt;&gt; see = Maps.newHashMapWithExpectedSize(32);</p>
+	</div>
+	<p>在JDK的collection类型，在Guava中都可以找到相关的static的构造方法，例如：<strong>Lists ， Sets ， Maps ， Queues</strong>。新的colleciont类型提供了直接构造的方法，例如：HashMultimap&lt;String, String&gt; multiMap = HashMultimap.create();</p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp;2：有限功能的函数式编程 </strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p>介绍2个重要的接口：</p>
+	<p>com.google.common.base.<strong>Function</strong> : 根据输入值来得到输出值</p>
+	<p>com.google.common.base.<strong>Predicate</strong> : 根据输入值得到 true 或者 false</p>
+	<p>拿Collections2中有2个函数式编程的接口：filter , transform ,例如 ：在Collection&lt;Integer&gt;中过滤大于某数的内容：</p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p>Collection&lt;Integer&gt; filterList = Collections2.filter(collections</p>
+		<p>&nbsp; &nbsp; &nbsp;, new Predicate&lt;Integer&gt;(){</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; @Override</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; public boolean apply(Integer input) {</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; if(input &gt; 4)</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; return false;</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; else</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; return true;</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</p>
+		<p>});</p>
+	</div>
+	<p>把Lis&lt;Integer&gt;中的Integer类型转换为String , 并添加test作为后缀字符：</p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p>List&lt;String&gt; c2 = Lists.transform(list, new Function&lt;Integer , String&gt;(){</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; @Override</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; public String apply(Integer input) {</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; return String.valueOf(input) + &quot;test&quot;;</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</p>
+		<p>});</p>
+	</div>
+	<p>需要说明的是每次调用返回都是新的对象，同时操作过程不是线程安全的。</p>
+</div>
+<p>&nbsp;</p>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 3：Multimap and BiMap </strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p>Map中一个key只能有一个，后续put进去的内容会覆盖前面的内容，有些业务需要有相同的key，但是有不同的内容，Guava中提供了</p>
+	<p>Multimaps 来解决这个问题。</p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Multimap&lt;String, String&gt; prosons = HashMultimap.create();</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; prosons.put(&quot;longhao&quot;, &quot;hubei&quot;);</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; prosons.put(&quot;lilei&quot; , &quot;henan&quot;);</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; prosons.put(&quot;longhao&quot;, &quot;shanxi&quot;);</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; prosons.put(&quot;liuxia&quot;, &quot;beijing&quot;);</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; prosons.put(&quot;lilei&quot;, &quot;hainan&quot;);</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Iterator&lt;String&gt; it = prosons.get(&quot;longhao&quot;).iterator();</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; while(it.hasNext()){</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; System.out.println(it.next());</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</p>
+	</div>
+	<p>BiMap可以有相同的key，但是不能有相同的value，如果不同的key设置了相同的value，则会抛出IllegalArgumentException异常，可以通过inverse()来反转kv，values()来获取value的set。</p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p>public void biMapShouldOnlyHaveUniqueValues() {</p>
+		<p>&nbsp; &nbsp; &nbsp;BiMap&lt;Integer, String&gt; biMap = HashBiMap.create();</p>
+		<p>&nbsp; &nbsp; &nbsp;biMap.put(1, &quot;a&quot;);</p>
+		<p>&nbsp; &nbsp; &nbsp;biMap.put(2, &quot;b&quot;);</p>
+		<p>&nbsp; &nbsp; &nbsp;biMap.put(3, &quot;a&quot;); //argh! an exception</p>
+		<p>}</p>
+	</div>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 4：tables </strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p>给出一个columns, rows , values， 这个API和Map&lt;K , Map&lt;K , V&gt;&gt;形式差不多，多了一些封装。例子：</p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p>static void tables(){</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Table&lt;Integer , String , Integer&gt; user = HashBasedTable.create();</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; user.put(1, &quot;longhao&quot;, 29);</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; user.put(1, &quot;shuaige&quot;, 29);</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; user.put(2, &quot;xiaomi&quot;, 1);</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; user.put(3, &quot;soso&quot;, 3);</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; System.out.println(user.containsColumn(&quot;soso&quot;));//true</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; System.out.println(user.containsColumn(&quot;3&quot;));//false</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; System.out.println(user.contains(1, &quot;xiaomi&quot;));//false</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; System.out.println(user.contains(1, &quot;meinv&quot;));//true</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; System.out.println(user.row(1));//{shuaige=29, longhao=29}</p>
+		<p>}</p>
+	</div>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 5：更简洁的判断</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p>使用Preconditions中的方法来判断是否为空等操作，这个操作和spring，apache common-lang中的API类似</p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p>import static com.google.common.base.Preconditions.checkArgument;</p>
+		<p>import static com.google.common.base.Preconditions.checkNotNull;</p>
+		<p>static void checkParam(String name , Integer passwd){</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; checkNotNull(name , passwd);</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; checkArgument(&quot;&quot; != name , passwd &gt; 0);</p>
+		<p>}</p>
+	</div>
+	<p>Common-lang，spring中的方法需要逐个调用。而Guava中支持。</p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 6：约束 </strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p>对Collection中的新加入元素做约束，只有符合条件的元素才能够被添加到Collection中，可以使用Constraint类来操作。</p>
+	<p>示例代码：</p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p>import static com.google.common.collect.Constraints.constrainedList;</p>
+		<p>static void constraintExam(){</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Constraint&lt;String&gt; chkListStr = new Constraint&lt;String&gt;(){</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; @Override</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; public String checkElement(String element) {</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; if(element.startsWith(&quot;h&quot;)){</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; throw new IllegalArgumentException(&quot;不允许有h开头的内容&quot;);</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; return element;</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; };</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; List&lt;String&gt; list = Lists.newArrayList(&quot;li&quot;,&quot;hao&quot;,&quot;a&quot;);</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; List&lt;String&gt; conList = constrainedList(list, chkListStr);</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; conList.add(&quot;soso&quot;);</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; conList.add(&quot;hqb&quot;);// throw IllegalArgumentException</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; for(String str : list){</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; System.out.println(str);</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</p>
+		<p>}</p>
+	</div>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 参考资料 </strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p><a href="http://blog.solidcraft.eu/2010/10/googole-guava-v07-examples.html">http://blog.solidcraft.eu/2010/10/googole-guava-v07-examples.html</a></p>
+	<p><a href="http://insightfullogic.com/blog/2011/oct/21/5-reasons-use-guava/#">http://insightfullogic.com/blog/2011/oct/21/5-reasons-use-guava/#</a></p>
+	<p><a href="http://codingjunkie.net/google-guava-cache/">http://codingjunkie.net/google-guava-cache/</a></p>
+</div>

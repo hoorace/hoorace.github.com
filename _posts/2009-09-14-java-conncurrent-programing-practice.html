@@ -1,0 +1,130 @@
+---
+comments: true
+date: 2009-09-14 20:28:38
+layout: post
+slug: java%e5%b9%b6%e5%8f%91%e7%bc%96%e7%a8%8b%e5%ae%9e%e8%b7%b5%e6%96%b9%e6%b3%953%e5%88%991
+title: java并发编程实践方法3则(1)
+wordpress_id: 367
+categories:
+- Java
+tag:
+- concurrent
+- Java
+- thread
+- 并发编程
+---
+
+<p><big><strong>阻塞队列和生产者-消费者模式+ThreadPoolExecutor</strong></big><br />
+&nbsp;&nbsp;&nbsp; <b>介绍</b>：<br />
+&nbsp;&nbsp; &nbsp;阻塞队列（blocking queue）提供了可阻塞的put和take的方法，如果队列已满，put方法会被阻塞直到有空间可用为止；如果队列为空，take方法会被阻塞，直到有 元素可用为止。阻塞队列同时提供了可定时的offer和poll方法，如果不设定时间，offer或者是poll将立刻返回操作结果（是否插入队列或者是 取到队列的头元素），在实践中，这两个方法较put和take好用。队列的长度可以设定也可以无限，如果未指定容量，则它等于 Integer.MAX_VALUE。<br />
+&nbsp;&nbsp; &nbsp;生产者-消费者的模式是设计分离&ldquo;需要完成的工作&rdquo;和&ldquo;执行工作&rdquo;的模式。应用该模式，当发现一个工作的时候不会立刻处理，而是把工作放到一个 to do list 中去，以备后续处理。生产者-消费者模式把生产者和消费者之间的活动解耦，从而简化了开发。生产者和消费者可以围绕阻塞队列展开，生产者把处理好的数据发 送到阻塞队列中，消费者到队列中取需要处理的数据。<br />
+&nbsp;&nbsp;&nbsp; <b>场景</b>：<br />
+&nbsp;&nbsp;&nbsp; 短信发送存在两种情况：A：jobs提取的异步发送存放在数据库中的待发送短信；B：用户需要发送的实时短信。两种情况的短信都需要和数据库交互。所有的 短信在提取出来的时候都需要发送网关！待发送短信数据的获取和成功发送到网关，就如同在餐馆洗盘子和把洗好的盘子烘干是一个流程。短信的获取代码可以把处 理好的待发送的短信放到一个阻塞队列中，同时更新数据库的状态为待发送；短信发送的代码可以把短信发送到网关，同时把发送过的消息从发送表删除，然后插入 到发送历史表。<br />
+&nbsp;&nbsp;&nbsp; <b>实现：</b><br />
+&nbsp;&nbsp; &nbsp;<b><i>阻塞队列类</i></b>：注意点：singlton的模式需要时线程安全的，队列需要是静态的，在内存中只有一份，尽量使用有界队列。如果队列满了，需要把消息写入到消息发送表，状态设置为等待。<br />
+&nbsp;&nbsp;&nbsp; public class SmsSendQueueManager {<br />
+&nbsp;&nbsp; &nbsp;private final int SEND_QUEUE_MAX_LEN = 10000;<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; /**<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * 系统唯一实例.<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; */<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; private static SmsQueueManager queueManager = new SmsQueueManager();<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; /**<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * 下行队列.<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; */<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; private BlockingQueue&lt;SmsMessage&gt; sendQueue = new LinkedBlockingQueue&lt;SmsMessage&gt;(SEND_QUEUE_MAX_LEN);<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; private SmsQueueManager() {<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; }<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; //线程安全的singlton<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; public static SmsQueueManager getInstance() {<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return queueManager;<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; }<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; /**<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * 将短信对象列表加入上行队列中.<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * @param item 短信对象<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; */<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; public boolean addSendItem(SmsMessage item) {<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return this.sendQueue.offer(item);<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; }<br />
+<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; /**<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * 从上行队列中弹出最前面的短信对象.<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * @return 短信对象<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; */<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; public SmsMessage popSendQueue() throws InterruptedException {<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return this.sendQueue.take();<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; }<br />
+&nbsp;&nbsp; &nbsp;}<br />
+&nbsp;&nbsp;&nbsp;<i><b> 生产者</b></i>：<br />
+&nbsp;&nbsp;&nbsp; 由quartz的jobs或者是自己实现的系统启动线程来把短信发送表中状态为待发送和重试类型的消息提取到消息队列中去，或者是实时消息发送直接把消息 offer到队列中。为了防止以后把生产者放入到线程池中，需要对读取数据库中的列表操作过程加锁。如果是一直单线程，则该操作不需要。<br />
+&nbsp;&nbsp;&nbsp; public class MessageSendProducter extend Thread{<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; public void run{<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;private SmsSendQueueManager queueManager = SmsSendQueueManager.getInstance();<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;private Lock lock = new ReentrantLock();<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &hellip;&hellip;<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp; Thread.sleep(5*1000);<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp; try{<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;lock.lock();<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//从数据库中获取数据，修改相关标示位为待发送；<br />
+<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &hellip;&hellip;处理逻辑 sms = &hellip;&hellip;<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; queueManager.addSendItem(sms)<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}finally{<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;lock.unlock();<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br />
+&nbsp;&nbsp; &nbsp;}<br />
+&nbsp;&nbsp;&nbsp; <i><b>消费者</b></i>：<br />
+&nbsp;&nbsp;&nbsp; 发送消息的线程是把队列中的消息发送到网关，用线程来处理；<br />
+&nbsp;&nbsp;&nbsp; public class MessageSendCustomer extend Thread{</p>
+<div style="margin-left: 40px;">&nbsp;&nbsp; &nbsp;//根据ThreadPoolExecutor构造一个可配置的线程池；<br />
+&nbsp;&nbsp; &nbsp;private static ThreadPoolExecutor sendThreadPool = new ThreadPoolExecutor(10, 100, 6,<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;TimeUnit.SECONDS, new ArrayBlockingQueue&lt;Runnable&gt;(1000),<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;new ThreadPoolExecutor.CallerRunsPolicy());<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; public void run{<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;SmsSendQueueManager queueManager = SmsSendQueueManager.getInstance();<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Sms sms = queueManager.popSendQueue();<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;sendThreadPool.execute(new SenderThread(sms));<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Thread.sleep(100);<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br />
+&nbsp;&nbsp; &nbsp;//get set 的方法设置；</div>
+<p>&nbsp;&nbsp; &nbsp;}<br />
+&nbsp;&nbsp;&nbsp; <i><b>消息发送到网关的线程：</b></i><br />
+&nbsp;&nbsp;&nbsp; public class SenderThread extends Thread {<br />
+&nbsp;&nbsp;&nbsp; /**<br />
+&nbsp;&nbsp;&nbsp;&nbsp; * 发送计数器.<br />
+&nbsp;&nbsp;&nbsp;&nbsp; */<br />
+&nbsp;&nbsp;&nbsp; private&nbsp; static final AtomicInteger counter = new AtomicInteger(0);<br />
+&nbsp;&nbsp;&nbsp; /**<br />
+&nbsp;&nbsp;&nbsp;&nbsp; * 待发送的短信对象.<br />
+&nbsp;&nbsp;&nbsp;&nbsp; */<br />
+&nbsp;&nbsp;&nbsp; protected Sms sms = null;<br />
+&nbsp;&nbsp; &nbsp;<br />
+&nbsp;&nbsp;&nbsp; public SenderThread(Sms sms){<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this.sms = sms;<br />
+&nbsp;&nbsp;&nbsp; }<br />
+&nbsp;&nbsp;&nbsp; /**<br />
+&nbsp;&nbsp;&nbsp;&nbsp; * 线程运行方法.<br />
+&nbsp;&nbsp;&nbsp;&nbsp; */<br />
+&nbsp;&nbsp;&nbsp; public void run() {<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int i = counter.incrementAndGet();<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; logger.debug(&quot;线程[&quot; + Thread.currentThread().getName() + &quot;]发送第&quot; + i + &quot;条短信，短信ID为：&quot; + this.smsMessage.getSmsId() + &quot;\n&quot;);<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; try {<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 调用下行短信接口<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CmppSender cmppSender = (CmppSender)BeanLocator.getInstance().getBean(SmsDispatchConfig.getCmppSender());<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cmppSender.send(sms);<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 发送成功，放入历史表<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; catch(Exception se) {<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;// 发送失败处理处理逻辑<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br />
+&nbsp;&nbsp;&nbsp; }<br />
+&nbsp; }<br />
+&nbsp;&nbsp;&nbsp; <i><b>容错处理：</b></i><br />
+&nbsp;&nbsp;&nbsp; 1：如果消息发送失败，需要更新发送表的记录；消息重试最大次数后不再发送该消息；<br />
+&nbsp;&nbsp;&nbsp; 2：定期把重试次数为最大值的消息重新发送一遍；<br />
+&nbsp;&nbsp;&nbsp; 3：消息发送的过程中系统重启的情况需要考虑。</p>
+<p>&nbsp;&nbsp;&nbsp; 生产者和消费者模式是java并发编程中相对比较容易理解的方式，也是研究多线程必须研究的问题。在非实时的需求处理的过程中，这种模式很好的把处理对象的生成和处理对象的处理逻辑分开，让代码更加的简洁。在多核时代，并发编程将是一种趋势！<br />
+&nbsp; </p>

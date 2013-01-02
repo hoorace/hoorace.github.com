@@ -1,0 +1,100 @@
+---
+comments: true
+date: 2011-11-28 09:20:38
+layout: post
+slug: '%e5%ae%9a%e5%88%b6jetty8%e6%96%b9%e5%bc%8f%e5%90%af%e5%8a%a8web%e5%ba%94%e7%94%a8'
+title: 定制Jetty8方式启动web应用
+wordpress_id: 724
+categories:
+- Java
+tag:
+- eclipse
+- jetty
+---
+
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 1：Jetty的4种web应用部署方式（不包括嵌入启动）：<br />
+	</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p>1：直接修改${JETTY_HOME}/etc/jetty.xml的配置来部署应用；</p>
+	<p>2：把war包扔到${JETTY_HOME}/webapps目录中，自动被WebAppDeployer发现去部署；</p>
+	<p>3：在${JETTY_HOME}/contents中增加一个配置文件（模仿test.xml的配置），由ContextDeployer自动发现去部署；</p>
+	<p>4：定制部署启动配置文件；</p>
+	<p>&nbsp; &nbsp; 前面3中部署方式在J<a href="http://docs.codehaus.org/display/JETTY/Running+Jetty-7.0.x">etty7的部署方式</a>中讲述的较为清楚。</p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 2：定制化启动Jetty:<br />
+	</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p>&nbsp; &nbsp; 由于我们每个应用需要不同端口启动，这样在停止A应用的情况下，B应用不会受到影响。同时，我们希望在每台服务器上只有一份jetty，每个应用的配置文件应该是独立的。</p>
+	<p><strong>2.1：jetty容器配置文件</strong></p>
+	<div style="height:1px;border-bottom:1px dashed #ccc;">&nbsp;</div>
+	<p>&nbsp; &nbsp; 在start.ini中配置了etc/jetty.xml ， etc/jetty-webapps.xml （WebAppDeployer），etc/jetty-contexts.xml（ContextDeployer）三个文件，代表在默认情况下启动jetty，web应用3种部署都是支持的。WebAppDeployer则是会扫描${JETTY_HOME}/webapps目录，寻找war包并部署；ContextDeployer会扫描${JETTY_HOME}/contents目录，找到可以部署的context配置文件并部署。</p>
+	<p>&nbsp; &nbsp; 所以定制jetty之前，我们需要在start.ini中把这3行注释掉。</p>
+	<p><strong>2.2：web应用配置</strong></p>
+	<div style="height:1px;border-bottom:1px dashed #ccc;">&nbsp;</div>
+	<p>&nbsp; &nbsp; 复制${JETTY_HOME}/etc/jetty.xml文件到bin目录下面，修改port和confidentialPort为自己应用的端口号。在&lt;Array type=&quot;org.eclipse.jetty.server.Handler&quot;&gt;中添加需要部署的war包得Item，如下注意（contextPath和war值）：</p>
+	<p>&nbsp; &nbsp; &nbsp;&lt;Item&gt;</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;New class=&quot;org.eclipse.jetty.webapp.WebAppContext&quot;&gt;</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;Set name=&quot;contextPath&quot;&gt;/aaa&lt;/Set&gt;</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;Set name=&quot;war&quot;&gt;/opt/longtask/aaa/webapps/aaa.war&lt;/Set&gt;</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;Set name=&quot;defaultsDescriptor&quot;&gt;&lt;SystemProperty name=&quot;jetty.home&quot; default=&quot;.&quot;/&gt;/etc/webdefault.xml&lt;/Set&gt;</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;Set name=&quot;extractWAR&quot;&gt;true&lt;/Set&gt;</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;Set name=&quot;copyWebDir&quot;&gt;false&lt;/Set&gt;</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;Call name=&quot;addServlet&quot;&gt;</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;Arg&gt;org.eclipse.jetty.servlet.DefaultServlet&lt;/Arg&gt;</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;Arg&gt;/&lt;/Arg&gt;</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;/Call&gt;</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;/New&gt;</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;/Item&gt;</p>
+	<p><strong>2.3：启动应用（省略相关sh脚本）</strong></p>
+	<div style="height:1px;border-bottom:1px dashed #ccc;">&nbsp;</div>
+	<p>JETTY_CONFIG=&quot;${PWD}/jetty-${APP_NAME}.xml ${PWD}/jetty-logging.xml&quot;</p>
+	<p>JETTY_OPTS=&quot;-jar ${JETTY_HOME}/start.jar --pre=${JETTY_CONFIG}&quot;</p>
+	<p>java -server $JDK_OPTS $JETTY_OPTS &gt;/dev/null 2&gt;&amp;1 &amp;&nbsp;</p>
+	<p><strong>2.4：OPTIONS的说明</strong></p>
+	<div style="height:1px;border-bottom:1px dashed #ccc;">&nbsp;</div>
+	<p>在jetty8中通过java -jar start.jar --version命令可以查看到默认启动的OPTIONS：</p>
+	<p>Active Options: [Server, annotations, ext, jdbc, jmx, jsp, jta, plus, resources, websocket]</p>
+	<p>如果要启动其他OPTIONS，需要自己添加。</p>
+	<p>&nbsp;</p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 3：FAQ:<br />
+	</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p>3.1：无法启动，报端口错误：</p>
+	<div style="height:1px;border-bottom:1px dashed #ccc;">&nbsp;</div>
+	<p>Caused by: java.net.BindException: Address already in use</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; at sun.nio.ch.Net.bind(Native Method)</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; at sun.nio.ch.ServerSocketChannelImpl.bind(ServerSocketChannelImpl.java:126)</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; at sun.nio.ch.ServerSocketAdaptor.bind(ServerSocketAdaptor.java:59)</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; at org.eclipse.jetty.server.nio.SelectChannelConnector.open(SelectChannelConnector.java:172)</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; at org.eclipse.jetty.server.AbstractConnector.doStart(AbstractConnector.java:300)</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; at org.eclipse.jetty.server.nio.SelectChannelConnector.doStart(SelectChannelConnector.java:250)</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; at org.eclipse.jetty.util.component.AbstractLifeCycle.start(AbstractLifeCycle.java:59)</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; at org.eclipse.jetty.server.Server.doStart(Server.java:273)</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; at org.eclipse.jetty.util.component.AbstractLifeCycle.start(AbstractLifeCycle.java:59)</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; at org.eclipse.jetty.xml.XmlConfiguration$1.run(XmlConfiguration.java:1203)</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; at java.security.AccessController.doPrivileged(Native Method)</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; at org.eclipse.jetty.xml.XmlConfiguration.main(XmlConfiguration.java:1126)</p>
+	<p>通过lsof -i:port来查看端口是否被占用，如果被占用，需要修改jetty配置文件中的port来启动</p>
+	<p>3.2：在去掉start.ini中注释掉jetty.xml后，制定自己的jetty.xml后报错。</p>
+	<div style="height:1px;border-bottom:1px dashed #ccc;">&nbsp;</div>
+	<p>问题：</p>
+	<p>java.io.FileNotFoundException: Unable to find XML Config: etc/jetty.xml</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; at org.eclipse.jetty.start.Main.resolveXmlConfig(Main.java:671)</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; at org.eclipse.jetty.start.Main.resolveXmlConfigs(Main.java:888)</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; at org.eclipse.jetty.start.Main.start(Main.java:508)</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; at org.eclipse.jetty.start.Main.parseCommandLine(Main.java:265)</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; at org.eclipse.jetty.start.Main.main(Main.java:79)</p>
+	<p>需要在--pre中添加启动项，不是在-jar start.jar后面添加</p>
+	<p>3.3：网上说war包需要解压缩，是错误的，jetty8不需要解压的。</p>
+	<div style="height:1px;border-bottom:1px dashed #ccc;">&nbsp;</div>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 4：参考文档：<br />
+	</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<ul>
+		<li><a href="http://wiki.eclipse.org/Jetty/Howto/WebappPerConnector">Serving Webapp A Only from Port A and Webapp B Only from Port B</a></li>
+		<li><a href="http://docs.codehaus.org/display/JETTY/Running+Jetty-7.0.x">Running Jetty-7.0.x</a></li>
+		<li><a href="http://wiki.eclipse.org/Jetty/Reference/jetty.xml_syntax">Jetty/Reference/jetty.xml syntax</a></li>
+	</ul>
+</div>

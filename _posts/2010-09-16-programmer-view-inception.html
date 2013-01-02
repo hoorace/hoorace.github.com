@@ -1,0 +1,40 @@
+---
+comments: true
+date: 2010-09-16 10:26:58
+layout: post
+slug: '%e7%a8%8b%e5%ba%8f%e5%91%98%e7%9a%84%e8%a7%92%e5%ba%a6%e7%9c%8b%e3%80%8a%e7%9b%97%e6%a2%a6%e7%a9%ba%e9%97%b4%e3%80%8b'
+title: 程序员的角度看《盗梦空间》
+wordpress_id: 601
+categories:
+- life-style
+---
+
+<p>&nbsp;&nbsp;&nbsp; 看完<a href="http://www.google.com.hk/url?sa=t&amp;source=web&amp;cd=1&amp;ved=0CCEQFjAA&amp;url=http%3A%2F%2Fen.wikipedia.org%2Fwiki%2FChristopher_Nolan&amp;ei=DUaSTOHBC4ymvQPirMSFBA&amp;usg=AFQjCNEyILxerr6lFD6-x8miPot8-8u1Rg&amp;sig2=fj0-oEa5tH763NGtfUQ79A">Christopher Nolan</a>的《<a href="http://movie.douban.com/subject/3541415/">盗梦空间</a>》，我还以为这哥们是Java程序员出身的。能够把电影搞的像java架构一样的分层，的确有做业务系统架构的天赋，建议联合国网银系统的架构就交给他搞定算了。在每层的梦中都为下一层的梦做铺垫，也和程序中每层中的功能点的划分较为相似，这不是电影，这是业务系统架构的生活版。</p>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 分层</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p style="text-align: center;">&nbsp;&nbsp;&nbsp; <img alt="" src="http://www.longtask.com/blog/wp-content/uploads/111.png" style="width: 500px; height: 400px;" /></p>
+	<p>&nbsp;&nbsp;&nbsp; 到梦空间中把梦分为6个级别：现实世界，第一层梦，第二层梦，第三层梦，第四层梦，迷失域。现实世界对应的是展现层，就是用户看到的那个界面；中间梦境是业务系统的分层实现；迷失域可以看做各种各样难以搞定的系统问题，例如：内心泄露的查找，高并发导致的系统宕机，bug导致的数据不一致。</p>
+	<p>&nbsp;&nbsp;&nbsp; 在《盗梦空间》中，每层梦都为后面的做铺垫，代码也是一层层的访问，最后达到能够完成业务目的的要求。每一层的问题，或许都是最开始你可能想不到的，例如：第一层梦的生活碰到了火车，业务系统中也较为类似，你或许会发现自己选择的tokyo cabinet仅仅单机较强，分布式方面很弱，或许你的一个ThreadLocal半年前没有remove还能支撑，到了现在3天都需要重启一下系统。系统中突入起来的&ldquo;火车&rdquo;或许你是想不到的，&ldquo;兵来将挡水来土掩&rdquo;的适应能力才是我们需要追求的。</p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 梦主是架构师</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p>&nbsp;&nbsp;&nbsp; 每层梦都有一个梦主，他和其他人分享这个梦境。系统的实现关键不在于代码多么的牛B，而是架构的适应性上。梦主如果是一个柔和的人，那么梦中的场景或许很温馨；架构师如果是个实用主义者，他的架构或许就追求简洁。如果梦主是一个内心纠结的人，或许梦中就充满了危险；架构师如果是个与时俱进的人，很可能就会导致系统过度设计。</p>
+	<p>&nbsp;&nbsp;&nbsp; 梦主在分享自己的生活，架构师在传达系统设计的思想。</p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 迷失，迷失</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p>&nbsp;&nbsp;&nbsp; 什么情况下会迷失？混乱！</p>
+	<p>&nbsp;&nbsp;&nbsp; 系统的架构混乱容易让团队迷失，个人了解的知识太多，也为让自己迷失。例如我自己，搞过web页面，SA，程序员，结果了解的东西是很多，但是没有一样特别的有竞争力，还不如专心致志的搞web service。当然还是需要继续思考，要搞好web service这门手艺，我需要主动学习什么资料，有谁能够请教的。站在一个点上，思路就清晰多了。</p>
+	<p>&nbsp;&nbsp;&nbsp; 如果一个产品，你看着在1年能肯定能够赚钱，那么这个产品肯定会因为大公司或者资本的介入而迅速淹没在一片红海中，例如现在的团购。红海中的淘汰属于清晰型成本问题淘汰；蓝海中的淘汰大多数都是迷失型方向问题淘汰。</p>
+	<p>&nbsp;&nbsp;&nbsp; 程序员的迷失，主要问题在于：缺乏思考，得过且过。</p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 刺激，让你清醒的好东西。</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p>&nbsp;&nbsp;&nbsp; 电影中，刺激是让梦者醒来的机制。这中间存在一个问题，如果一个人有过量的药剂，他很可能一生都在迷失域中。</p>
+	<p>&nbsp;&nbsp;&nbsp; 程序员的过量药剂是什么？加班。</p>
+	<p>&nbsp;&nbsp;&nbsp; 如果你沉寂在加班中，缺少思考的话，你很可能迷失。当然，没有药剂也是不行的，你到达不了梦的深度。适度吧！</p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 你懂了么？</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p>&nbsp;&nbsp;&nbsp; 最后陀螺只是变慢了，没有停。两个小孩的衣服颜色鲜艳了很多。主人公如此努力的目标是什么？你呢？</p>
+</div>

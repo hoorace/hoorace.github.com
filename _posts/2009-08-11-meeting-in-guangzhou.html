@@ -1,0 +1,24 @@
+---
+comments: true
+date: 2009-08-11 00:31:54
+layout: post
+slug: '%e5%b9%bf%e5%b7%9e%e7%ba%bf%e4%b8%8b%e6%8a%80%e6%9c%af%e4%ba%a4%e6%b5%81%e6%b2%99%e9%be%99'
+title: 广州线下技术交流沙龙
+wordpress_id: 358
+categories:
+- life-style
+---
+
+<p>&nbsp;&nbsp; &nbsp; &nbsp;在整个珠三角地区，商业气氛很浓厚，但是知识分享却相当的的落后，比起北京，上海，杭州等城市，算是落后了一个等级。这次由杨老师（<a target="_blank" href="http://timyang.net/">@xmpp</a>）组织的技术分享活动是难得的交流机会，由于对分布式存储有着浓厚的兴趣，周末就跑到广州去学习一下。</p>
+<p>&nbsp;&nbsp; &nbsp; 我们从别人的设计中主要获取的是思想，同时结合自己的应用来做相关的系统架构设计，Last.fm的Richard Jones写过一篇文章《<a target="_blank" href="http://www.metabrew.com/article/anti-rdbms-a-list-of-distributed-key-value-stores/">反对关系数据库----一些分布式key/value数据存储系统比较</a>》，中间阐述了各类分布式开源的key/value存储的系统的对比，给出了一些建议。但是更多的我们可以从大型应用的设计思想中获取养分，商业分布式key/value store主要有：</p>
+<p style="margin-left: 40px; ">&bull; Dynamo (Amazon)</p>
+<p style="margin-left: 40px; ">&bull; Cassandra (facebook)</p>
+<p style="margin-left: 40px; ">&bull; Voldemort (LinkedIn)</p>
+<p style="margin-left: 40px; ">&bull; PNUTS (Yahoo)</p>
+<p style="margin-left: 40px; ">&bull; Bigtable (Google)</p>
+<p style="margin-left: 40px; ">&bull; HyperTable(Baidu)</p>
+<p>&nbsp;&nbsp; &nbsp; &nbsp;在实际的工作中，我们或许更关注key/value store，杨老师就&nbsp;<strong>Berkeley db - memcachedb，&nbsp;Tokyo cabinet - Tyrant ，&nbsp;Redis</strong>做了相关的测试（单线程跑的），虽然Redis力克群雄，但是似乎内存占用太高，而且不合理的配置会导致系统的不稳定性，推荐使用<a target="_blank" href="http://tokyocabinet.sourceforge.net/">Tokyo cabinet</a>（Tokyo Cabinet是日本人 Mikio Hirabayashi开发的一款 DBM 数据库，该数据库读写非常快，哈希模式写入100万条数据只需0.643秒，读取100万条数据只需0.773秒，是 Berkeley DB 等 DBM 的几倍。Tokyo Cabinet 是一个DBM的实现。这里的数据库由一系列key-value对的记录构成。key和value都可以是任意长度的字节序列,既可以是二进制也可以是字符串。这里没有数据类型和数据表的概念）</p>
+<p>&nbsp;&nbsp; &nbsp; &nbsp;如果想获取更多的，点击<a target="_blank" href="http://www.slideshare.net/iso1600/key-value-store">这里</a>观看杨老师的PPT大作。当然，免不了要说一下自己的收获。</p>
+<p>&nbsp;&nbsp; &nbsp; &nbsp;<strong>1：互联网应用和电信应用的架构差别</strong>。在CAP理论（Consistency(一致性),Availability(可用性), Partition tolerance(分布) 三部分在系统实现只可同时满足二点，没法三者兼顾）中，互联网强调了可用性和分布，而电信，银行业强调了一致性和分布。而且电信业的系统架构强调了应对业务逻辑的变化，所以<strong>工作流，规则引擎</strong>可以派上大用场，而在互联网的应用架构中，业务逻辑的变化较少，强调减少用户等待时间。</p>
+<p>&nbsp;&nbsp; &nbsp; <strong>2：关系数据库在电信行业不可或缺</strong>。由于业务的复杂性导致数据模型的复杂，所以电信系统的数据存储对关系数据库的依赖不会像互联网那样逐渐弱化，数据库的设计的好坏将对电信企业的系统稳定性和可用性产生很大的影响。Oracle DBA在电信行业是一个受欢迎的职业。</p>
+<p>&nbsp;&nbsp; &nbsp; 当然，赖勇浩的《<span class="Apple-style-span" style="font-family: corbel; font-size: 14px; color: rgb(17, 17, 17); line-height: 22px; ">选好业务与技术，单枪匹马做游戏<span class="Apple-style-span" style="color: rgb(0, 0, 0); font-family: Arial; font-size: 12px; line-height: normal; ">》也相当不错，关注游戏开发比较少，就不写感受让人贻笑大方了。通过线下交流，除了收获知识外，还认识了一帮技术人员，感谢杨老师，感谢sina。</span></span></p>

@@ -1,0 +1,160 @@
+---
+comments: true
+date: 2012-03-06 06:12:23
+layout: post
+slug: spring%e7%9a%84rmi-httpinvoker-%ef%bc%8c-hessian%e6%b5%8b%e8%af%95%e7%bb%93%e6%9e%9c
+title: Spring的RMI , Http Invoker, Hessian测试结果
+wordpress_id: 742
+categories:
+- Java
+tag:
+- hessian
+- http invoker
+- Java
+- RMI
+- spring
+---
+
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; RMI配置说明： </strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p><strong>1：对象序列化：</strong></p>
+	<p>public class Account implements Serializable{</p>
+	<p>&nbsp; &nbsp; private String name;</p>
+	<p>&nbsp; &nbsp; public String getName(){</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; return name;</p>
+	<p>&nbsp; &nbsp; }</p>
+	<p>&nbsp; &nbsp; public void setName(String name) {</p>
+	<p>&nbsp; &nbsp; &nbsp; this.name = name;</p>
+	<p>&nbsp; &nbsp; }</p>
+	<p>}</p>
+	<p><strong>2：远程接口定义：</strong></p>
+	<p>public interface RemoteCallExample extends Remote {</p>
+	<p>&nbsp; &nbsp; &nbsp; public String show() throws RemoteException;</p>
+	<p>}</p>
+	<p><strong>3：远程接口实现：</strong></p>
+	<p>public class RemoteCallExampleImpl implements RemoteCallExample {</p>
+	<p>&nbsp; &nbsp; &nbsp; @Override</p>
+	<p>&nbsp; &nbsp; &nbsp; public String show() throws RemoteException{</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; return &quot;remote test&quot;;</p>
+	<p>&nbsp; &nbsp; &nbsp; }</p>
+	<p>}</p>
+	<p><strong>4：Spring服务器端配置（使用RmiServiceExporter来）：</strong></p>
+	<p>在WEB-INF目录下面新建remoting-servlet.xml文件，添加相关的配置。</p>
+	<p>&lt;bean name=&quot;remoteCallExample&quot; class=&quot;com.hqb360.pay.service.impl.RemoteCallExampleImpl&quot; /&gt;</p>
+	<p>&lt;bean class=&quot;org.springframework.remoting.rmi.RmiServiceExporter&quot;&gt;</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;!-- does not necessarily have to be the same name as the bean to be exported --&gt;</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;property name=&quot;serviceName&quot; value=&quot;remoteCallExample&quot;/&gt;</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;property name=&quot;service&quot; ref=&quot;remoteCallExample&quot;/&gt;</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;property name=&quot;serviceInterface&quot; value=&quot;com.hqb360.pay.service.RemoteCallExample&quot;/&gt;</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;!-- defaults to 1099 --&gt;</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;property name=&quot;registryPort&quot; value=&quot;1199&quot;/&gt;</p>
+	<p>&lt;/bean&gt;</p>
+	<p><strong>5：服务器端类</strong></p>
+	<p>public class RemoteCallRMI{</p>
+	<p>&nbsp; &nbsp; &nbsp; public String show() throws RemoteException{</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; return remoteCallExample.show();</p>
+	<p>&nbsp; &nbsp; &nbsp; }&nbsp; &nbsp;&nbsp;</p>
+	<p>&nbsp; &nbsp; &nbsp; private RemoteCallExample remoteCallExample;</p>
+	<p>&nbsp; &nbsp; &nbsp; public RemoteCallExample getRemoteCallExample() {</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; return remoteCallExample;</p>
+	<p>&nbsp; &nbsp; &nbsp; }</p>
+	<p>&nbsp; &nbsp; &nbsp; public void setRemoteCallExample(RemoteCallExample remoteCallExample) {</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; this.remoteCallExample = remoteCallExample;</p>
+	<p>&nbsp; &nbsp; &nbsp; }</p>
+	<p>}</p>
+	<p><strong>6：服务器端配置</strong></p>
+	<p>&lt;bean name=&quot;remoteCallRMI&quot; class=&quot;com.hqb360.pay.service.impl.RemoteCallRMI&quot; &gt;</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;property name=&quot;remoteCallExample&quot; ref=&quot;remoteCall&quot; /&gt;</p>
+	<p>&lt;/bean&gt;</p>
+	<p>&lt;bean id=&quot;remoteCall&quot; class=&quot;org.springframework.remoting.rmi.RmiProxyFactoryBean&quot;&gt;</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;property name=&quot;serviceUrl&quot; value=&quot;rmi://192.168.100.10:1199/remoteCallExample&quot;/&gt;</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;property name=&quot;serviceInterface&quot; value=&quot;com.hqb360.pay.service.RemoteCallExample&quot;/&gt;</p>
+	<p>&lt;/bean&gt;</p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 一些RMI问题说明：</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p>1. RMI在启动配置中需要添加：<strong>-Djava.rmi.server.hostname=192.168.100.10</strong></p>
+	<p>2. 需要制定相关的具体IP，把读取配置文件放到系统启动的时候处理。</p>
+	<p>Spring3.0后默认的HandlerMapping是DefaultAnnotationHandlerMapping，不是以前的BeanNameUrlHandlerMapping，所以配置Hessian和HttpInvoker的时候需要重新定义一下HandlerMapping.</p>
+	<p>在按照spring手册配置的时候需要添加定义（Spring文档有遗漏的地方）：</p>
+	<p>&lt;!--Hessian 启动BeanNameMapping 映射功能,以httpRequest作为处理Adapter--&gt;</p>
+	<p>&nbsp; &nbsp; &lt;bean class=&quot;org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping&quot;&gt;</p>
+	<p>&nbsp; &nbsp; &nbsp; &nbsp; &lt;property name=&quot;defaultHandler&quot; ref=&quot;httpRequestHandlerAdapter&quot; /&gt;</p>
+	<p>&nbsp; &nbsp; &lt;/bean&gt;</p>
+	<p>&nbsp; &nbsp; &lt;!-- Hessian 方式以Http进行传递 --&gt;</p>
+	<p>&nbsp; &nbsp; &lt;bean id=&quot;httpRequestHandlerAdapter&quot; class=&quot;org.springframework.web.servlet.mvc.HttpRequestHandlerAdapter&quot; /&gt;</p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 测试结果</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p><strong>测试性能：RMI &gt; Hessian &gt; Http Invoker</strong></p>
+	<p>数据图表如下：</p>
+	<p><img alt="" height="298" src="http://www.longtask.com/blog/wp-content/uploads/ex(1).jpg" width="485" /></p>
+	<p><strong>RMI</strong></p>
+	<p>RMI并发测试（线程池大小：5，线程数：5）</p>
+	<p>[TestRunner] Starting executor timeOut:1000000ms workers:5 threadPoolSize:5</p>
+	<p>0 [5,880ms, 100%]</p>
+	<p>0 [5,881ms, 100%]</p>
+	<p>0 [5,977ms, 100%]</p>
+	<p>0 [5,978ms, 100%]</p>
+	<p>0 [5,989ms, 100%]</p>
+	<p>RemoteTestNG finishing: 8318 ms</p>
+	<p>RMI并发测试（线程池大小：5，线程数：10）</p>
+	<p>[TestRunner] Starting executor timeOut:1000000ms workers:10 threadPoolSize:5</p>
+	<p>0 [5,843ms, 100%]</p>
+	<p>0 [5,856ms, 100%]</p>
+	<p>0 [5,864ms, 100%]</p>
+	<p>0 [5,967ms, 100%]</p>
+	<p>0 [5,970ms, 100%]</p>
+	<p>0 [5,795ms, 100%]</p>
+	<p>0 [5,810ms, 100%]</p>
+	<p>0 [5,812ms, 100%]</p>
+	<p>0 [5,891ms, 100%]</p>
+	<p>0 [5,935ms, 100%]</p>
+	<p>RemoteTestNG finishing: 14194 ms</p>
+	<p><strong>Httpinvoker</strong></p>
+	<p>并发测试（线程池大小：5，线程数：5）</p>
+	<p>[TestRunner] Starting executor timeOut:100000ms workers:5 threadPoolSize:5</p>
+	<p>0 [24,350ms, 100%]</p>
+	<p>0 [25,384ms, 100%]</p>
+	<p>0 [27,601ms, 100%]</p>
+	<p>0 [27,700ms, 100%]</p>
+	<p>0 [29,443ms, 100%]</p>
+	<p>RemoteTestNG finishing: 31737 ms</p>
+	<p>并发测试（线程池大小：5，线程数：10）</p>
+	<p>[TestRunner] Starting executor timeOut:1000000ms workers:10 threadPoolSize:5</p>
+	<p>0 [26,519ms, 100%]</p>
+	<p>0 [26,637ms, 100%]</p>
+	<p>0 [28,365ms, 100%]</p>
+	<p>0 [29,744ms, 100%]</p>
+	<p>0 [29,821ms, 100%]</p>
+	<p>0 [28,433ms, 100%]</p>
+	<p>0 [29,914ms, 100%]</p>
+	<p>0 [31,795ms, 100%]</p>
+	<p>0 [28,959ms, 100%]</p>
+	<p>0 [29,407ms, 100%]</p>
+	<p>RemoteTestNG finishing: 61477 ms</p>
+	<p><strong>hessian测试结果</strong></p>
+	<p>并发测试（线程池大小：5，线程数：5）</p>
+	<p>[TestRunner] Starting executor timeOut:100000ms workers:5 threadPoolSize:5</p>
+	<p>0 [13,343ms, 100%]</p>
+	<p>0 [13,957ms, 100%]</p>
+	<p>0 [14,544ms, 100%]</p>
+	<p>0 [14,612ms, 100%]</p>
+	<p>0 [14,822ms, 100%]</p>
+	<p>RemoteTestNG finishing: 17133 ms</p>
+	<p>并发测试（线程池大小：5，线程数：10）</p>
+	<p>[TestRunner] Starting executor timeOut:100000ms workers:10 threadPoolSize:5</p>
+	<p>0 [13,407ms, 100%]</p>
+	<p>0 [14,058ms, 100%]</p>
+	<p>0 [14,271ms, 100%]</p>
+	<p>0 [14,293ms, 100%]</p>
+	<p>0 [18,198ms, 100%]</p>
+	<p>0 [14,496ms, 100%]</p>
+	<p>0 [15,128ms, 100%]</p>
+	<p>0 [16,478ms, 100%]</p>
+	<p>0 [17,680ms, 100%]</p>
+	<p>0 [17,317ms, 100%]</p>
+	<p>RemoteTestNG finishing: 37844 ms</p>
+	<p>&nbsp;</p>
+	<p>需要测试代码的联系：longtask@gmail.com</p>
+</div>

@@ -1,0 +1,140 @@
+---
+comments: true
+date: 2010-09-15 03:42:24
+layout: post
+slug: '%ef%bb%bf%e4%bd%bf%e7%94%a8servlet%ef%bc%8cspring%ef%bc%8cjetty%e6%9e%84%e5%bb%baweb-service'
+title: "\uFEFF使用servlet，spring，jetty构建web service"
+wordpress_id: 598
+categories:
+- Java
+- Web Service
+tag:
+- jetty
+- json
+- servlet
+- spring
+- Web Service
+---
+
+<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; 这里讨论的web service是供其他应用程序调用的API。这一部分只是谈到用最原始，最简单的方式来实现相关的需求，返回的结果提供xml和json两种格式。如果你是web service高手，请绕行。我们从最简单的方式着手讨论web service，后续的文章才会讨论SOAP,WSDL,RESTFUL相关的内容。</span></p>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 为什么需要web service？</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; 互联网高速发达的今天，企业开发的应用和工具无法满足所有用户的需求，通过开放web service的方式开放API后，用户可以通过相关的服务制作满足特定需求的网站或者工具来满足不同用户的需求。成功的案例很多，flickr，twitter，facebook等厂商从中广泛受益。</span></p>
+	<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; 为什么使用servlet？因为它够用了；为什么使用jetty，因为他轻量，和spring结合起来用非常方便启动服务和调试；为什么使用spring？我只能说：狗日的Spring，你的功能太棒了！</span></p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 整体架构</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p style="text-align: center;"><span style="font-size: 14px;"><a href="http://www.flickr.com/photos/hoorace/4992062763/" title="a1 by longhao_net, on Flickr"><img alt="a1" height="395" src="http://farm5.static.flickr.com/4088/4992062763_8211acfa16.jpg" width="500" /></a></span></p>
+	<ol>
+		<li><span style="font-size: 14px;">通过实现servlet规范中的Filter接口来提供用户鉴权，有效的时间戳，系统参数校验等功能。</span></li>
+		<li><span style="font-size: 14px;">所有的请求都走到请求代理的servlet，在通过相关的参数校验后，通过实现spring的ApplicationContextAware接口来找到具体的业务bean。例如：参数中的action=aaa，对应的&lt;bean name=&quot;aaa&quot; class=&quot;...&quot; /&gt;</span></li>
+		<li><span style="font-size: 14px;">返回相关的结果的时候，需要把对象转换为具体的格式，例如xml或者json。</span></li>
+	</ol>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 具体实现</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p><span style="font-size: 14px;"><strong>1：简单的用户鉴权和系统参数鉴权。</strong></span></p>
+	<p><span style="font-size: 14px;">参数中包括2个字段：session，seckret_key。session代表用户的独有请求ID，seckret_key是约定的特定字段加密后的信息，例如给定用户一个&ldquo;111&rdquo;的字符串MD5加密后的字符串。在用户鉴权的时候，两个都正确，才能通过，然后访问业务系统。</span></p>
+	<p><span style="font-size: 14px;">有人会问：为什么不是Oauth协议的方式来搞定呢？我只能说，我们还没有那么大的业务需求。后面再讨论。</span></p>
+	<p><span style="font-size: 14px;">在系统中，action对应的name是固定的，所以用户传入错误的ation name的时候需要直接返回。</span></p>
+	<p><span style="font-size: 14px;"><strong>2：访问代理。</strong></span></p>
+	<p style="text-align: center;"><span style="font-size: 14px;"><a href="http://www.flickr.com/photos/hoorace/4992062805/" title="a2 by longhao_net, on Flickr"><img alt="a2" height="373" src="http://farm5.static.flickr.com/4150/4992062805_aa2573a030.jpg" width="500" /></a></span></p>
+	<p><span style="font-size: 14px;">根据传入的Action的名称来访问相关的类获取结果，显然需要用策略模式来实现。我需要知道在spring的bean中有哪些action，把这些action在系统启动的时候存到一个对象中，供我们后续调用，很明显，需要实现Spring的ApplicationContextAware接口来搞定。</span></p>
+	<p><span style="font-size: 14px;">定义的接口是：</span></p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p><span style="font-size: 14px;">public interface Action{<br />
+			&nbsp;&nbsp;&nbsp; public ResultDomain execute();<br />
+			}</span></p>
+	</div>
+	<p><span style="font-size: 14px;">WebApplicationContext的实现：</span></p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p><span style="font-size: 14px;">private Map&lt;String,Action&gt; executeActionMap = new HashMap&lt;String,Action&gt;();<br />
+			public void setApplicationContext(ApplicationContext context)<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; throws BeansException {<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Map map = context.getBeansOfType(Action.class);<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if(CollectionUtils.isEmpty(map)){<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Set&lt;Map.Entry&lt;String, Action&gt;&gt; set=map.entrySet();<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Iterator&lt;Map.Entry&lt;String, Action&gt;&gt; it = set.iterator();<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Map.Entry&lt;String, Action&gt; entry;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; while(it.hasNext()){<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; entry=it.next();<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; executeActionMap.put(entry.getKey(), entry.getValue());<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br />
+			}<br />
+			<br />
+			public ExecuteAction getExecuteAction(String name) {<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return executeActionMap.get(name);<br />
+			}</span></p>
+	</div>
+	<p><span style="font-size: 14px;">ActionPorxy的实现。</span></p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p><span style="font-size: 14px;">public ResultDomain proxy() {<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; HttpServletRequest request = ServletActionContext.getRequest();<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; String action = request.getParameter(&quot;action&quot;);<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Action action = webApplicationContext.getExecuteAction(action);<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ResultDomain result = action.execute();<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return result;<br />
+			}<br />
+			//some get set method</span></p>
+	</div>
+	<p><span style="font-size: 14px;">最后通过ActionPorxy就可以直接得到希望得到的对象来后续处理了。</span></p>
+	<p><span style="font-size: 14px;">3：返回结果</span></p>
+	<p style="text-align: center;"><span style="font-size: 14px;"><a href="http://www.flickr.com/photos/hoorace/4992671350/" title="a3 by longhao_net, on Flickr"><img alt="a3" height="227" src="http://farm5.static.flickr.com/4124/4992671350_33d898b3c5.jpg" width="500" /></a></span></p>
+	<p><span style="font-size: 14px;">在servlet的doService的方法中，调用返回结果的类，然后根据用户需要的格式返回xml或者json数据。result的访问也采用了策略模式，根据用户选择返回结果的格式来访问具体的类。</span></p>
+	<p><span style="font-size: 14px;">使用到的json包是：jsonlib; 使用到的xml转换：xStream。</span></p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; jetty的相关配置。</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p><span style="font-size: 14px;">就不说怎么配置spring的bean了。下面配置都需要在&lt;bean name=&quot;WebServer&quot; class=&quot;org.mortbay.jetty.Server&quot; init-method=&quot;start&quot;&gt;</span></p>
+	<p><span style="font-size: 14px;">a:)http或者ajp的配置</span></p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p><span style="font-size: 14px;">&lt;property name=&quot;connectors&quot;&gt;<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;list&gt;<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;bean name=&quot;LocalSocket&quot; class=&quot;org.mortbay.jetty.nio.SelectChannelConnector&quot;&gt;<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;property name=&quot;host&quot; value=&quot;127.0.0.1&quot; /&gt;<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;property name=&quot;port&quot; value=&quot;8080&quot; /&gt;<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/bean&gt;<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/list&gt;<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;list&gt;<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;bean name=&quot;AjpSocket&quot; class=&quot;org.mortbay.jetty.ajp.Ajp13SocketConnector&quot;&gt;<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;property name=&quot;host&quot; value=&quot;127.0.0.1&quot; /&gt;<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;property name=&quot;port&quot; value=&quot;8009&quot; /&gt;<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/bean&gt;<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/list&gt;<br />
+			&lt;/property&gt;<br />
+			</span></p>
+	</div>
+	<p><span style="font-size: 14px;">b:)filter的配置</span></p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p><span style="font-size: 14px;">需要在org.mortbay.jetty.servlet.ServletHandler中配置filters的属性<br />
+			&lt;property name=&quot;filters&quot;&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br />
+			&nbsp;&nbsp;&nbsp; &lt;list&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;bean class=&quot;org.mortbay.jetty.servlet.FilterHolder&quot;&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;property name=&quot;name&quot; value=&quot;SignFilter&quot; /&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;property name=&quot;filter&quot;&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;bean class=&quot;com.longtask.filter.SignFilter&quot; /&gt;&nbsp; <br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;/property&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;/bean&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br />
+			&nbsp;&nbsp;&nbsp; &lt;/list&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br />
+			&lt;/property&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br />
+			&lt;property name=&quot;filterMappings&quot;&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br />
+			&nbsp;&nbsp;&nbsp; &lt;list&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;bean class=&quot;org.mortbay.jetty.servlet.FilterMapping&quot;&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;property name=&quot;pathSpecs&quot;&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;list&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;value&gt;/*&lt;/value&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;/list&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;/property&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;property name=&quot;filterName&quot; value=&quot;SignFilter&quot; /&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;/bean&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br />
+			&nbsp;&nbsp;&nbsp; &lt;/list&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br />
+			&lt;/property&gt;&nbsp;&nbsp;</span></p>
+	</div>
+	<p><span style="font-size: 14px;">c:)servlet的配置，和log配置请参考前面一篇文章《<a href="http://www.longtask.com/blog/?p=578">Spring的同集群内的远程调用的3种方法</a>》</span></p>
+	<p><span style="font-size: 14px;">其他配置不懂的地方可以去参考以下jetty的源码，熟悉spring很容易弄的。<br />
+		</span></p>
+</div>
+<p><strong>这样只是做了个简单的实现，如果放到现网跑肯定会出现各种各样到问题（逐步深入），下一步就讨论到一些业务的分离和系统部署，来逐步提高性能。</strong></p>

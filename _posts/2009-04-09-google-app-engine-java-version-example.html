@@ -1,0 +1,43 @@
+---
+comments: true
+date: 2009-04-09 00:21:03
+layout: post
+slug: google-app-engine-%e7%9a%84java%e7%89%88%e8%af%95%e7%94%a8%e5%b0%8f%e7%bb%93%ef%bc%81
+title: Google App Engine 的Java版试用小结！
+wordpress_id: 272
+categories:
+- Java
+tag:
+- eclipse
+- GAE
+- Java
+---
+
+<p><big><strong>简介</strong></big></p>
+<p>&nbsp;&nbsp;&nbsp; Google App Engine正式宣布支持Java！兼容所有现存的Java标准和工具，比如 Google Plugin for Eclipse，以及支持Java Servlet API, JDO 和JPA, javax.cache, and javax.mail等等，并且让Java开发者能够利用Google App Engine架构，和强大的sandbox。<br />
+1：Google App Engine 提供1万个名额给感兴趣的Java开发者试用，赶紧注册：<a href="http://appengine.google.com/promo/java_runtime">http://appengine.google.com/promo/java_runtime</a><br />
+2：查看SDK：<a href="http://code.google.com/appengine/docs/java/">http://code.google.com/appengine/docs/java/</a> <br />
+3：java的开发包：<a href="http://code.google.com/appengine/downloads.html">http://code.google.com/appengine/downloads.html</a> <br />
+4：eclipse的插件：<a href="http://code.google.com/eclipse">http://code.google.com/eclipse</a></p>
+<p>&nbsp;</p>
+<p><big><strong>试运行情况</strong></big></p>
+<p>下载SDK后，可以运行里面的例子：<br />
+在命令窗口执行：D:\appengine_java\bin&gt;dev_appserver.cmd ..\demos\guestbook\war<br />
+The server is running at <a href="http://localhost:8080/">http://localhost:8080/</a>，如图：</p>
+<p><a target="_blank" href="http://farm4.static.flickr.com/3584/3423615623_134503b2bc.jpg?v=0"><img alt="" src="http://farm4.static.flickr.com/3584/3423615623_134503b2bc.jpg?v=0" /></a></p>
+<p>相关的数据后数据保持在：WEB-INF\appengine-generated\local_db.bin中<br />
+在eclipse中建工程的信息在帮助文档中讲的很清楚。<br />
+感觉比较强悍的是在工程上点击右键 run as &gt; web applications来通过GWT来运行还是比较爽的。</p>
+<p><a target="_blank" href="http://farm4.static.flickr.com/3328/3423615625_a564834d18.jpg?v=0"><img alt="" src="http://farm4.static.flickr.com/3328/3423615625_a564834d18.jpg?v=0" /></a></p>
+<p>&nbsp;</p>
+<p><big><strong>你需要注意的几个问题：</strong></big></p>
+<p>1：默认下载的eclipse对启动参数没有设置，升级的时候会报错：java.error.OutOfMemory。你需要手动设置一下。右键eclipse.exe&gt;常规。在eclipse.exe后面加上参数：<br />
+-vmargs -Xms128m -Xmx512m -XX:PermSize=128m -XX:PermSize=256m<br />
+2：到 <a target="_blank" href="http://java.sun.com/javase/downloads/index.jsp">Java SE Development Kit (JDK) for your platform&nbsp;</a> 上升级你的jdk到6，主要一些功能是java6才有的。<br />
+3：当你没有收到注册java测试人员的回复的时候如果deploy你的工程则会包下面的错误：<br />
+java.io.IOException: Error posting to URL: <a href="http://appengine.google.com/api/appversion/create?app_id=p2pstudy&amp;version=1">http://appengine.google.com/api/appversion/create?app_id=p2pstudy&amp;version=1</a>&amp;<br />
+400 Bad Request<br />
+Invalid runtime specified.</p>
+<p>&nbsp;at com.google.appengine.tools.admin.ServerConnection.send(ServerConnection.java:114)<br />
+&nbsp;at com.google.appengine.tools.admin.ServerConnection.post(ServerConnection.java:66)<br />
+&nbsp;at com.google.appengine.tools.admin.AppVersionUpload.send(AppVersionUpload.java:345)</p>

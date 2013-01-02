@@ -1,0 +1,68 @@
+---
+comments: true
+date: 2011-03-30 03:35:00
+layout: post
+slug: java-heap-dump%e8%a7%a6%e5%8f%91%e5%92%8c%e5%88%86%e6%9e%90
+title: Java heap dump触发和分析
+wordpress_id: 672
+categories:
+- Java
+tag:
+- heap dump
+- HPROF
+- Java
+- jhat
+- jmap
+- jstat
+---
+
+<p><span style="font-size:14px;">&nbsp;&nbsp;&nbsp; 为了分析java应用的内存泄漏，使用thread dump往往解决不了问题。使用jstat【eg：<a href="http://www.google.com.hk/url?sa=t&amp;source=web&amp;cd=2&amp;ved=0CCgQFjAB&amp;url=http%3A%2F%2Fdownload.oracle.com%2Fjavase%2F1.5.0%2Fdocs%2Ftooldocs%2Fshare%2Fjstat.html&amp;ei=yPiSTbqoCYLOvQPlgom9CA&amp;usg=AFQjCNFn5NygCF6PuGM4GqcYCtc6X8XCVw&amp;sig2=h-u3sevbVJ94VvDwodD9qg" target="_blank">jstat </a>-gcutil pid 1000 5】工具查看运行的java应用的heap size,perm size ,survivor ratio等，当时你无法知道是什么对象把堆填满了。</span></p>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 什么是 Java heap dump<br />
+	</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p><span style="font-size:14px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 首先需要搞懂什么是java heap，java heap是分配给实例类和数组对象运行数据区，所有java线程在运行期间共享heap中的数据。Java heap dump相当于java应用在运行的时候在某个时间点上打了个快照（snapshot）。</span></p>
+	<p><span style="font-size:14px;">&nbsp;&nbsp;&nbsp;&nbsp; 如果你不懂啥是snapshot，点击<a href="http://en.wikipedia.org/wiki/Snapshot_%28computer_storage%29" target="_blank">这里</a></span></p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 触发 Java heap dump </strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p><span style="font-size:14px;">有以下方法出发heap dump</span></p>
+	<ol>
+		<li><span style="font-size:14px;">使用$JAVA_HOME/bin/<a href="http://www.google.com.hk/url?sa=t&amp;source=web&amp;cd=2&amp;ved=0CCAQFjAB&amp;url=http%3A%2F%2Fdownload.oracle.com%2Fjavase%2F1.5.0%2Fdocs%2Ftooldocs%2Fshare%2Fjmap.html&amp;ei=5_iSTYP2HJCOvQPU_pm9CA&amp;usg=AFQjCNFr8XgO8PX4-4QvoRxFvAh4LEXA5g&amp;sig2=lJb4GdMId12S6_Ew6YXvag">jmap</a> -dump来触发，eg：jmap -dump:format=b,file=/home/longhao/heamdump.out &lt;pid&gt;</span></li>
+		<li><span style="font-size:14px;">使用$JAVA_HOME/bin/<a href="http://www.google.com.hk/url?sa=t&amp;source=web&amp;cd=1&amp;ved=0CBkQhgIwAA&amp;url=http%3A%2F%2Fjava.sun.com%2Fdeveloper%2FtechnicalArticles%2FJ2SE%2Fjconsole.html&amp;ei=-PiSTeLLDY7UvQODi5G9CA&amp;usg=AFQjCNEFUBKnvOZ50G07zeJLsOXFZ-UVSw&amp;sig2=HDZn6b06a27ZD87DYJJsPw" target="_blank">jcosole</a>中的MBean，到MBean&gt;com.sun.management&gt;HotSpotDiagnostic&gt;操作&gt;dumpHeap中，点击 dumpHeap按钮。生成的dump文件在java应用的根目录下面。</span></li>
+		<li><span style="font-size:14px;">在应用启动时配置相关的参数 -XX:+HeapDumpOnOutOfMemoryError，当应用抛出OutOfMemoryError时生成dump文件。</span></li>
+		<li><span style="font-size:14px;">使用<a href="http://www.google.com.hk/url?sa=t&amp;source=web&amp;cd=1&amp;ved=0CBkQFjAA&amp;url=http%3A%2F%2Fjava.sun.com%2Fdeveloper%2FtechnicalArticles%2FProgramming%2FHPROF.html&amp;ei=FPmSTaH5LYncvwObyv28CA&amp;usg=AFQjCNHrnFaZkSrAE4cKpk3A6L4AcrDWAw&amp;sig2=nhRGV8HnAQsGhulSSdgdBg" target="_blank">hprof</a>。启动虚拟机加入-Xrunhprof:head=site，会生成java.hprof.txt文件。该配置会导致jvm运行非常的慢，不适合生产环境。</span></li>
+	</ol>
+	<p><span style="font-size:14px;"><br />
+		</span></p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 分析 Java heap dump</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 1：使用IBM HeapAnalyzer<br />
+		</strong></span></p>
+	<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+		<p><span style="font-size:14px;">&nbsp;&nbsp;&nbsp; <a href="http://www.alphaworks.ibm.com/tech/heapanalyzer" target="_blank">IBM HeapAnalyzer</a>是一款免费的JVM内存堆的图形分析工具，它可以有效的列举堆的内存使用状况，帮助分析Java内存泄漏的原因。</span></p>
+		<p><span style="font-size:14px;">&nbsp;&nbsp;&nbsp; 下载解压后有一个ha413.jar，执行: java -Xmx512m -jar ha413.jar /home/longhao/heapdump.out</span></p>
+		<p><span style="font-size:14px;">&nbsp;&nbsp;&nbsp;&nbsp; 执行结果如图所示：</span></p>
+		<p style="text-align: center;"><span style="font-size:14px;"><img alt="" src="http://farm6.static.flickr.com/5176/5573840400_7d8e21a701.jpg" /><br />
+			</span></p>
+		<p><span style="font-size:14px;">&nbsp;&nbsp;&nbsp;</span></p>
+	</div>
+	<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 2：jhat</strong></span></p>
+	<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+		<p><span style="font-size:14px;">&nbsp;&nbsp;&nbsp;<a href="http://download.oracle.com/javase/6/docs/technotes/tools/share/jhat.html" target="_blank"> jhat（Java Head Analyse Tool ）</a>是用来分析java堆的命令，可以将堆中的对象以html的形式显示出来，包括对象的数量，大小等等，并支持对象查询语言OQL，分析相关的应用后，可以通过http://localhost:7000来访问分析结果。</span></p>
+		<p><span style="font-size:14px;">&nbsp;&nbsp;&nbsp; 示例: $JAVA_HOME/bin/jhat -J-Xmx512m /home/longhao/dump.out<br />
+			</span></p>
+		<p style="text-align: center;"><span style="font-size:14px;"><img alt="" height="500" src="http://farm6.static.flickr.com/5013/5573880930_5f758206f8.jpg" width="474" /><br />
+			</span></p>
+	</div>
+	<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 3：Eclipse MemoryAnalyzer<br />
+		</strong></span></p>
+	<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+		<p><span style="font-size:14px;">&nbsp;&nbsp;&nbsp;<a href="http://www.eclipse.org/mat/" target="_blank"> Eclipse Memory Analyzer</a>是一个快速并且功能强大的Java heap分析器，能够帮助你查找内存泄漏和减少内存消耗。在File&gt;Acquire Heap Dump&gt;configure&gt;HPROF jmap dump provider设置一下分析应用的JDK，点击相关应用列表来生成heap dump并分析。<br />
+			</span></p>
+		<p style="text-align: center;"><span style="font-size:14px;">&nbsp;&nbsp;&nbsp; <img alt="" src="http://farm6.static.flickr.com/5303/5573880998_98d2cd5d98.jpg" /><br />
+			</span></p>
+	</div>
+	<p><span style="font-size:14px;">&nbsp;&nbsp;&nbsp; 在socket，nio中的有些API中，申请的内存是直接向OS要的，在堆中分析内存是查看不到的，可以通过-XX:MaxDirectMemorySize=&lt;size&gt;来设置应用向OS直接申请的最大内存数。<br />
+		</span></p>
+</div>

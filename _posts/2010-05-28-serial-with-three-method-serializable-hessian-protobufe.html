@@ -1,0 +1,41 @@
+---
+comments: true
+date: 2010-05-28 01:01:47
+layout: post
+slug: '%e5%ba%8f%e5%88%97%e5%8c%96%ef%bc%9aserializablehessianprotobuf%e6%80%a7%e8%83%bd%e5%af%b9%e6%af%94'
+title: 序列化：serializable,hessian,protobuf性能对比
+wordpress_id: 542
+categories:
+- Java
+tag:
+- google protobuf
+- hessian
+- nio
+---
+
+<p>&nbsp;&nbsp;&nbsp; 分布式应用系统中，系统之间的通讯的质量决定了系统的可用性，当然很多可以选择的技术：XML-RPC，RMI，SOAP，CORBA，JMS，EJB，NIO等。在传输数据的过程中，数据包越小，占用的带宽就越少，同等条件下资源利用就会越小。目前基于SOA的ESB系统中，很多采用NIO来传输数据，就涉及到对象的序列化的问题。</p>
+<p>&nbsp;&nbsp;&nbsp; 本文主要讨论jdk自带序列化，<a href="http://hessian.caucho.com/" target="_blank">hessian</a>，Google的<a href="http://code.google.com/p/protobuf/" target="_blank">protobuf</a>之间的性能比较，主要指标有以下三个：（执行序列化测试1次;1个数据对象，100个，1000个）</p>
+<ol>
+	<li>序列化文件大小</li>
+	<li>序列化的读取读取性能</li>
+	<li>序列化的平均写入性能</li>
+</ol>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px;"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp;性能指标结果（纵坐标为耗时）</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p style="text-align: center;"><img alt="" height="292" src="http://www.longtask.com/blog/wp-content/uploads/1(1).jpg" width="483" /></p>
+	<p>&nbsp;&nbsp;&nbsp; 文件大小：hessian最小，传输带宽方面占有优势。</p>
+	<p style="text-align: center;"><img alt="" height="292" src="http://www.longtask.com/blog/wp-content/uploads/2(1).jpg" width="483" /></p>
+	<p>&nbsp;&nbsp;&nbsp; 写操作：写操作在大批量的时候，protobuf比hessian和jdk有优势。</p>
+	<p style="text-align: center;"><img alt="" height="290" src="http://www.longtask.com/blog/wp-content/uploads/3.jpg" width="487" /></p>
+	<p>&nbsp;&nbsp;&nbsp; 读操作：读取方面protobuf仍然占有优势，但是总体上来书，hessian和protobuf差距不大。</p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px;"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp;性能外的问题：</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p>1：易用性：hessian比protobuf使用起来要简单的多，google需要预先生成一个*.proto文件，使用的时候需要依赖它的build接口，和GAE中的web.py的模板文件一样，预处理真是方便的框架，并没有让用户觉得爽。这方面hessian占优势。</p>
+	<p>2：学习成本：老牌hessian在java平台上广结良缘，文档和FAQ相当齐全，学习成本相对较低。google搜索protobuf google显示21.1W条，而hessian java却有54.4W条。</p>
+	<p>3：跨平台：hessian支持的语言：java,c++,python,php,erlang,ruby等，主要是针对java平台的，C++版本是05年的和python版本是07年的，更新都较慢；protobuf这块做的就比较好，如果系统中需要不同语言的就选择protobuf了，单java语言的还是选择hessian比较好。</p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px;"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp;其他方面的知识：</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p>&nbsp;&nbsp;&nbsp; 二进制协议比基于xml协议（Burlap和apache XML-RPC）的效率要高的多（ORMI的HTTP隧道启用除外），XML-RPC经过测试无论是文件大小和速度都没有优势。</p>
+</div>

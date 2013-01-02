@@ -1,0 +1,111 @@
+---
+comments: true
+date: 2011-10-14 04:11:31
+layout: post
+slug: '%e7%94%a8yaml%e6%9e%84%e5%bb%ba%e6%95%b0%e6%8d%ae%e6%b5%8b%e8%af%95dao%e5%b1%82'
+title: 用YAML构建数据测试DAO层
+wordpress_id: 705
+categories:
+- Java
+tag:
+- dao
+- Java
+- yaml
+---
+
+<p><span style="font-size:14px;">&nbsp;&nbsp;&nbsp; 测试DAO层最常见的就是直接组织数据，调用相关的方法，然后查看数据库，看看相关数据是否在DB中正确的展示。这样测试，效率低下，容易出错，过多的依赖了人肉。如果选择测试数据来配置，根据配置的测试数据验证相关信息，或许能够达到事半功倍的效果。</span></p>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 测试数据配置选择(YAML)<br />
+	</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p><span style="font-size:14px;"><b>&nbsp; &nbsp; 在JavaBean中，传统的对象set是这样的：</b></span></p>
+	<div class="code panel" style="border-width: 1px;">
+		<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+			<div class="codeContent panelContent"><pre class="code-java"><span style="font-size:14px;">    pvs.setId(100L);
+    pvs.setCookieAdvert(1);
+    pvs.setCookieAdList(<span class="code-quote">&quot;1&quot;</span>);
+</span></pre></div>
+		</div>
+	</div>
+	<p><span style="font-size:14px;">&nbsp; &nbsp; 对象属性多时，对象的set显得有些复杂，自动代码生成工具生成的代码较多都是set数据的，代码看起来不够雅观，需要把测试数据和测试代码分离。可以提供参考的又xml，wiki的方式。xml的方式读取大家都比较清楚，这里介绍一下wiki：</span></p>
+	<p><span style="font-size:14px;"><strong>wiki语法</strong></span></p>
+	<div class="code panel" style="border-width: 1px;">
+		<div class="codeContent panelContent"><pre class="code-java"><span style="font-size:14px;">|table|表名称|
+|字段名称1|字段名称2|字段名称3|
+|字段值|字段值|字段值|
+|字段值|字段值|字段值|
+|字段值|字段值|字段值|
+</span></pre></div>
+	</div>
+	<p><span style="font-size:14px;">&nbsp;&nbsp;&nbsp; 通过wiki配置的方式，和表字段一一对应，看起来比较直观，只是在字段较多时容易造成混淆，同时需要自己写代码支持wiki语法，框架级别的支持不够。xml配置也麻烦，数据阅读也不够直观。</span></p>
+	<p><span style="font-size:14px;">&nbsp;&nbsp;&nbsp; yaml简单，直观，方便阅读，java支持框架（<a class="external-link" href="http://yaml.org/" rel="nofollow">http://yaml.org/</a>）较多，所以选择yaml来配置测试数据。和TestNg保持一致，使用snakeyaml (<a class="external-link" href="http://code.google.com/p/snakeyaml/" rel="nofollow">http://code.google.com/p/snakeyaml/</a>)</span></p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 测试过程：</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p><span style="font-size:14px;">&nbsp;&nbsp;&nbsp; 测试数据包括BaseDao对DB的基本操作：insert , update , find , findById , list , listCount , delete。由于findById和delete都是只有一个字段，所以测试数据基本生成只有insert ， update ，delete ， list这四个，业务模块可以根据自己的需求添加相关的Dao层测试数据。</span></p>
+	<p><span style="font-size:14px;">&nbsp;&nbsp;&nbsp; 测试修改示例：</span></p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<div class="code panel" style="border-width: 1px;">
+			<div class="codeContent panelContent"><pre class="code-java"><span style="font-family:comic sans ms,cursive;"><span style="font-size: 14px;">insert: !!com.longtask.analysis.report.domain.entity.User
+&nbsp; pv: 1
+&nbsp; uv: 1
+&nbsp; ip: 1
+&nbsp; liveTime:
+&nbsp; isDate: 1
+&nbsp; startTime: 1
+&nbsp; endTiem: 1
+&nbsp; addTime: 1
+update: !!com.longtask.analysis.report.domain.entity.User
+&nbsp; pv: 1
+&nbsp; uv: 1
+&nbsp; ip: 1
+find: !!com.longtask.analysis.report.domain.entity.User
+&nbsp; pv: 1
+&nbsp; uv: 1
+&nbsp; ip: 1
+list: !!com.longtask.analysis.report.domain.entity.User
+&nbsp; pv: 1
+&nbsp; uv: 1
+&nbsp; ip: 1
+</span></span></pre></div>
+		</div>
+	</div>
+	<p><span style="font-size:14px;"><b>说明：</b></span></p>
+	<ol>
+		<li><span style="font-size:14px;">字段会自动转换成需要类型，所以long设置后面不用加L</span></li>
+		<li><span style="font-size:14px;">为空的数据不用设置，也不用删除相关的属性（尤其是insert，后面可以作为复制粘贴的参考）</span></li>
+		<li><span style="font-size:14px;">时间设置createdTime: 2011-09-23 15:03:17</span></li>
+	</ol>
+</div>
+<p><span style="font-size:14px;"><br />
+	</span></p>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 数据读取的代码<br />
+	</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p><span style="font-size:14px;">读取yaml配置文件数据，放置到map中的代码：</span></p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p><span style="font-size:14px;">public Map&lt;String , T&gt; getYamlData(String name){<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; try {<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Yaml yaml = new Yaml();<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; @SuppressWarnings(&quot;unchecked&quot;)<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Map&lt;String , T&gt; data = (Map&lt;String , T&gt;)yaml.load(this.getClass()<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; .getResourceAsStream(&quot;/&quot; + name));<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return data;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; } catch (Exception e) {<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; logger.error(&quot;init yaml error : &quot; , e);<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; throw new RuntimeException(&quot;init yaml error : &quot; , e);<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br />
+			&nbsp;&nbsp;&nbsp; }</span></p>
+	</div>
+	<p><span style="font-size:14px;">子类中测试代码</span></p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p><span style="font-size:14px;">@BeforeMethod<br />
+			&nbsp;&nbsp;&nbsp; public void setBefore() {<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; String pg = this.getClass().getPackage().getName().replace(&quot;.&quot;, &quot;/&quot;);<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; data = super.getYamlData( pg + &quot;/UserDaoTest.yaml&quot;);<br />
+			&nbsp;&nbsp;&nbsp; }</span></p>
+		<p><span style="font-size:14px;">private Map&lt;String , User&gt;&nbsp; data;</span></p>
+	</div>
+	<p><span style="font-size:14px;">调用data中的属性，获取到相关对象</span></p>
+	<p><span style="font-size:14px;">User user = data.get(&quot;insert&quot;);</span></p>
+</div>
+<p><span style="font-size:14px;">&nbsp;&nbsp;&nbsp; 代码生成工具如果用yaml配置，彻底分离了测试数据准备和代码，会让测试更加简单！</span></p>

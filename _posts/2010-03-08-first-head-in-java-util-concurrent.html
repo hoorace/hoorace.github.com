@@ -1,0 +1,66 @@
+---
+comments: true
+date: 2010-03-08 20:26:18
+layout: post
+slug: java%e5%b9%b6%e5%8f%91%e6%a1%86%e6%9e%b6java-util-concurrent-%e6%89%ab%e7%9b%b2
+title: Java并发框架(java.util.concurrent.*)扫盲
+wordpress_id: 455
+categories:
+- Java
+tag:
+- amdahl
+- concurrent
+- Java
+- juc
+- spring
+- 并发编程
+---
+
+<p>&nbsp;&nbsp;&nbsp; 在多核时代，为了提高CPU的使用率同时提高程序的运行效率，并发编程成为一种趋势。JDK1.5（2004-10发布）加入并发包已经过去了5个年头了，很多java程序员对并发编程仍然一无所知；尤其是在简历上写着精通JAVA的同学们，当我问juc包的使用情况的时候，他们否定使用过，我对他们的看法也就直接减分了。以前在看《Java 并发编程实践》这边书的时候做过相关API的总结，拿出来扫盲了。</p>
+<p>&nbsp;</p>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 10px;"><span style="foProxy-Connection: keep-alive
+Cache-Control: max-age=0
+
+-size: 14px;"><strong><strong>&nbsp;&nbsp;&nbsp; JAVA并发框架API一览</strong></strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px;">
+	<p style="text-align: center;"><strong><a href="http://farm5.static.flickr.com/4067/4416602475_691d21b15c_b.jpg" target="_blank"><img alt="" height="197" src="http://farm5.static.flickr.com/4067/4416602475_691d21b15c.jpg" width="500" /></a></strong></p>
+	<p><strong>&nbsp;&nbsp;&nbsp; <strong>执行框程序(Executor)</strong>：最常见的用法就是用Executors来构造相关的线程池；用<tt>CompletionService来分离生产任务和已经完成的任务，</tt>生产者 <tt>submit</tt> 执行的任务。使用者 <tt>take</tt> 已完成的任务，并按照完成这些任务的顺序处理它们的结果；Callable和Future接口到处都需要用到。</strong></p>
+	<p><strong>&nbsp;&nbsp;&nbsp; <strong>队列(Queue)</strong>：在使用生产者消费者模式的时候需要构建出满足自己自身系统需要的队列。</strong></p>
+	<p><strong>&nbsp;&nbsp;&nbsp; <strong>同步器(Synchronizer)</strong>常见的有5种：</strong></p>
+	<ol>
+		<li><strong>信号量(Semaphore)用于限制可以访问某些资源（物理的或逻辑的）的线程数目；</strong></li>
+		<li><strong>闭锁(CountDownLatch)是一个同步辅助类，在完成一组正在其他线程中执行的操作之前，它允许一个或多个线程一直等待。用于在保持给定数目的 信号、事件或条件前阻塞执行。把信号量设置为1的时候就是一个闭锁的实现。</strong></li>
+		<li><strong>关卡(CyclicBarrier)允许一个给定数量的成员多次集中在一个关卡点，然后在统一执行后面的操作，这在并行迭代算法中非常有用，能把一个问题拆分成一系列相互独立的子问题。</strong></li>
+		<li><strong>交换器(Exchanger)是关卡的另一种形式，它提供了一个同步点，在这个同步点，一对线程可以交换数据。每个线程通过exchange()方法的入口提供数据给他的伙伴线程，并接收他的伙伴线程提供的数据，并返回。它在多流水线设计中是有用的。</strong></li>
+		<li><strong>Future和FutureTask：可取消的异步计算，利用开始和取消计算的方法、查询计算是否完成的方法和获取计算结果的方法。FutureTask可以通过线程池来执行。</strong></li>
+	</ol>
+	<p><strong>&nbsp;&nbsp;&nbsp; <strong>并发容器</strong>：ConcurrentHashMap来获取的完全并发和更新的所期望可调整并发的哈希表；期望的读数和遍历远远大于列表的更新数时，请使用CopyOnWriteArrayList 代替 ArrayList。</strong></p>
+	<p><strong>&nbsp;&nbsp;&nbsp; <strong>原子操作(atomic)</strong>：支持在单个变量上解除锁的线程安全编程；我用的最多的是在多线程中的计数操作。</strong></p>
+	<p><strong>&nbsp;&nbsp;&nbsp; <strong>互斥锁(Lock)</strong>：为锁和等待条件提供一个框架的接口和类，它不同于内置同步和监视器，该框架允许更灵活地使用锁和条件。</strong></p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 10px;"><span style="font-size: 14px;"><strong><strong>&nbsp;&nbsp;&nbsp; Amdahl定律</strong></strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px;">
+	<p><strong>&nbsp;&nbsp;&nbsp; Amdahl定律描述了在一个系统中，基于可并行化和串行化的组件各自所占的比重，程序通过获得额外的计算资源，理论上能够加速多少。如果F是必须串行化执行的比重，那么Amdahl定律告诉我们，在一个N处理器的机器中，我们最多可以加速：<strong>1/(F+(1-F)/N)</strong> 。<br />
+		&nbsp;&nbsp;&nbsp; 当N无限增大趋近无穷时，speedup的最大值无限趋近1/F，这意味着一个程序中如果50%的处理都需要串行进行的话，speedup只能提升2倍（不考虑事实上有多少线程可用）；如果程序的10%需要串行进行，speedup最多能够提高近10倍。更多信息点击<a href="http://book.csdn.net/bookfiles/398/10039814662.shtml" target="_blank">这里</a></strong></p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 10px;"><span style="font-size: 14px;"><strong><strong>&nbsp;&nbsp;&nbsp; Spring中的多线程任务</strong></strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px;">
+	<p><strong>&nbsp;&nbsp;&nbsp; 在中小型项目中把一些提醒类邮件（邮件发送等级较低）放到spring线程池内执行，可以减少邮件发送等待时间。前提是：这些邮件的发送不需要放到数据库或者是文件系统中持久化。在邮件发送类中引用：TaskExecutor接口来执行邮件发送的线程，spring的配置使用示例：</strong></p>
+	<blockquote>
+		<p><strong>&lt;bean id=&quot;emailExecutor&quot;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; class=&quot;org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor&quot;&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;property name=&quot;corePoolSize&quot; value=&quot;6&quot; /&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;property name=&quot;maxPoolSize&quot; value=&quot;10&quot; /&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;property name=&quot;queueCapacity&quot; value=&quot;80&quot; /&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;property name=&quot;rejectedExecutionHandler&quot;&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;bean class=&quot;java.util.concurrent.ThreadPoolExecutor$CallerRunsPolicy&quot; /&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;/property&gt;<br />
+			&lt;/bean&gt;</strong></p>
+	</blockquote>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 10px;"><span style="font-size: 14px;"><strong><strong>&nbsp;&nbsp;&nbsp; 书籍推荐&nbsp;&nbsp;&nbsp; </strong></strong></span>点击<a href="http://www.ibm.com/developerworks/cn/java/j-concurrent/" target="_blank">这里</a>查看IBM developerworks的多线程专题</p>
+<p><span style="font-size: 14px;"><strong><strong><br />
+	</strong></strong></span></p>
+<p style="text-align: center;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; <a href="http://www.douban.com/subject/2148132/" target="_blank"><img alt="" height="136" src="http://img2.douban.com/mpic/s2764832.jpg" width="109" /> </a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="http://www.douban.com/subject/1244021/" target="_blank"><img alt="" src="http://img2.douban.com/mpic/s1503403.jpg" style="width: 99px; height: 142px;" /></a></strong></p>
+<p><strong><br />
+	&nbsp;</strong></p>

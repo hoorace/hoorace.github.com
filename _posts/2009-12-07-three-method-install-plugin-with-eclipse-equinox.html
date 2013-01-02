@@ -1,0 +1,74 @@
+---
+comments: true
+date: 2009-12-07 07:12:11
+layout: post
+slug: eclipse-equinox%e7%89%88%e6%9c%ac%e5%90%8e%e5%ae%89%e8%a3%85%e6%8f%92%e4%bb%b6%e7%9a%843%e4%b8%ad%e6%9c%89%e6%95%88%e6%96%b9%e6%b3%95
+title: Eclipse Equinox版本后安装插件的3中有效方法
+wordpress_id: 384
+categories:
+- Java
+tag:
+- eclipse
+- Java
+---
+
+<p>&nbsp;&nbsp;&nbsp;&nbsp; 使用eclipse，最看重的还是它的插件数量比较多，使用起来比较方便，但是大多数人对eclipse的插件使用还停留在原始的方式，解压相关的目录到 eclipse的plugin和features中，这样管理插件过于麻烦，插件版本设计的时候就知道相关的痛苦程度了。其实eclipse有更高级的插 件管理方法，给你的插件管理效率带来一个飞跃。</p>
+<br />
+<p><big><strong>（1）：使用link的方式</strong></big><br />
+&nbsp;&nbsp;&nbsp; 在eclipse的目录下面建一个名称为links的文件夹，然后在links里面新建一个例如：findbugs.link的文件，用文本编辑器打开， 内容修改为：path=d:/eclipse/findbugs1.3.9 (文件解压后对应的目录，可以是相对路径)。如果是觉得有些插件用起来不爽，可以定期清理，这样可以加快eclipse的启动速度；</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp; 注意：A：一个link文件中可以有多个path，换行即可；<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; B：links的文件名称可以任意，安装后重启eclipse才会生效。<br />
+&nbsp;&nbsp; &nbsp;如果安装插件后看不到，3.4以前版本：需要把eclipse下面的configuration目录删除，重启即可，3.4以后版本：Eclipse 启动找不到插件的话，解决办法是eclipse\configuration 目录下的 config.ini 文件中加入一行 : osgi.checkConfiguration=true 。<br />
+<big><strong>（2）：update的方式</strong></big><br />
+&nbsp;&nbsp;&nbsp; 3.4以后的版本中，Equinox p2取代了原来的插件安装管理机制，它能搜索更新并安装。方法是：Help&gt;install new software，点击 add，输入插件的名称和update的地址，例 如：name:findbugs,location:http://findbugs.cs.umd.edu/eclipse，点击OK，等待一段时间选 择直接希望安装的版本即可。<br />
+&nbsp;&nbsp; <br />
+<big><strong>（3）：dropins的方式</strong></big><br />
+&nbsp;&nbsp;&nbsp; 如果你不想使用P2用户界面，使用dropins放置插件是一个好的选择。作为Eclipse的守护目录，系统启动的时候就会加载这个目录的内容，同时，对这个目录的更改会对运行系统立刻生效。它可以看做对plugins目录的升级版。<br />
+&nbsp;&nbsp;&nbsp; dropins文件夹支持的格式如下：<br />
+&nbsp;&nbsp;&nbsp; <strong>A：dropins 文件夹支持多种布局，这依赖于你应用的尺度和你想得到的组成的分离度。简单的jar文件和目录文件访问布局如下：</strong></p>
+<div style="margin-left: 40px;">&nbsp;--eclipse/<br />
+&nbsp;&nbsp; --dropins/<br />
+&nbsp;&nbsp;&nbsp;&nbsp; --org.eclipse.core.tools_1.4.0.200710121455.jar<br />
+&nbsp;&nbsp;&nbsp;&nbsp; --org.eclipse.releng.tools_3.3.0.v20070412/<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; --plugin.xml<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; --tools.jar<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ... etc ...<br />
+&nbsp;&nbsp; ...</div>
+<p>&nbsp;&nbsp;&nbsp; <strong>B：你也可以像访问传统的eclipse应用和拓展布局一样来定义dropins文件夹。</strong></p>
+<br />
+<div>
+<div style="margin-left: 40px;">&nbsp;--eclipse/<br />
+&nbsp;&nbsp; --dropins/<br />
+&nbsp;&nbsp;&nbsp;&nbsp; --eclipse/<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; --features/<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; --plugins/<br />
+&nbsp;</div>
+&nbsp;&nbsp; &nbsp;<strong>C：如果你有很多不同的插件要访问，同时你想保持他们分离，你可以在dropins文件夹添加多个目录来包含传统的Eclipse拓展。</strong></div>
+<div>
+<div style="margin-left: 40px;">&nbsp;--eclipse/<br />
+&nbsp;&nbsp; --dropins/<br />
+&nbsp;&nbsp;&nbsp;&nbsp; --emf/<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; --eclipse/<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; --features/<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; --plugins/<br />
+&nbsp;&nbsp;&nbsp;&nbsp; --gef/<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; --eclipse/<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; --features/<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; --plugins/<br />
+&nbsp;&nbsp;&nbsp;&nbsp; ... etc ...<br />
+&nbsp;</div>
+&nbsp;&nbsp; &nbsp;<strong>D：可以像方法二那样添加links:</strong></div>
+<div style="margin-left: 40px;">&nbsp;--eclipse/<br />
+&nbsp;&nbsp; --dropins/<br />
+&nbsp;&nbsp;&nbsp;&nbsp; --emf.link</div>
+<br />
+<p><big><strong>安装插件后在窗口&mdash; &gt; 首选项 中看不到的解决方案</strong></big></p>
+<br />
+<br />
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 一：把 eclipse\configuration\org.eclipse.update 删除掉。出现这种情况的原因是在你安装新的插件以前你启动过 eclipse ，在 org.eclipse.update 文件夹下记录了插件的历史更新情况，它只记忆了以前的插件更新情况，而你新安装的插件它并不记录，所以删除掉这个文件夹就可以解决这个问题了，不过删除掉 这个文件夹后， eclipse 会重新扫描所有的插件，此时再重新启动 eclipse 时可能会比刚才稍微慢点。</p>
+<br />
+<br />
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 二：创建一个 Eclipse 快捷启动方式，在目标栏中加入一个&ldquo; 空格&mdash; clean &rdquo;参数，注意不要把&mdash; clean 前面的空格漏掉。或者在菜单【开始】&mdash;【运行】中启动你的 eclipse 时加上&mdash; clean 参数，如我的可以在&ldquo;运行&rdquo;中输入： D:\eclipse\eclipse.exe &ndash;clean ，如果启动 eclipse 后找到你所安装的新插件后，在下次启动之前把参数 clean 去掉就可以了。</p>
+<br />
+<br />
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 三：如果 Eclipse 启动找不到插件的话，解决办法是在 eclipse\configuration 目录下的 config.ini 文件中加入一行 : osgi.checkConfiguration=true ，这样它就会寻找并安装插件 , 找到插件后可以把该行注释掉 ( 去掉 ), 这样以后每次启动就不会因为寻找插件而显得慢了。</p>

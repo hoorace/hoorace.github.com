@@ -1,0 +1,41 @@
+---
+comments: true
+date: 2009-05-31 20:53:03
+layout: post
+slug: drools50%e7%9a%84xls%e6%96%87%e4%bb%b6%e8%bd%acdrl%e6%96%87%e4%bb%b6%e6%8f%90%e5%8d%87%e8%a7%a3%e6%9e%90%e6%95%88%e7%8e%87
+title: Drools5.0的xls文件转drl文件提升解析效率
+wordpress_id: 319
+categories:
+- Java
+tag:
+- drools
+- Java
+- oscache
+---
+
+<p>&nbsp;&nbsp;&nbsp; drools中，支持的常见文件类型有drl(drools的规则语言)，xls，cvs，rf（规则流文件），drt（drools rule template），在简单的应用中，一般只会使用drl和xls的文件，为了方便业务人员和维护人员能够配置规则文件，一般的规则文件都是由程序员做成execl文件，这样一来，添加相关的配置就很傻瓜了。但是这样做会影响到程序运行的效率，我们做一个测试。</p>
+<br />
+<p>&nbsp;&nbsp;&nbsp; 规则文件：base.xls 包含了 rule.xls和simple.xls；在rule.xls中包括了credit.xls，为了读取credit.xls中的规则对象，则需要对base.xls ，rule.xls，credit.xls三个execl文件解析，读取规则对象结果合计耗时：<br />
+<br />
+&nbsp;&nbsp;&nbsp; 读取规则文件耗时--------------------<strong>13484毫秒</strong><br />
+<br />
+&nbsp;&nbsp;&nbsp; 在drools5.0中，org.drools.decisiontable.SpreadsheetCompiler这个类可以把xls文件流转化为drl的String对象，通过FileWriter来写成drl文件，相关的转换代码是：<br />
+public String drlString(String file,String toDir) throws Exception{<br />
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; SpreadsheetCompiler sc = new SpreadsheetCompiler();<br />
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; File f = new File(file);<br />
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; String fileName = f.getName();<br />
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; String name = fileName.substring(0,fileName.lastIndexOf(&quot;.&quot;));<br />
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; FileInputStream xlsStream = new FileInputStream(f);<br />
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; String drlFileTmp = sc.compile(xlsStream, InputType.XLS);<br />
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; drlFileTmp.replaceAll(&quot;.xls&quot;, &quot;.drl&quot;);<br />
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; File drlFile = new File(toDir + &quot;/&quot; + name + &quot;.drl&quot;);<br />
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; FileWriter writer = new FileWriter(drlFile);<br />
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; writer.write(drlFileTmp);<br />
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; writer.close();<br />
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return drlFileTmp;<br />
+}<br />
+&nbsp; 把execl解析成为drl文件后，读取规则对象结果合计耗时：<br />
+<br />
+&nbsp; 读取规则文件耗时-------------------<strong>-7579毫秒</strong><br />
+<br />
+&nbsp;&nbsp;&nbsp; 从数据上看，几乎节省了一半的时间开销。当然，<strong>7.6秒</strong>仍然<strong>不是一个可以接受的数字</strong>，需要继续优化。我们需要在系统打版本的时候，就把xls规则文件转换为drl规则文件，然后我们在<strong>系统启动</strong>的时候，把规则对象通过<strong>oscache缓存</strong>在内存中。如果没有该对象则重新从规则文件中读取，有的话直接从内存读取，这样一来，读取规则对象消耗的时间几乎为0。这里把xls转化为drl文件只是为了加速系统的启动。</p>

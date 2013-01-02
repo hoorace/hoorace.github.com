@@ -1,0 +1,104 @@
+---
+comments: true
+date: 2008-10-29 11:50:02
+layout: post
+slug: ibatis%e7%9a%84%e5%bb%b6%e8%bf%9f%e5%8a%a0%e8%bd%bd%e6%9c%ba%e5%88%b6
+title: ibatis的延迟加载机制
+wordpress_id: 71
+categories:
+- Java
+tag:
+- ibatis
+- Java
+---
+
+<p align="justify">        在Domain Moudel中，经常会碰到一个域对象中包含另外一个域对象的列表，例如：一个blog的文章会有多个回复。我们就拿blog来做实例说明，情形一：获取blog的文章信息展示给用户，此内容只包括Article对象的信息；情形二：获取单个文章Article的信息，包括用户对这个文章的回复信息。
+   <strong> //文章对象 Article
+</strong>    public class Article{
+       public String articleId;
+       public String title;
+       public String content;
+       public String userId;
+       public Date createTime;
+       public List&lt;Review&gt; reviewList;//Review域对象list
+     ……//其他属性，get,set方法；
+    }
+  <strong>  //回复对象 Review
+</strong>    public class Review{
+       public String reviewId;
+       public String title;
+       public String content;
+       public String articleId;
+       public String userId;
+       ……//其他属性，get,set方法；
+    }
+   <strong> ibatis的一对多的配置文件如下：
+</strong>    &lt;sqlMap namespace="Article"&gt;
+     &lt;typeAlias alias="article" type="com.ibatis.eg.Article"/&gt;
+     &lt;typeAlias alias="review" type="com.ibatis.eg.Review"/&gt;
+     &lt;resultMap id="article_result" class="article"&gt;
+         &lt;result property="articleId" column="articleId"/&gt;
+         &lt;result property="title" column="title"/&gt;
+         &lt;result property="content" column="content"/&gt;
+         &lt;result property="userId" column="userId"/&gt;
+         &lt;result property="createTime" column="createTime"/&gt;
+         &lt;result property="review" column="articleId" select = "getReviewByArticleId"/&gt;
+         ……
+     &lt;/resultMap&gt;
+     &lt;select id="findArticle" resultMap="article_result" parameterClass="article"&gt;
+         SELECT
+                articleId,
+                content,
+                ……
+         FROM article
+         &lt;dynamic prepend="where"&gt;
+       &lt;isNotEmpty prepend="and" property = "articleId"&gt;
+        articleId = #articleId#
+       &lt;/isNotEmpty&gt;
+       &lt;isNotEmpty prepend="and" property = "content"&gt;
+        content = #content#
+       &lt;/isNotEmpty&gt;
+       ……
+      &lt;/dynamic&gt;
+     &lt;/select&gt;
+     &lt;!--此处的resultClass的类和数据库中的字段需要保持一致，否则需要 as 一下或者在此文件中配置一个resultMap--&gt;
+     &lt;!--例如：如果数据库中是review_Id需要 select review_Id as reviewId ……--&gt;
+     &lt;select id="getReviewByArticleId" resultClass="review" parameterClass="String"&gt;
+         SELECT
+                reviewId,
+                articleId,
+                content,
+                ……
+         FROM review where articleId = #articleId#
+     &lt;/select&gt;
+    &lt;/sqlMap&gt;         
+
+<p align="justify">        如果我们要实现<strong>延迟加载（lazy loadding）</strong>的功能，仅仅配置上述xml文件还是不够的，在ibatis的主配置文件sql-map-config.xml中，需要把ibatis的两项配置做一下修改。
+ <em><strong><font color="#0000ff">&lt;settings
+  ……
+     lazyLoadingEnabled="true"
+     enhancementEnabled="true"
+     ……/&gt;
+</font></strong></em>        lazyLoadingEnabled设置系统是否实现延迟加载机制，enhancementEnabled设置是否用字节码强制机制，通过字节码强制机制可以为lazy loadding带来性能方面的改进；当用户 getSqlMapClientTemplate().queryForList("findArticle",article)的时候，实际上只是执行了查询article表的信息，而在Article对象中getReview()的时候，才会执行后面的查询Review对象的语句；这样在首页访问Article列表的时候就不用加载Review的信息，而在点击单个文章(Article)浏览的时候需要回复对象Review的时候，则会执行getReviewByArticleId的查询操作，把列表信息给出来。这样做明显的减少了代码的负责程度，按需提取信息也提升了系统的性能！
+         如果是settings中配置useStatementNamespaces = "true"（是否使用Statement命名空间）的话，上面的xml配置resultMap中的延迟加载信息应该写成：select = "Article.getReviewByArticleId"，同时dao中也要写成：getSqlMapClientTemplate().queryForList("Article.findArticle",article)；
+         下面是做一下简单的<strong>测试代码</strong>：
+          public void testListLazyLoading() {
+               ArticleDao articleDao = (ArticleDao) this.getApplicationContext().getBean("articleDao");
+                Article article = new Article();
+                article.setArticleId("00000005");
+                List&lt;Article&gt; list =  articleDao.listLazyLoading(article);
+                for (int i = 0; i &lt; list.size(); i++) {
+                    Article articleTmp = (Article) list.get(i);
+                    //List&lt;Review&gt; reviewList = articleTmp.getReviewList();
+                   System.out.println(i + "---------ArticleId=" + articleTmp.getArticleId());
+                    //for(Review review:reviewList){
+                     //System.out.println( "---------reviewId=" + review.getReviewId());
+                    //}
+                }
+            }
+     执行上面测试语句的时候，仅仅查询acticle表，只有去掉注释的时候，才会把review表中的信息查询出来。
+   <strong> 参考资料：
+</strong>    1：夏昕 xiaxin(at)gmail.com ibatis开发指南
+    2：Clinton Begin iBATIS SQL Maps2
+    3：Owen Cline DB2 UDB、WebSphere 和 iBATIS
+    卓望java工程师郭经干对完成本文亦有贡献！原创文章，转载请注明原文地址！

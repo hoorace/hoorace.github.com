@@ -1,0 +1,27 @@
+---
+comments: true
+date: 2011-11-21 01:29:24
+layout: post
+slug: '%e9%80%9a%e8%bf%87sonar%e6%9d%a5%e6%8f%90%e9%ab%98%e7%b1%bb%e7%9a%84%e5%86%85%e8%81%9a%e6%80%a7'
+title: 通过Sonar来提高类的内聚性
+wordpress_id: 716
+categories:
+- Java
+tag:
+- sonar
+---
+
+<p><span class="Apple-style-span" style="font-size: 14px; ">&nbsp; &nbsp; 在我们学习面向对象语言时，两个概念相当难理解：<strong>类必须高内聚，低耦合</strong>。今天的博文我们将解释这两个概念的重要性，同时展示Sonar如何帮助大家来评估类的内聚性。</span></p>
+<p><span style="font-size:14px;">&nbsp; &nbsp; 几周前，我开始讨论如何《<a href="http://sonar.codehaus.org/fight-back-design-erosion-by-breaking-cycles-with-sonar/" target="_blank">Fight Back Design Erosion by Breaking Cycles with Sonar</a>》，我提到好的设计应该能够通过很小的努力编写的新代码块就可以替换系统中的相关部分代码。第一个层面需要从&ldquo;宏观水平&rdquo;来看，例如：确保你的&ldquo;packages&rdquo; 没有包的循环依赖；但得到任何水平的模块化设计,你也需要考虑&ldquo;微观&rdquo;，例如，你的类/方法要保证高内聚，低耦合。</span></p>
+<p><span style="font-size:14px;">&nbsp; &nbsp; 耦合性是指每个类对其他类的依赖程度。换句话说，如果一个类是高耦合的，那么对这个类的修改将直接或间接影响到其他许多类：不是我所说的大模块！你可以通过反转控制来降低类之间的耦合。</span></p>
+<p><span style="font-size:14px;">&nbsp; &nbsp; 内聚是指一个类中的方法的紧密程度。当一个类中的两个方法不使用一个共同属性或者方法，如果遵守单一职责原则，这意味着它们没有共用任何东西或者它们就不属于同一个类。换句话说，你应该把这个类分解为多个新类来达到类级别模块化的目的。</span></p>
+<p><span style="font-size:14px;">&nbsp; &nbsp; 所以类应该尽可能的降低耦合关系，而方法需要刚好相反的来提高内聚性。这和一个灵活的组织非常相似：每个团队（class）应该非常自主（低耦合），但是团队中所有的成员（methods）应该彼此联系非常精密（高内聚）</span></p>
+<p><span style="font-size:14px;"><strong>&nbsp; &nbsp; Sonar2.0带来了实验性且有前途的度量：用LCOM4 (缺乏内聚性的方法)来衡量类的内聚性。解释这个度量是非常简单的，值1表示这个类只有一个职责(好)，值X代码这个类有X个职责（差），值X得类应该重构/分割。</strong></span></p>
+<p><span style="font-size:14px;">&nbsp; &nbsp; 这里没有魔法，只有尝试。让我们用Driver这个类来举例。这个类有2个域：Car 和 Brain，包含5个方法：drive(), goTo(), stop(), getAngry() ， drinkCoffee()。下面是这些组件之间的依赖关系图，这个类有3个不同的职责，所以LCOM4 = 3 ,这打破了单一职责的原则。</span></p>
+<p style="text-align: center; "><img alt="" height="315" src="http://sonar.codehaus.org/wp-content/uploads/2010/03/lcom4_story.png" width="500" /></p>
+<p><span style="font-size:14px;">&nbsp; &nbsp; 当进入Sonar，事情仍然非常简单。在项目面板的第一个窗口小部件就可以快速的查看：</span></p>
+<p style="text-align: center; "><img alt="" height="153" src="http://sonar.codehaus.org/wp-content/uploads/2010/03/sonar_lcom4_widget.png" width="500" /></p>
+<p><span style="font-size:14px;">&nbsp; &nbsp; 在那里，你可以点击下面的链接去查看可疑类。了解一个类的LCOM4只是一个很好的起点，仅仅了解是绝对不够的。点击你感兴趣的类，你将会看到需要内聚的方法块。重构就此开始！</span></p>
+<p style="text-align: center; "><img alt="" height="213" src="http://sonar.codehaus.org/wp-content/uploads/2010/03/lcom4_details_viewer.png" width="500" /></p>
+<p><span style="font-size:14px;">&nbsp; &nbsp; 你可以查看Stuart Gunter的文章《<a href="http://www.g3it.com/technical/java/assessing-the-single-responsibility-principle-with-lcom4-and-sonar-2-0/" target="_blank">Assessing the Single Responsibility Principle with LCOM4 with Sonar 2.0</a>》。这个反馈是通过实践帮助我们改进相关的度量算法。</span></p>
+<p><span style="font-size:14px;">&nbsp; &nbsp; 说明：翻译文章来源地址：《<span class="Apple-style-span" style="font-weight: bold; "><a href="http://www.sonarsource.org/clean-up-design-at-class-level-with-sonar/" target="_blank">Clean Up Design at Class Level with Sonar</a><span class="Apple-style-span" style="font-weight: normal; ">》</span></span></span></p>

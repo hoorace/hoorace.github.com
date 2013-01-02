@@ -1,0 +1,43 @@
+---
+layout: default
+title: 龙浩的blog
+---
+
+
+{% for post in paginator.posts %}
+  <article class="post">
+    <h2>{{ post.date | date: "%Y-%m-%d" }} | <a href="{{ site.url }}{{ post.url }}" rel="bookmark permalink">{{ post.title }}</a></h2>
+    <div class="row-fluid show-grid">
+              <div class="span12">
+                <span class="label label-info">分类</span><a href="/categories.html#{{ post.categories }}-ref"> {{ post.categories }} </a>
+                <span class="label label-warning">标签</span> {% for tag in post.tag %} <a href="/tags.html#{{ tag }}-ref">{{ tag }}</a> &nbsp; {% endfor %}
+              </div>
+    </div>
+
+    {{ post.content }}
+
+  <div class="row-fluid show-grid artice_bottom">
+   <div class="pull-right">
+      <a href="{{ site.url }}{{ post.url }}#disqus_thread" title="Comments" class="btn btn-success">立刻发布评论</a>
+   </div>
+  </div>
+
+
+  </article>
+{% endfor %}
+
+<div>
+<ul  class="pager">
+{% if paginator.previous_page %}
+  {% if paginator.previous_page == 1 %}
+    <li class="previous"><a href='/'><h4>上一页</h4></a></li>
+  {% else %}
+    <li class="previous"><a href='/page{{paginator.previous_page}}'><h4>上一页</a></h4></li>
+  {% endif %}
+{% endif %}
+{% if paginator.next_page %}
+  <li class="next"><a href='/page{{paginator.next_page}}'><h4>下一页</h4></a></li>
+{% endif %}
+</ul> 
+</div>
+

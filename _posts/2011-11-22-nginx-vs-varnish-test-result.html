@@ -1,0 +1,41 @@
+---
+comments: true
+date: 2011-11-22 02:19:44
+layout: post
+slug: nginx-%e8%bf%98%e6%98%af-varnish
+title: Nginx 还是 Varnish?
+wordpress_id: 720
+categories:
+- Linux
+tag:
+- nginx
+- varnish
+---
+
+<p style="text-align: center;"><img alt="" height="438" src="http://www.longtask.com/blog/wp-content/uploads/varnish部署图.jpg" width="376" /></p>
+<p><strong><span style="font-size:14px;">单文件压力测试<br />
+	</span></strong></p>
+<hr />
+<p><span style="font-size:14px;">&nbsp;&nbsp;&nbsp; 准备用varnish来做图片缓冲服务器，用ab测试了一下单文件读取。发现nginx和varnish都可以把网卡写满（千兆网卡速度》110M/S）。调整了ab测试的并发数，在同样的配置的机器上，发现nginx的在1W并发情况下，依然可以运行；varnish在3600并发测试的时候，直接开始报错。不能不说nginx是神器，varnish不靠谱么？</span></p>
+<p><span style="font-size: 14px;"><br />
+	<br />
+	<strong>多文件压力测试</strong></span></p>
+<hr />
+<ol>
+	<li><span style="font-size:14px;">到图片服务器的图片目录执行：find . -name &quot;*.jpg&quot; -print &gt; jpg_url.txt<br />
+		</span></li>
+	<li><span style="font-size:14px;">合计得到38W张图片，用python代码切割成10个文件。<br />
+		</span></li>
+	<li><span style="font-size:14px;">启动5个python进程访问其中5个url，varnish即使有缓存也无法写满网卡，修改为启动10个python进程，varnish有缓存可以写满网卡。<br />
+		</span></li>
+	<li><span style="font-size:14px;">启动10个经常多文件访问nginx服务器，发现网卡平均流量为60M左右。<br />
+		</span></li>
+	<li><span style="font-size:14px;">最后把所有文件用varnish缓存，内存占用大小为19G多。平均每张图片大小为50K<br />
+		</span></li>
+</ol>
+<p><strong><span style="font-size:14px;"><br />
+	结论<br />
+	</span></strong></p>
+<hr />
+<p><span style="font-size:14px;">&nbsp;&nbsp;&nbsp; 我们图片的平均大小为50K，varnish的3500的并发，最大处理为175MB，超过网卡125MB的峰值。所以还是用varnish比较靠谱。如果图片的大小为10K，直接用nginx做反向代理或许更好。<br />
+	</span></p>

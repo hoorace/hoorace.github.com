@@ -1,0 +1,56 @@
+---
+comments: true
+date: 2009-04-16 21:05:29
+layout: post
+slug: oscache%e4%bd%bf%e7%94%a8%e5%b0%8f%e7%bb%93
+title: oscache使用小结
+wordpress_id: 286
+categories:
+- Java
+tag:
+- Java
+- oscache
+---
+
+<p>&nbsp;&nbsp;&nbsp; 使用规则引擎的时候，缓存规则对象使用到oscache，发现以前写的过于简单（只是简单的把对象缓存在内存中），本次看了一下oscache的相关文档，小结一下使用体会。</p>
+<p><br />
+&nbsp;&nbsp;&nbsp; <big><strong>配置：</strong></big>在看规则配置说明的时候，最好同时看源代码中的几个配置相关的cache规则参考示例porterties文件。例如：oscacheDiskAndMemory.properties（同时缓冲到磁盘和内存的配置）：</p>
+<pre lang="java" line="1">
+# CACHE IN MEMORY
+cache.memory=true
+# CACHE SIZE
+cache.capacity=100
+# CACHE PERSISTENCE CLASS
+cache.persistence.class=com.opensymphony.oscache.plugins.diskpersistence.DiskPersistenceListener
+# CACHE DIRECTORY
+cache.path=/tmp/cachetagscache
+</pre>
+<p>&nbsp;</p>
+<p><br />
+<big><strong>&nbsp;&nbsp;&nbsp; 实现类：</strong></big>阅读com.opensymphony.oscache.general.GeneralCacheAdministrator的源代码，如果是简单的需求，继承这个类是一个不错的方式。不要在cache的时候new自己的cache类，写一个sington的方法，例如：</p>
+<pre lang="java" line="1">
+public class RuleSetCache extends GeneralCacheAdministrator{
+	private RuleSetCache(){
+			super(null);
+	}
+	private static volatile RuleSetCache ruleSetCache = null;
+	public static RuleSetCache getInstance(){
+	if(ruleSetCache == null){//判断ruleSetCache对象在jvm中是否存在
+		synchronized(RuleSetCache.class){
+			//上面重复判断是为了防止同步耗时
+			if(ruleSetCache == null){
+				ruleSetCache = new RuleSetCache();
+			}
+		}
+	}
+	return ruleSetCache;
+	}
+}
+</pre>
+<p>&nbsp;&nbsp;&nbsp; 创建缓存，缓存对象，清除缓存等操作在GeneralCacheAdministrator类中写的比较清楚。</p>
+<p>&nbsp;</p>
+<p><br />
+&nbsp;&nbsp;&nbsp; <big><strong>监听类：</strong></big>可以新写一个Listener来实现监听RuleSetCache的命中与否，帮助文档中有一个案例，直接拷贝过来添加一些自己的东西就可以了。写这个方法也可以用来改善cache key的创建和使用范围。同时需要在porterties的配置文件中配置这个类的相关信息。<br />
+&nbsp;&nbsp;&nbsp; 具体的信息在docs\wiki\Statistics.html这个文件中。</p>
+<p><br />
+&nbsp;&nbsp;&nbsp; <big><strong>测试：</strong></big>为了熟悉oscache，建议把test的base包下的测试案例自己跑一下。这样更容易加深对系统的理解。目前对JspTag和CacheFilter没有用到，有使用心得的可以讨论一下。后续会讲一下和规则引擎的配合使用情况。</p>

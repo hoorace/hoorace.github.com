@@ -1,0 +1,97 @@
+---
+comments: true
+date: 2011-05-21 09:15:07
+layout: post
+slug: web-py%e5%9c%a8google-app-engine%e4%b8%8a%e7%9a%84%e6%b3%a8%e6%84%8f%e4%ba%8b%e9%a1%b9
+title: web.py在google app engine上的注意事项
+wordpress_id: 681
+categories:
+- python
+tag:
+- GAE
+- mako
+- python
+- web.py
+---
+
+<p><span style="font-size:14px;">&nbsp;&nbsp;&nbsp; <a href="http://webpy.org" target="_blank">web.py</a> 是python的一款web开发框架，小巧，简单，实用。写简单的web页面，web.py可以快速的完成，你只需了解它的MTV（model,template,view）工作模式就好了。gae中默认是支持<a href="http://www.djangoproject.com/" target="_blank">django</a>的，这个框架开发效率很好，对我们有些小应用来说还是太重了。所以webpy是个不错的选择。</span></p>
+<p><span style="font-size:14px;">&nbsp;&nbsp;&nbsp; 由于web.py自带的模板用起来并不是很爽，可以选择mako作为开发模板。把web.py和<a href="http://www.makotemplates.org/" target="_blank">mako</a>的包放到工程中，关于web.py的具体工作内容可以参考官方的文档，有需要的时候查看一下即可。在结合gae开发的过程中会碰到的问题做一些探讨。</span></p>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; Session的存储<br />
+	</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p><span style="font-size:14px;">&nbsp;&nbsp;&nbsp; 由于web.py支持文件和数据库存储，gae不支持本地文件存储session，所以只能找到他的memcache作为session的存储地，所以需要重写web.session中的Store类来达到在gae中存储session的目的。</span></p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p>from web.session import Store<br />
+			import web<br />
+			import time<br />
+			<br />
+			class MemcacheStore(Store): <br />
+			&nbsp;&nbsp;&nbsp; def __init__(self, memcache):<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; self.memcache = memcache<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br />
+			&nbsp;&nbsp;&nbsp; def __contains__(self, key):&nbsp; <br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; data = self.memcache.get(key)&nbsp; <br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return bool(data)&nbsp;&nbsp; <br />
+			&nbsp;&nbsp; <br />
+			&nbsp;&nbsp;&nbsp; def __getitem__(self, key):&nbsp; <br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; now = time.time()&nbsp; <br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; value = self.memcache.get(key)<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if not value:&nbsp; <br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; raise KeyError&nbsp; <br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else:&nbsp; <br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; value[&#39;attime&#39;] = now<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; self.memcache.replace(key,value)<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return value&nbsp; <br />
+			&nbsp;&nbsp; <br />
+			&nbsp;&nbsp;&nbsp; def __setitem__(self, key, value):&nbsp; <br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; now = time.time() <br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; value[&#39;attime&#39;] = now<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; s = self.memcache.get(key)<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if s:&nbsp; <br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; #value = dict(map(lambda x: (str(x[0]), x[1]), [(k, v) for (k, v) in value.iteritems() if k not in [&#39;_id&#39;]]))&nbsp; <br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; self.memcache.replace(key,value)<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else:&nbsp; <br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; self.memcache.add(key,value,int(web.config.session_parameters[&#39;timeout&#39;][0]))&nbsp; <br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br />
+			&nbsp;&nbsp;&nbsp; def __delitem__(self, key):&nbsp; <br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; self.memcache.delete(key)&nbsp; <br />
+			&nbsp;&nbsp; <br />
+			&nbsp;&nbsp;&nbsp; def cleanup(self, timeout):&nbsp; <br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; #timeout = timeout / (24.0 * 60 * 60) <br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; #last_allowed_time = time.time() - timeout&nbsp; <br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; #self.collection.remove({&#39;attime&#39; : { &#39;$lt&#39; : last_allowed_time}})&nbsp; <br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; #automatic cleanup the session<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; #self.memcache.flush_all()<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pass</p>
+	</div>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 模板的生成<br />
+	</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p><span style="font-size:14px;">&nbsp;&nbsp;&nbsp; web.py templetor 把模板编译成 python 字节码，这需要访问标准库中的 parser 模块。不幸的是，由于安全原因 GAE 禁用了这个模块。<br />
+		<br />
+		&nbsp;&nbsp;&nbsp; 为了克服这个状况，web.py 支持把模板编译成 python 代码，从而避免在 GAE 上使用原来的模板。web.py 确保在应用这种方法的时候模板中的代码不需要任何改变。<br />
+		<br />
+		&nbsp;&nbsp;&nbsp; 为了编译一个文件夹中所有的模板（一旦有模板改动，就需要重新运行），运行：<br />
+		<br />
+		&nbsp;&nbsp;&nbsp; <span style="background-color:#d3d3d3;">$ python web/template.py --compile templates</span><br />
+		<br />
+		&nbsp;&nbsp;&nbsp; 以上命令把 templates/ 目录下的模板文件递归地全部编译，并且生产 __init__.py， &#39;web.template.render` 重新编写过，它将视 templates 为一个 python 模块。</span></p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 配置的问题<br />
+	</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p><span style="font-size:14px;">&nbsp;&nbsp;&nbsp; 由于web.py的静态文件需要放在根目录的static下面，所以需要在<a href="http://yaml.org">yaml</a>配置中对css，js，images做相关的配置处理，否则gae无法通过web.py来正确的解析相关的配置。</span></p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p>- url: /css<br />
+			&nbsp; mime_type: text/css<br />
+			&nbsp; expiration: 10000d<br />
+			&nbsp; static_dir: static/css<br />
+			- url: /images<br />
+			&nbsp; expiration: 10000d<br />
+			&nbsp; static_dir: static/images<br />
+			- url: /js<br />
+			&nbsp; static_dir: static/js<br />
+			&nbsp; expiration: 10000d</p>
+	</div>
+</div>

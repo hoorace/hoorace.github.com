@@ -1,0 +1,24 @@
+---
+comments: true
+date: 2010-09-19 00:33:20
+layout: post
+slug: '%e5%88%86%e7%a6%bbweb-service%e4%b8%ad%e7%9a%84%e9%89%b4%e6%9d%83%e4%b8%9a%e5%8a%a1'
+title: 分离Web Service中的鉴权业务
+wordpress_id: 607
+categories:
+- Web Service
+tag:
+- Web Service
+---
+
+<p>&nbsp;&nbsp;&nbsp; 通过分析业务日志，发现web service系统中大部分的问题日志都是因为鉴权不通过。包括3个方面的内容：</p>
+<ul>
+	<li>用户校验直接不通过，</li>
+	<li>用户没有相关权限，</li>
+	<li>请求相关参数校验错误。</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp; 当通过鉴权，请求到业务系统的内部，基本没有什么问题出现。如果有问题主要是系统的bug了。所以，到达一定的规模，需要对系统的鉴权模块做一个分离，让鉴权通过的请求能够跳转到系统中。如果系统规模较小，可以考虑继续把鉴权和业务系统放在一起，规模稍大一点，就需要在apache反向代理这层完成鉴权的大部分功能。</p>
+<p style="text-align: center;"><a href="http://www.flickr.com/photos/hoorace/5003014365/" title="cache副本 by longhao_net, on Flickr"><img alt="cache副本" height="391" src="http://farm5.static.flickr.com/4087/5003014365_da1d53c13a.jpg" width="457" /></a></p>
+<p>&nbsp;&nbsp;&nbsp; 解决鉴权问题，需要更少的访问到数据库，考虑使用cache。在jdk中有oscache，<a href="http://ehcache.org/">ehcache</a>等框架可以选用，如果你用spring的话，建议使用ehcache，因为spring集成了ehcache，而且ehcache支持分布式。如果相关数据不存在，则向数据库中查询，如果存在，则直接在cache中查找，当然更新数据库相关信息的时候不要忘记update cache。具体ehcache使用请参考<a href="http://ehcache.org/documentation/getting_started.html">官方文档</a></p>
+<p>&nbsp;&nbsp;&nbsp; 请求量再次增大的时候，考虑使用<a href="http://memcached.org/">memcached</a>来分布cache系统中读较多的信息。用户请求先到鉴权系统去处理，然后再rewrite到业务系统中去。如何使用memcached的话题内容有点多，暂时先不讨论。</p>
+<p>&nbsp;&nbsp;&nbsp; 后续用户需求一些restful的API，然后我们根据需求来讨论如何实现restful的web service。当然，简单的实现可以满足需求，不建议潮流化的玩rest。</p>

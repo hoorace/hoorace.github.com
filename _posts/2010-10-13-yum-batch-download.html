@@ -1,0 +1,43 @@
+---
+comments: true
+date: 2010-10-13 05:35:47
+layout: post
+slug: yum%e5%ba%93%e6%89%b9%e9%87%8f%e4%b8%8b%e8%bd%bd%e5%8a%9f%e8%83%bd
+title: yum库批量下载功能
+wordpress_id: 623
+categories:
+- python
+tag:
+- linux
+- python
+---
+
+<p>&nbsp;&nbsp;&nbsp; 觉得国外的yum库下载太慢，就搞一个mirror玩玩。需求较为简单：给定一个url，把url显示出来的rpm为后缀的文件全部下载到本地。写脚本解决问题当日最简单了，所以我就出了个菜鸟的思路：</p>
+<ul>
+	<li>下载页面文件到本地</li>
+	<li>分析文件中&lt;a&gt;&lt;/a&gt;的href中带有rpm后缀的字符串A</li>
+	<li>拼上url和A，然后wget</li>
+</ul>
+<p>&nbsp;&nbsp;&nbsp; 实现到代码如下：</p>
+<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+	<p>#!/usr/bin/env python<br />
+		import os<br />
+		url = &#39;http://download.fedora.redhat.com/pub/epel/5Server/x86_64/&#39;<br />
+		os.system(&#39;wget &#39;+ url)<br />
+		for line in open(&#39;index.html&#39;,&#39;r&#39;).readlines():<br />
+		&nbsp;&nbsp;&nbsp; start = line.find(&#39;&lt;a href=&#39;)<br />
+		&nbsp;&nbsp;&nbsp; if start != -1:<br />
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; str = line[start:line.find(&#39;&lt;/a&gt;&#39;)]<br />
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if str.endswith(&#39;rpm&#39;):<br />
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; os.system(&#39;wget &#39;+url + str.split(&#39;\&quot;&#39;)[1]);</p>
+</div>
+<p>&nbsp;&nbsp;&nbsp;&nbsp; 代码看起来总是觉得很别扭。由于对字符串的操作没有深入思考如何弄，仅仅看了相关规则实现了需求，所以不能不找鱼哥 @nnfish 求助优化一下。使用正则表达式优化后的操作代码如下：</p>
+<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+	<p>import urllib,re,os<br />
+		url = &#39;http://download.fedora.redhat.com/pub/epel/5Server/x86_64/&#39;<br />
+		data = urllib.urlopen(url).read()<br />
+		urls = re.findall(r&#39;href=&quot;(.*\.rpm?)&quot;&#39;, data)<br />
+		for url in urls:<br />
+		&nbsp;&nbsp;&nbsp; os.system(&#39;wget &#39;+url)</p>
+</div>
+<p>&nbsp;&nbsp;&nbsp; 用Python写的一个HTML/XML的解析器<a href="http://hi.baidu.com/javalang/blog/item/84bac4bf731fb80f18d81fe1.html">Beautiful Soup</a>来处理相关到html字符串也是一个好的选择，可以搜索引擎上搜索学习具体操作</p>

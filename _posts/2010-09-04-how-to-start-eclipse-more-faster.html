@@ -1,0 +1,77 @@
+---
+comments: true
+date: 2010-09-04 08:35:29
+layout: post
+slug: '%e9%9a%8f%e6%83%b3%e9%85%8d%e7%bd%ae%ef%bc%9a%e6%9b%b4%e5%bf%ab%e7%9a%84%e5%90%af%e5%8a%a8eclipse'
+title: 随想配置：更快的启动eclipse
+wordpress_id: 592
+categories:
+- Java
+tag:
+- eclipse
+- gc
+- Java
+---
+
+<p><span style="font-size:14px;">&nbsp;&nbsp; 总是感觉自己的elipse启动比别人的慢，开始以为是装的插件太多（pydev，GAE，scala&hellip;&hellip;）或者是导入的项目有点大。后来把-Xloggc:gc.log这个配置加上去看看启动的日志，吓了一跳，一次启动做了9次fullgc。和jboss服务器一样，肯定可以优化一下配置来更少的full gc来节约启动时间。</span></p>
+<p><span style="font-size:14px;">&nbsp;&nbsp;<strong> 第一次优化</strong>：把-Xms（初始化堆大小）&nbsp;-Xmx（JVM最大堆大小）设置为一样大小512m，避免GC后JVM重新分配内存。但是重启eclipse的时候full gc的次数并没有减少，而且启动的时候GC全部变成了full gc，日志如下：</span></p>
+<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+	<p><span style="font-size:14px;">3.308: [Full GC 3.308: [Tenured: 0K-&gt;19530K(262144K), 0.1515426 secs] 172215K-&gt;19530K(498112K), [Perm : 16383K-&gt;16383K(16384K)], 0.1516281 secs] [Times: user=0.14 sys=0.00, real=0.15 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">8.472: [Full GC 8.472: [Tenured: 19530K-&gt;34170K(262144K), 0.2060534 secs] 145021K-&gt;34170K(498112K), [Perm : 20479K-&gt;20479K(20480K)], 0.2061412 secs] [Times: user=0.19 sys=0.00, real=0.21 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">9.027: [Full GC 9.027: [Tenured: 34170K-&gt;35855K(262144K), 0.1790415 secs] 54259K-&gt;35855K(498112K), [Perm : 24575K-&gt;24575K(24576K)], 0.1791281 secs] [Times: user=0.19 sys=0.00, real=0.18 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">10.004: [Full GC 10.004: [Tenured: 35855K-&gt;44735K(262144K), 0.2850547 secs] 81210K-&gt;44735K(498112K), [Perm : 28671K-&gt;28646K(28672K)], 0.2851505 secs] [Times: user=0.28 sys=0.00, real=0.28 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">10.725: [Full GC 10.725: [Tenured: 44735K-&gt;49542K(262144K), 0.2657311 secs] 71680K-&gt;49542K(498112K), [Perm : 32759K-&gt;32759K(32768K)], 0.2658216 secs] [Times: user=0.25 sys=0.00, real=0.27 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">12.057: [Full GC 12.057: [Tenured: 49542K-&gt;64706K(262144K), 0.3637080 secs] 179985K-&gt;64706K(498112K), [Perm : 36863K-&gt;36863K(36864K)], 0.3637938 secs] [Times: user=0.37 sys=0.00, real=0.36 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">12.788: [Full GC 12.788: [Tenured: 64706K-&gt;65640K(262144K), 0.3229940 secs] 87100K-&gt;65640K(498112K), [Perm : 40959K-&gt;40959K(40960K)], 0.3230836 secs] [Times: user=0.31 sys=0.00, real=0.32 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">13.652: [Full GC 13.652: [Tenured: 65640K-&gt;70639K(262144K), 0.4553435 secs] 116918K-&gt;70639K(498112K), [Perm : 45055K-&gt;44963K(45056K)], 0.4554289 secs] [Times: user=0.45 sys=0.00, real=0.46 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">14.679: [Full GC 14.679: [Tenured: 70639K-&gt;72308K(262144K), 0.4009647 secs] 122313K-&gt;72308K(498112K), [Perm : 49151K-&gt;49151K(49152K)], 0.4010552 secs] [Times: user=0.38 sys=0.00, real=0.40 secs]&nbsp;</span></p>
+</div>
+<p><span style="font-size:14px;">&nbsp;&nbsp; &nbsp;从日志中分析可以看出：触发full gc的罪魁祸首是Perm，这个没有设置，所以继续优化！</span></p>
+<p><span style="font-size:14px;">&nbsp;&nbsp; &nbsp;<strong>第二次优化</strong>：-XX:PermSize=64m &nbsp;-XX:MaxPermSize=64m，把持久化的初始化大小和最大大小设置为一样。Full gc消失了，来了24次minor gc。</span></p>
+<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+	<p><span class="Apple-style-span" style="font-size: 14px; ">0.689: [GC 0.689: [DefNew: 32256K-&gt;2724K(36288K), 0.0108873 secs] 32256K-&gt;2724K(520256K), 0.0109685 secs] [Times: user=0.02 sys=0.00, real=0.01 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">1.020: [GC 1.020: [DefNew: 34980K-&gt;3090K(36288K), 0.0159294 secs] 34980K-&gt;5812K(520256K), 0.0159941 secs] [Times: user=0.02 sys=0.00, real=0.02 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">1.451: [GC 1.451: [DefNew: 35346K-&gt;2612K(36288K), 0.0131000 secs] 38068K-&gt;8344K(520256K), 0.0131866 secs] [Times: user=0.01 sys=0.00, real=0.01 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">2.670: [GC 2.674: [DefNew: 34868K-&gt;4032K(36288K), 0.0338445 secs] 40600K-&gt;14881K(520256K), 0.0357554 secs] [Times: user=0.03 sys=0.02, real=0.04 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">3.537: [GC 3.537: [DefNew: 36280K-&gt;4032K(36288K), 0.0297593 secs] 47129K-&gt;19882K(520256K), 0.0298390 secs] [Times: user=0.03 sys=0.00, real=0.03 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">3.595: [GC 3.595: [DefNew: 36223K-&gt;74K(36288K), 0.0121076 secs] 52074K-&gt;19924K(520256K), 0.0122015 secs] [Times: user=0.00 sys=0.00, real=0.01 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">4.108: [GC 4.108: [DefNew: 32330K-&gt;1755K(36288K), 0.0071144 secs] 52180K-&gt;21605K(520256K), 0.0071898 secs] [Times: user=0.02 sys=0.00, real=0.01 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">7.550: [GC 7.550: [DefNew: 34011K-&gt;4032K(36288K), 0.0460676 secs] 53861K-&gt;35250K(520256K), 0.0461438 secs] [Times: user=0.05 sys=0.00, real=0.05 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">8.818: [GC 8.818: [DefNew: 36288K-&gt;4032K(36288K), 0.0352634 secs] 67506K-&gt;38332K(520256K), 0.0353470 secs] [Times: user=0.05 sys=0.00, real=0.04 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">9.926: [GC 9.926: [DefNew: 36288K-&gt;4032K(36288K), 0.0410570 secs] 70588K-&gt;45524K(520256K), 0.0411413 secs] [Times: user=0.03 sys=0.02, real=0.04 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">10.332: [GC 10.332: [DefNew: 36288K-&gt;4031K(36288K), 0.0325734 secs] 77780K-&gt;52292K(520256K), 0.0326496 secs] [Times: user=0.05 sys=0.00, real=0.03 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">10.583: [GC 10.583: [DefNew: 36287K-&gt;4031K(36288K), 0.0250005 secs] 84548K-&gt;57151K(520256K), 0.0250791 secs] [Times: user=0.03 sys=0.00, real=0.02 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">10.765: [GC 10.765: [DefNew: 36213K-&gt;4032K(36288K), 0.0691980 secs] 89333K-&gt;72388K(520256K), 0.0692885 secs] [Times: user=0.08 sys=0.00, real=0.07 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">10.977: [GC 10.977: [DefNew: 36288K-&gt;4031K(36288K), 0.0426303 secs] 104644K-&gt;81872K(520256K), 0.0427115 secs] [Times: user=0.05 sys=0.00, real=0.04 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">11.211: [GC 11.211: [DefNew: 36287K-&gt;4032K(36288K), 0.0550659 secs] 114128K-&gt;91896K(520256K), 0.0551464 secs] [Times: user=0.03 sys=0.02, real=0.06 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">11.641: [GC 11.641: [DefNew: 36288K-&gt;3147K(36288K), 0.0295076 secs] 124152K-&gt;93474K(520256K), 0.0296096 secs] [Times: user=0.03 sys=0.00, real=0.03 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">12.591: [GC 12.591: [DefNew: 35403K-&gt;2274K(36288K), 0.0241671 secs] 125730K-&gt;95722K(520256K), 0.0242549 secs] [Times: user=0.02 sys=0.02, real=0.02 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">12.896: [GC 12.896: [DefNew: 34530K-&gt;3023K(36288K), 0.0193394 secs] 127978K-&gt;98567K(520256K), 0.0194275 secs] [Times: user=0.02 sys=0.00, real=0.02 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">13.249: [GC 13.249: [DefNew: 35280K-&gt;939K(36288K), 0.0161462 secs] 130824K-&gt;99419K(520256K), 0.0162313 secs] [Times: user=0.01 sys=0.00, real=0.02 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">13.919: [GC 13.919: [DefNew: 33195K-&gt;2070K(36288K), 0.0124033 secs] 131675K-&gt;100550K(520256K), 0.0125083 secs] [Times: user=0.02 sys=0.00, real=0.01 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">14.396: [GC 14.396: [DefNew: 34326K-&gt;4032K(36288K), 0.0204527 secs] 132806K-&gt;104239K(520256K), 0.0205335 secs] [Times: user=0.02 sys=0.00, real=0.02 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">14.554: [GC 14.554: [DefNew: 36288K-&gt;4031K(36288K), 0.0554755 secs] 136495K-&gt;114252K(520256K), 0.0555567 secs] [Times: user=0.06 sys=0.00, real=0.06 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">14.735: [GC 14.735: [DefNew: 36287K-&gt;4031K(36288K), 0.0728643 secs] 146508K-&gt;129069K(520256K), 0.0729860 secs] [Times: user=0.06 sys=0.00, real=0.07 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">14.954: [GC 14.954: [DefNew: 36287K-&gt;4032K(36288K), 0.0529429 secs] 161325K-&gt;137308K(520256K), 0.0530283 secs] [Times: user=0.05 sys=0.00, real=0.05 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">15.308: [GC 15.308: [DefNew: 36288K-&gt;1126K(36288K), 0.0192389 secs] 169564K-&gt;138221K(520256K), 0.0193313 secs]</span></p>
+</div>
+<p><span style="font-size:14px;">&nbsp;&nbsp;&nbsp;从日志中分析可以看出：频繁的minor gc是由新生代没有设置自动分配造成的。</span></p>
+<p><span style="font-size:14px;">&nbsp;&nbsp; &nbsp;<strong>第三次优化</strong>：-Xmn256m 设置新生代大小为256M。好了，就4次minor gc。完成任务。日志如下：</span></p>
+<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+	<p><span class="Apple-style-span" style="font-size: 14px; ">3.592: [GC 3.592: [DefNew: 209792K-&gt;19904K(235968K), 0.0765218 secs] 209792K-&gt;19904K(498112K), 0.0766072 secs] [Times: user=0.06 sys=0.02, real=0.08 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">10.457: [GC 10.457: [DefNew: 229696K-&gt;26176K(235968K), 0.1996293 secs] 229696K-&gt;58203K(498112K), 0.1997121 secs] [Times: user=0.17 sys=0.03, real=0.20 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">12.862: [GC 12.862: [DefNew: 235968K-&gt;17131K(235968K), 0.1315169 secs] 267995K-&gt;74647K(498112K), 0.1315965 secs] [Times: user=0.14 sys=0.00, real=0.13 secs]&nbsp;</span></p>
+	<p><span style="font-size:14px;">14.465: [GC 14.465: [DefNew: 226923K-&gt;26176K(235968K), 0.1363962 secs] 284439K-&gt;101396K(498112K), 0.1364835 secs]</span></p>
+</div>
+<p><span style="font-size:14px;"><strong>最后的配置如下：</strong></span></p>
+<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+	<p><span class="Apple-style-span" style="font-size: 14px; ">-Xmn128m</span></p>
+	<p><span style="font-size:14px;">-Xms512m</span></p>
+	<p><span style="font-size:14px;">-Xmx512m</span></p>
+	<p><span style="font-size:14px;">-XX:PermSize=64m &nbsp;</span></p>
+	<p><span style="font-size:14px;">-XX:MaxPermSize=64m</span></p>
+	<p><span style="font-size:14px;">-verbose:gc</span></p>
+	<p><span style="font-size:14px;">-XX:+PrintGCTimeStamps</span></p>
+	<p><span style="font-size:14px;">-XX:+PrintGCDetails&nbsp;</span></p>
+	<p><span style="font-size:14px;">-Xloggc:gc.log</span></p>
+</div>

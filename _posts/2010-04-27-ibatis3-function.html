@@ -1,0 +1,84 @@
+---
+comments: true
+date: 2010-04-27 10:28:22
+layout: post
+slug: ibatis3%e5%8a%9f%e8%83%bd%e4%b8%80%e8%a7%88
+title: 'Ibatis3功能一览 '
+wordpress_id: 501
+categories:
+- Java
+tag:
+- ibatis
+- Java
+---
+
+<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; ibatis3的设计相对ibatis2来说改动较大，可以说是在功能和配置继承的基础上翻天覆地的修改，所以：你别指望2个版本是自动兼容的。暴露了更多底层的接口和添加Dynamic SQL的功能提升了其拓展性，但是添加Annotation的功能却是鸡肋。相关的功能点我们还是看看这张图先。<br />
+	</span></p>
+<p style="text-align: center;"><span style="font-size: 14px;"><a href="http://farm5.static.flickr.com/4051/4534800706_9430173fe7_b.jpg" target="_blank"><img alt="点击看大图" height="500" src="http://farm5.static.flickr.com/4051/4534800706_9430173fe7.jpg" width="480" /></a></span></p>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px;"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp; 新功能点</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px;">
+	<p><span style="font-size: 14px;">1：<strong>Dynamic SQL：</strong>动态SQL对熟悉JSTL或基于xml的文本处理的程序员来说是很好理解的，采用了基于OGNL的表达式后更是让XML mapper的配置减少到原来的一半。示例代码如下：<br />
+		</span></p>
+	<blockquote>
+		<p><span style="font-size: 14px;">&lt;select id=&rdquo;findActiveBlogWithTitleLike&rdquo; parameterType=&rdquo;Blog&rdquo; resultType=&rdquo;Blog&rdquo;&gt;<br />
+			&nbsp;&nbsp;&nbsp; SELECT * FROM BLOG<br />
+			&nbsp;&nbsp;&nbsp; WHERE state = &lsquo;ACTIVE&rsquo;<br />
+			&nbsp;&nbsp;&nbsp; &lt;if test=&rdquo;title != null&rdquo;&gt;<br />
+			&nbsp;&nbsp;&nbsp; AND title like #{title}<br />
+			&nbsp;&nbsp; &lt;/if&gt;<br />
+			&lt;/select&gt;<br />
+			</span></p>
+	</blockquote>
+	<p><span style="font-size: 14px;">2：<strong>Maper Annotations：</strong>这个功能比较鸡肋，至少偶是这样认为。程序员在代码中写sql，这个给人的感觉是回到了jdbc的环境中，而且 Annotaciton和java代码高度耦合了，并非配置优先。<br />
+		</span></p>
+	<p><span style="font-size: 14px;">3：<strong>SelectBuilder：</strong>用java代码来写sql，它使用static import和ThreadLocal变量的方式来保证语法的简介，很容易的去处理交织的条件和SQL格式化。<br />
+		</span></p>
+	<blockquote>
+		<p><span style="font-size: 14px;">public String selectBlogsSql() {<br />
+			&nbsp;&nbsp;&nbsp; BEGIN(); // Clears ThreadLocal variable<br />
+			&nbsp;&nbsp;&nbsp; SELECT(&quot;*&quot;);<br />
+			&nbsp;&nbsp;&nbsp; FROM(&quot;BLOG&quot;);<br />
+			&nbsp;&nbsp;&nbsp; return SQL();<br />
+			}<br />
+			</span></p>
+	</blockquote>
+	<p><span style="font-size: 14px;">表达的结果是：select * from blog;<br />
+		</span></p>
+	<p><span style="font-size: 14px;">4：<strong>暴露底层接口：</strong>ibatis可以通过实现一些接口来拦截执行某些特定的功能点，默认情况下有4种：<br />
+		<br />
+		&nbsp;&nbsp;&nbsp; * Executor(update, query, flushStatements, commit, rollback, getTransaction, close, isClosed)<br />
+		&nbsp;&nbsp;&nbsp; * ParameterHandler(getParameterObject, setParameters)<br />
+		&nbsp;&nbsp;&nbsp; * ResultSetHandler(handleResultSets, handleOutputParameters)<br />
+		&nbsp;&nbsp;&nbsp; * StatementHandler(prepare, parameterize, batch, update, query)<br />
+		</span></p>
+	<p><span style="font-size: 14px;">具体的实例请看：ibatis user guide</span></p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px;"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp; 对入门者的建议：</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px;">
+	<ol>
+		<li><span style="font-size: 14px;">当然需要先了解sql map的配置情况，每个标签的一些属性，尤其是需要使用&lt;sql&gt;这个标签来减少sql的重复；<br />
+			</span></li>
+		<li><span style="font-size: 14px;">特定的情况实现 TypeHandler这个接口，例如java的对象中的enum对象和数据库字段的对应。oracle数据库的blob字段可以直接找到默认实现 BlobTypeHnadler就好了；</span></li>
+		<li><span style="font-size: 14px;">尽量不要用<strong><a href="http://ibatis.apache.org/ibator.html" target="_blank">ibator</a></strong>这个自动工具来生成dao层的代码，这样代码的可维护性过差，但是可以研究下生成的代码；<br />
+			</span></li>
+		<li><span style="font-size: 14px;">了解一些setting的属性，特定功能打开和关闭特定配置。例如cache功能。</span></li>
+	</ol>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px;"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp; 一些问题：</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px;">
+	<ul>
+		<li><span style="font-size: 14px;">如果你想把ibatis3用到项目中，最好点击<a href="https://issues.apache.org/jira/secure/IssueNavigator.jspa?reset=true&amp;pid=10601&amp;status=1" target="_blank"><span style="font-family: comic sans ms,cursive;"><strong>这里</strong></span></a></span>看看是否有你不能接受的bug吧！</li>
+		<li><span style="font-size: 14px;">缺少spring框架的集成支持，估计还是需要自己写plugs和spring等框架集成或搜集非官方的文档。</span></li>
+		<li><span style="font-size: 14px;">网上资料不全，遇到问题只能跟代码了！<br />
+			</span></li>
+	</ul>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px;"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp; 资源：</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px;">
+	<ol>
+		<li><span style="font-size: 14px;"><a href="http://svn.apache.org/repos/asf/ibatis/java/ibatis-3/trunk /doc/en/iBATIS-3-User-Guide.pdf" target="_blank">ibatis用户导航</a><br />
+			</span></li>
+		<li><a href="http://www.ibm.com/developerworks/cn/opensource/os-ibatis3/" target="_blank"><span style="font-size: 14px;">iBATIS 3 内的新特性（其实是用户导航的简体中文版的简介）<br />
+			</span></a></li>
+	</ol>
+</div>

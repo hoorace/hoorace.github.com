@@ -1,0 +1,35 @@
+---
+comments: true
+date: 2011-09-25 03:26:52
+layout: post
+slug: '%e7%bc%96%e7%a8%8b%e7%8f%a0%e7%8e%91%ef%bc%9a%e5%af%b9dao%e5%b1%82%e7%9a%84%e4%b8%80%e7%82%b9%e4%bf%ae%e6%94%b9'
+title: 编程珠玑：对DAO层的一点修改
+wordpress_id: 701
+categories:
+- Java
+tag:
+- dao
+- ibatis
+- Java
+---
+
+<p><span style="font-size:14px;">&nbsp; &nbsp; 由于以前的Domain对象都是不需要序列化的，所以为了操作数据库查询的方便，直接采用继承BaseDomain的方式来完成。这样在传递动态参数的时候，只需要把参数放到Map总，就可以很好的在ibatis配置文件(map.xx来直接获取值)中使用。</span></p>
+<p><span style="font-size:14px;">&nbsp; &nbsp; 这样导致的一个害处就是对象看起来有直接根本就不需要的属性，即使你添加关键字transient，不少程序员依然在set的时候会费解一些不必要的属性。例如：在insert()设置属性的时候竟然能够setPageNo()。质疑这个很有道理，但是以前一直extends粗暴简单的来完成任务，没有额外的系统设计问题，所以就得过且过，没有继续抽象。</span></p>
+<p><span style="font-size:14px;">&nbsp; &nbsp; 目前，Domain对象需要额外提供序列化的功能和为API服务，简单粗暴的方式不能继续适应系统要求，所以需要继续抽象。在CRUD的模型中，逐个分析需求变化导致的问题。</span></p>
+<ol>
+	<li><span style="font-size:14px;">&nbsp; &nbsp; insert() , update() , delete() 都可以直接传入对象，不需要额外的值，即使有这样的条件，也建议不动态传值到ibatis中；<br />
+		</span></li>
+	<li><span style="font-size:14px;">&nbsp; &nbsp; find() , list() 需要动态出入参数，同事find和list传入的参数值有所不同；list和find参数存在继承关系；<br />
+		</span></li>
+</ol>
+<p><span style="font-size:14px;">&nbsp; &nbsp; 按照需求，设计抽象有3点：</span></p>
+<ul>
+	<li><span style="font-size:14px;">&nbsp; &nbsp; FindAapter() 提供动态参数的设置；<br />
+		</span></li>
+	<li><span style="font-size:14px;">&nbsp; &nbsp; ListAaapter() 提供分页的参数的设置，继承FindAapter() &nbsp;接口；<br />
+		</span></li>
+	<li><span style="font-size:14px;">&nbsp; &nbsp; 用泛型动态传递Domain对象，让相关返回规范化。<br />
+		</span></li>
+</ul>
+<p><span style="font-size:14px;">&nbsp; &nbsp; UML关系图如下：</span></p>
+<p style="text-align: center; "><span style="font-size:14px;">&nbsp; &nbsp;&nbsp;<a href="http://farm7.static.flickr.com/6180/6180758126_d6cb6f11e9.jpg" target="_parent"><img alt="" height="331" src="http://farm7.static.flickr.com/6180/6180758126_d6cb6f11e9.jpg" width="500" /></a></span></p>

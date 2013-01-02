@@ -5,18 +5,24 @@ permalink: /:categories/:year/:month/:day/:title
 exclude: [".rvmrc", ".rbenv-version", "README.md", "Rakefile", "changelog.md"]
 auto: true
 pygments: true
+safe: true
+markdown: rdiscount
+paginate: 6
+paginate_files:
+ - index.html
 
 # Themes are encouraged to use these universal variables 
 # so be sure to set them if your theme uses them.
 #
-title : Jekyll Bootstrap
-tagline: Site Tagline
+title : 龙浩的blog
+tagline: [java , python , cloud computing , node.js , mobile app , apple , jetty]
 author :
-  name : Name Lastname
-  email : blah@email.test
-  github : username
-  twitter : username
-  feedburner : feedname
+  name : longhao 
+  email : longtask@gmail.com 
+  github : hoorace
+  twitter : hoorace
+  weibo : hoorace
+
 
 # The production_url is only used when full-domain names are needed
 # such as sitemap.txt 
@@ -26,7 +32,7 @@ author :
 # Else if you are pushing to username.github.com, replace with your username.
 # Finally if you are pushing to a GitHub project page, include the project name at the end.
 #
-production_url : http://username.github.com
+production_url : http://hoorace.github.com
 
 # All Jekyll-Bootstrap specific configurations are namespaced into this hash
 #
@@ -81,9 +87,9 @@ JB :
   comments :
     provider : disqus
     disqus :
-      short_name : jekyllbootstrap
+      short_name : longhao 
     livefyre :
-      site_id : 123
+      site_id : 319958 
     intensedebate :
       account : 123abc
     facebook :
@@ -99,7 +105,7 @@ JB :
   analytics :
     provider : google 
     google : 
-        tracking_id : 'UA-123-12'
+        tracking_id : 'UA-4346922-1'
     getclicky :
       site_id : 
     mixpanel :

@@ -1,0 +1,115 @@
+---
+comments: true
+date: 2010-12-03 01:43:04
+layout: post
+slug: '%e5%9f%ba%e4%ba%8eibatis2-%e7%9a%84dao%e5%b1%82%e9%87%8d%e6%9e%84'
+title: 基于Ibatis2.*的DAO层重构
+wordpress_id: 647
+categories:
+- Java
+tag:
+- dao
+- ibatis
+- Java
+---
+
+<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; Ibatis框架的架构在不断的演进，稳定的业务系统在不断完善业务的过程中，多数程序员们希望代码风格能够保持一致，导致系统中到ibatis配置写法仍然停留在多年前的水平。一般情况下，程序员更注重业务层的重构，抽象服务的接口，归并重复的方法，封装公用的逻辑等。由于Dao层的配置并不是显得那么刺眼，所以关注度也显得明显不够。在复杂的业务系统中，DAO层一般都是自动生成的，然而需求不断增加的后，一个文件中一堆的ibatis配置，您或许第一想法是业务好复杂，然后就只能望着配置兴叹了。<br />
+	</span></p>
+<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; 本文通过讨论ibatis的配置重构优化，来提高DAO层的易用性，简洁性，达到更好封装DAO层的目的。</span></p>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 参数传递对象，不要用Map</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; 使用map传递参数的好处是，无论多少，都可以put进去，然后在配置中获取到。这样做到坏处是：每次加入了新的参数，都需要修改dao层，严重违反了开闭原则（OCP）。传递对象的好处就是更好到封装了参数的变化，添加参数dao层不用修改；建议是所有的对象都继承一个父类，这个类中封装了分页参数，里面有一个map来传递变量。</span></p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p><span style="font-size: 14px;">Map&lt;String,Object&gt; params;<br />
+			&nbsp;&nbsp;&nbsp; public Object getParam(String key){<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return params.get(key);<br />
+			&nbsp;&nbsp;&nbsp; }<br />
+			&nbsp;&nbsp;&nbsp; public void setParam(String key,Object value){<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if(params == null){<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; params = new HashMap&lt;String,Object&gt;();<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; params.put(key, value);<br />
+			&nbsp;&nbsp;&nbsp; }<br />
+			&nbsp;&nbsp;&nbsp; //在对象中setParam后，可以在ibatis中这样调用：<br />
+			&nbsp;&nbsp;&nbsp; &lt;isNotEmpty prepend=&quot;and&quot; property = &quot;params.name&quot;&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; name = #params.name#<br />
+			&nbsp;&nbsp;&nbsp; &lt;/isNotEmpty&gt;<br />
+			&nbsp;&nbsp;&nbsp; //同时，我们也可以把查询出来的结果set到params中，然后在service层getParam来获取相关的结果()。<br />
+			&nbsp;&nbsp;&nbsp; &lt;resultMap id=&quot;user4group&quot; class=&quot;user&quot;&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;result property=&quot;userId&quot; column=&quot;user_id&quot; /&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;result property=&quot;name&quot; column=&quot;name&quot; /&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;result property=&quot;params.groupName&quot; column=&quot;group_name&quot; /&gt;<br />
+			&nbsp;&nbsp;&nbsp; &lt;/resultMap&gt;<br />
+			</span></p>
+	</div>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 用<sql>标签&lt;sql&gt;封装查询条件</sql></strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; 查询表中单条记录，列表记录以及查询表中数据总数的条件基本上都是一样的，所以</span><dynamic prepend="WHERE"><span style="font-size: 14px;">后面的条件可以写在一个里面，在查询条件不属于对象属性时，可以在动态参数中增加条件。 </span></dynamic></p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p><span style="font-size: 14px;">&lt;sql id=&quot;query_user&quot;&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;dynamic prepend=&quot;WHERE&quot;&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;isNotEmpty prepend=&quot;and&quot; property = &quot;name&quot;&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; name = #name#<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;/isNotEmpty&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;isNotEmpty prepend=&quot;and&quot; property = &quot;params.names&quot;&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ip_address_id in ($params.names$)<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;/isNotEmpty&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;/dynamic&gt;<br />
+			&nbsp;&nbsp;&nbsp; &lt;/sql&gt;<br />
+			&nbsp;&nbsp;&nbsp; //在&lt;select&gt;中添加查询条件&lt;include refid=&quot;query_user&quot; /&gt;&nbsp;&nbsp;&nbsp; (list_user,list_user_count是一样的添加)：<br />
+			&nbsp;&nbsp;&nbsp; &lt;select id=&quot;find_user&quot; resultMap=&quot;user_result&quot; parameterClass=&quot;user&quot;&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; SELECT<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; name,age<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; FROM user<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;include refid=&quot;query_user&quot; /&gt;&nbsp;&nbsp;&nbsp; <br />
+			&nbsp;&nbsp;&nbsp; &lt;/select&gt;</span></p>
+	</div>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 合理的使用&lt;iterate</strong><span><strong>&gt;</strong></span></span><span style="font-size: 14px;"><strong><iterate></iterate></strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; 查询条件中，某字段需要传递多值查询到情况比较普遍，有一种做法是直接拼接成字符串传递给ibatis；存在这样的情况：查询所有user中的vip用户和高级用户，参数传递将如何呢？拼接一下，然后params.type动态搞定？ ibatis提供了一种迭代器的方式来操作类似的需求（不仅仅是这样的需求）</span></p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p><span style="font-size: 14px;">public class UserServiceImpl{<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int[] type = {1,2};//定义的状态<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; User user = new User();<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; user.setParam(&quot;type&quot;,type);<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; List&lt;User&gt; userList = userDao.listUser(user);<br />
+			&nbsp;&nbsp;&nbsp; }<br />
+			&nbsp;&nbsp; // ibatis 中的写法是：<br />
+			&nbsp;&nbsp;&nbsp; &lt;select id=&quot;list_user_group&quot; parameterClass=&quot;user&quot;&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; select user from user where type in<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;iterate prepend=&quot;and&quot; property=&quot;params.type&quot; open=&quot;(&quot;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; close=&quot;)&quot; conjunction=&quot;,&quot;&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; #params.type[]:INTEGER#<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;/iterate&gt;<br />
+			&nbsp; &nbsp;&nbsp;&nbsp; &lt;/select&gt;<br />
+			</span></p>
+	</div>
+	<span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; 这样做的好处是减少了在java代码中拼字符串，可以把List或者是数组直接传递给ibatis，让程序员容易理解传递到内容。</span></div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 延迟加载</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; 查询group相关信息，然后做一系列的操作，而后返回结果需要查询group下面的user的信息。可以使用ibatis提供的延时加载机制处理。具体信息参考本人前面写到一篇文章《<a href="http://www.longtask.com/blog/?p=71">ibatis的延迟加载机制</a>》</span></p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 缓存配置表和字典表</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; 业务中经常查询数据库中的配置表和字典表的信息，高压力的系统中会直接使用memcache来搞定缓存，可是一般系统压力都达不到使用memcache的条件，本地缓存就够了（我只能说没事玩memcache的人是过度设计）。<br />
+		</span></p>
+	<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; 在java的业务层也可以封装，也就是读取配置的时候查询到内容缓存到一个static的对象中。ibatis为我们提供了更底层的封装，可以直接借用配置完成我们想要的功能。</span></p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p><span style="font-size: 14px;">&lt;cacheModel id=&quot;user-cache&quot; imlementation=&quot;LRU&quot;&gt;<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;flushInterval hours=&quot;24&quot;/&gt;<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;flushOnExecute statement=&quot;insertUser&quot;/&gt;<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;flushOnExecute statement=&quot;updateUser&quot;/&gt;<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;flushOnExecute statement=&quot;deleteUser&quot;/&gt;<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;property name=&quot;size&quot; value=&quot;1000&quot; /&gt;<br />
+			&nbsp;&nbsp;&nbsp; &lt;/cacheModel&gt;<br />
+			<br />
+			&nbsp;&nbsp;&nbsp; &lt;select id=&quot;find_user&quot; resultMap=&quot;user_result&quot; cacheModel=&quot;user-cache&quot;&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp; SELECT name,age FROM user WHERE name like &#39;%&#39;||#name#||&#39;%&#39;<br />
+			&nbsp;&nbsp;&nbsp; &lt;/select&gt;<br />
+			</span></p>
+	</div>
+</div>
+<p><span style="font-size: 14px;">&nbsp;&nbsp; 系统中还有很多小细节带来DAO层更好到封装以及足够的简洁，行动中开火吧！<br />
+	</span></p>

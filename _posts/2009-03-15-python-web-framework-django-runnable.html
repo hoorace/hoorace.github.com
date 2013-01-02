@@ -1,0 +1,101 @@
+---
+comments: true
+date: 2009-03-15 19:32:08
+layout: post
+slug: python-web%e6%a1%86%e6%9e%b6django%e7%9a%84%e5%bc%80%e5%a7%8b%e4%b9%8b%e6%97%85-runnable
+title: Python Web框架Django的开始之旅--Runnable
+wordpress_id: 213
+categories:
+- python
+tag:
+- apache
+- django
+- python
+---
+
+<h3>Django是简介：</h3>
+<p><br />
+&nbsp;&nbsp;&nbsp; Django是一个开放源代码的Web应用框架，由Python写成。采用了MVC的设计模式，即模型M，模版T和视图控制器V。它最初是被开发来用于管理劳伦斯出版集团旗下的一些以新闻内容为主的网站的。并于2005年7月在BSD许可证下发布。这套框架是以比利时的吉普赛爵士吉他手Django Reinhardt来命名的。<br />
+&nbsp;&nbsp;&nbsp; Django的主要目标是使得开发复杂的、数据库驱动的网站变得简单。Django注重组件的重用性和&ldquo;可插拔性&rdquo;，敏捷开发和DRY法则（Don't Repeat Yourself）。在Django中Python被普遍使用，甚至包括配置文件和数据模型。更多信息在<a target="_blank" href="http://zh.wikipedia.org/wiki/Django">这里</a></p>
+<h3>Django安装</h3>
+<p><br />
+&nbsp;&nbsp;&nbsp; 安装Django之间你必须安装python，到<a target="_blank" href="http://www.python.org/download/">python.org</a>(千万别到python.com上，别怪我没有告诉你)上去下载2.3以上，3.0以下的版本（3.x的版本不向下兼容，目前django还不支持）。到<a target="_blank" href="http://www.python.org/download/">http://www.djangoproject.com/download/</a>下载最新的django1.0.2的gz包，<br />
+在linux下的安装为：<br />
+&nbsp;&nbsp;&nbsp; 1：tar xzvf Django-1.0.2-final.tar.gz<br />
+&nbsp;&nbsp;&nbsp; 2：cd Django-1.0.2-final<br />
+&nbsp;&nbsp;&nbsp; 3：sudo python setup.py install<br />
+在windows下面的安装方式为：<br />
+&nbsp;&nbsp;&nbsp; 1：进入命令行；转到django的解压缩目录<br />
+&nbsp;&nbsp;&nbsp; 2：输入：C:\Python25\python.exe setup.py install 就可以了，这里的python.exe是自己的的python在windows下的安装目录。</p>
+<h3>开发前准备工作</h3>
+<p><br />
+&nbsp;&nbsp;&nbsp; 1：django支持的数据库<br />
+&nbsp;&nbsp;&nbsp; 在web开发之旅中，摆脱数据库总是不太现实，所以需要了解一下django支持的数据库，目前django支持5中数据库：<a target="_blank" href="http://www.oracle.com/database/">Oracle</a>，<a target="_blank" href="http://www.mysql.com/">MySQL</a> ，<a target="_blank" href="http://www.postgresql.org">PostgreSQL </a>，<a target="_blank" href="http://www.sqlite.org/">SQLite 3</a> ，<a target="_blank" href="http://www.microsoft.com/sql/">Microsoft SQL Server </a><br />
+&nbsp;&nbsp;&nbsp; <strong>Oracle和Django的结合</strong><br />
+&nbsp;&nbsp;&nbsp; 目前支持oracle 9i以上的版本，你需要到<a target="_blank" href="http://cx-oracle.sourceforge.net/">http://cx-oracle.sourceforge.net/</a>下载cx-oracle包来提供相关的支持。<br />
+&nbsp;&nbsp;&nbsp; <strong>Mysql和Django的结合</strong><br />
+&nbsp;&nbsp;&nbsp; 支持Mysql4.0以上的版本，需要到<a target="_blank" href="http://sourceforge.net/projects/mysql-python">http://sourceforge.net/projects/mysql-python</a>下载mysql-python包。<br />
+&nbsp;&nbsp;&nbsp; 其他数据库工作中很少关注，如果想继续关注请google一下。<br />
+2：web服务器的安装<br />
+&nbsp;&nbsp;&nbsp; （1）到<a target="_blank" href="http://www.modpython.org">www.modpython.org</a>下载mod_python包，安装中会自动找到你的python安装目录和apache的安装目录，如果提示没有找到，就需要你选择一下相关的安装目录，如果错误会自动退出安装。<br />
+&nbsp;&nbsp;&nbsp; （2）在apache的httpd.conf中添加相关的配置：<br />
+&nbsp;&nbsp; 在&lt;IfModule alias_module&gt;&lt;/IfModule&gt; 中间添加相关的配置，注意你的apache的版本号对应的相关的配置。<br />
+&nbsp;&nbsp;&nbsp; LoadModule python_module modules/mod_python.so<br />
+&nbsp;&nbsp;&nbsp; &lt;Directory &quot;E:/python/web&quot;&gt;<br />
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Options FollowSymLinks<br />
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; AllowOverride None<br />
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Order allow,deny<br />
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; allow from all<br />
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Satisfy all<br />
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; AddHandler mod_python .py<br />
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; PythonHandler test<br />
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; PythonDebug On<br />
+&nbsp;&nbsp;&nbsp; &lt;/Directory&gt;<br />
+&nbsp;&nbsp;&nbsp; （3）测试一下你的服务器，在目录E:/python/web下面新建test.py,内容如下：<br />
+&nbsp;&nbsp;&nbsp; from mod_python import apache</p>
+<pre lang="python" line="1">
+def handler(req):
+  req.write(&quot;Hello World!&quot;)
+  return apache.OK
+</pre>
+<p>&nbsp;&nbsp;&nbsp; 启动apache服务器，在浏览器中输入http://localhost/python/test.py，现实Hello World!则代表服务器启动了。</p>
+<p>&nbsp;</p>
+<h3>开始django之旅</h3>
+<p><br />
+&nbsp;&nbsp;&nbsp; （1）到django的安装目录（C:\Python25\Lib\site-packages\django\bin），执行C:/Python25/python.exe django-admin.py startproject mydjango 然后在安装目录下面会有4个文件，分别是：__init__.py （可以向Python编译器表明当前文件夹下的内容是Python工程模块） ；manage.py （一个命令行工具，可以让你以多种方式与Django项目交互）；setting.py （Django项目的配置 ）；urls.py （负责配置URL的地址映射以及管理URL的地址格式 ）Python代码不要放在document root下 ，因为这样做别人可以从Web看到你的代码；把代码放在document root以外的目录，如/opt/mydjango。<br />
+&nbsp;&nbsp;&nbsp; （2）在命令模式下执行：<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; C:\Python25\Lib\site-packages\django\bin&gt;cd mydjango<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; C:\Python25\Lib\site-packages\django\bin\mydjango&gt;C:/Python25/python.exe manage.py runserver<br />
+&nbsp;&nbsp; &nbsp; &nbsp;&nbsp; Validating models...<br />
+&nbsp; &nbsp; &nbsp; &nbsp; 0 errors found<br />
+&nbsp;&nbsp; &nbsp; &nbsp;&nbsp; Django version 1.0.2 final, using settings 'mydjango.settings'<br />
+&nbsp;&nbsp; &nbsp; &nbsp;&nbsp; Development server is running at http://127.0.0.1:8000/<br />
+&nbsp; &nbsp; &nbsp; &nbsp; Quit the server with CTRL-BREAK.<br />
+&nbsp;&nbsp;&nbsp; 在浏览器中看到相关的内容，就说明启动了Django应用服务器，如果你的代码有改动，它自动reload，不需要重启项目。默认情况下runserver命令启动服务器的端口为8000，只监听本地连接 <br />
+&nbsp;&nbsp;&nbsp; 如果你希望改变端口，增加一个命令行参数即可：<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; C:/Python25/python.exe manage.py runserver 8080 <br />
+&nbsp;&nbsp;&nbsp; 你也可以改变服务器监听的IP地址：<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; C:/Python25/python.exe manage.py runserver 0.0.0.0:8080<br />
+&nbsp;&nbsp;&nbsp; 后面你就可以自己写python的代码。</p>
+<h3>推荐2本django的电子书籍</h3>
+<p><br />
+&nbsp;&nbsp;&nbsp; 1：<a target="_blank" href="http://www.woodpecker.org.cn/obp/django/django-stepbystep/newtest/doc/">django step by step</a><br />
+&nbsp;&nbsp;&nbsp; 2：<a target="_blank" href="http://www.djangobook.com/en/2.0/ ">The Django Book&nbsp;</a>&nbsp;&nbsp;&nbsp;&nbsp; 中文版翻译在<a target="_blank" href="http://www.javaeye.com/wiki/Django-book">这里</a><br />
+&nbsp;&nbsp;&nbsp; 如果你python还没有学习的话，请买本《python核心编程第二版》读读吧!</p>
+<h3>配置过程中可能的问题</h3>
+<p><br />
+1：在windows的命令模式下执行 python 报错：<br />
+计算机的属性》高级》计算机环境变量》path中添加C:\Python25（python安装目录）<br />
+2:403错误,查找apache下面的error日志：<br />
+client denied by server configuration<br />
+apache2.0和2.2的配置文件不一样。<br />
+2.0:<br />
+Options FollowSymLinks<br />
+AllowOverride None <br />
+2.2:<br />
+Options FollowSymLinks<br />
+AllowOverride None<br />
+Order allow,deny<br />
+Deny from all&nbsp;&nbsp; 这个地方需要修改为allow from all<br />
+Satisfy all</p>
+<p>&nbsp;</p>

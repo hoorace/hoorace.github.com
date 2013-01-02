@@ -1,0 +1,26 @@
+---
+comments: true
+date: 2011-07-25 23:56:35
+layout: post
+slug: java-object%e7%b1%bb%e4%b8%ad%e7%9a%84%e6%96%b9%e6%b3%95
+title: Java Object类中的方法
+wordpress_id: 699
+categories:
+- review
+tag:
+- Java
+---
+
+<p><span style="font-size:14px;">&nbsp;&nbsp;&nbsp; 面试问的最多的问题是：&ldquo;<strong>Java object类中有哪些方法？归类总结一下</strong>&rdquo;。一般情况下，3年以上工作经验的回答少于6个方法的，会导致减分，2年以下工作经验的知道6个以上会加分。到阿里云后面试过30+，回答让我满意的人很少。<br />
+	</span></p>
+<p><span style="font-size:14px;">&nbsp;&nbsp;&nbsp; 作为一个半路出家当程序员，开始我总是痴迷于应用。a框架的配置，b框架的模板，c框架的控制&hellip;&hellip;其实我对Java底层了解的很少，也没有想过了解java的底层。触动我去看Object类的是几件事。<br />
+	</span></p>
+<p><span style="font-size:14px;">&nbsp;&nbsp;&nbsp; 在上个东家做消息全网传输的时候，我用BeanUtil.copyProperties()拷贝对象的值，觉得很爽，后面某同事review我的代码提示我可以覆写对象的<strong>clone()</strong>方法的，毕竟，反射的效率是比较低的。然后当我去做的时候，发现了更好的选择。然后在打印日志的时候，我习惯拼接属性，于是又被提示覆写<strong>toString()</strong>方法是包爽的，就这样，我认识了Object的2个方法。</span></p>
+<p><span style="font-size:14px;">&nbsp;&nbsp;&nbsp; 看《Effecive Java》这本书，中间提到&ldquo;为什么覆写<strong>equals()</strong>方法的时候总是要覆写<strong>hashcode()</strong>&rdquo;。开始第一遍没有看懂，也懒得管了，因为hashcode我用的少，后来去参加一个面试，被人问到的时候，感觉无比的尴尬，我读过，却不知道答案！这是个人总结能力的问题，后面又不能不回来仔细看看这2个方法到底是做什么的。<br />
+	</span></p>
+<p><span style="font-size:14px;">&nbsp;&nbsp;&nbsp; 关于线程的<strong>notify() ， notifyAll() ， wait()</strong>『3个』 方法，学习线程的时候看过，不过自从用了JUC的包，我基本没有在代码中使用过了。每次用eclipse的&ldquo;alt + /&rdquo; 快捷键从后翻总能看到，所以无论如何，这几个方法应该知道。<br />
+	</span></p>
+<p><span style="font-size:14px;">&nbsp;&nbsp;&nbsp; 写到这里，有7个方法了，这几个方法很容易想到，在我开发java2年后，能够回答Object类中的7个方法。其实clone()方法不常用，所以，我说的数字6是有依据的。这6个方法，作为java程序员，天天不见也会见几次。如果写了几年java代码不知道基类里面的方法，就算你Hbase玩的再熟，我凭什么相信你能写优质代码？如果一个在农村盖房子3年的砌匠不知道前后梁有多少瓴子（鲁班收徒的故事），您会怎么想？<br />
+	</span></p>
+<p><span style="font-size:14px;">&nbsp;&nbsp;&nbsp; 再后来，不能不用反射，就知道了getClass()方法，finalize()方法我至今没用过！<br />
+	</span></p>

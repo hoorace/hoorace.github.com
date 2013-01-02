@@ -1,0 +1,103 @@
+---
+comments: true
+date: 2009-06-11 23:04:36
+layout: post
+slug: nutch09%e5%ae%9e%e7%8e%b0%e6%8a%93%e5%8f%96%e5%8a%a8%e6%80%81%e7%bd%91%e9%a1%b5%e9%83%a8%e7%bd%b2%e7%ac%94%e8%ae%b0
+title: nutch0.9实现抓取动态网页部署笔记
+wordpress_id: 331
+categories:
+- Java
+tag:
+- Java
+- tomcat
+---
+
+<p><big><strong>一：准备工作：</strong></big></p>
+<p>&nbsp;&nbsp;&nbsp; 1：下载nutch，地址是：<a href="http://www.apache.org/dist/lucene/nutch/" target="_blank">http://www.apache.org/dist/lucene/nutch/</a></p>
+<p>&nbsp;&nbsp;&nbsp; 2：下载JDK6（一定要是jdk6的版本，否则会报错），地址是：</p>
+<p><a href="http://java.sun.com/javase/downloads/index.jsp ">http://java.sun.com/javase/downloads/index.jsp </a></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp; 3：下载Cygwin(是一个在windows平台上运行的unix模拟环境的软件)，地址是：<a href="http://www.cygwin.com/ " target="_blank">http://www.cygwin.com/ </a>安装说明参考<a href="http://dev2dev.cnblogs.com/archive/2006/02/01/324638.html" target="_blank">这里</a>：<br />
+&nbsp;&nbsp;&nbsp;&nbsp; 4：下载tomcat6，地址是：<a href="http://tomcat.apache.org/" target="_blank">http://tomcat.apache.org/</a><br />
+</p>
+<p><big><strong>二：配置：（前面的软件都安装完毕）</strong></big><br />
+&nbsp;&nbsp;&nbsp;&nbsp; <strong>1：解压缩的nutch后，到conf下面修改crawl-urlfilter.txt</strong><br />
+# accept hosts in MY.DOMAIN.NAME<br />
++^http://([a-z0-9]*\.)*apache.org/<br />
++^http://([a-z0-9]*\.)*longtask.com/blog/<br />
+如果有需要可以继续添加相关的站点.<br />
+&nbsp;&nbsp;&nbsp;&nbsp; <strong>2：修改conf下面的nutch-site.xml文件，在&lt;configuration&gt;之间添加以下内容</strong><br />
+&lt;property&gt;<br />
+&nbsp; &lt;name&gt;http.agent.name&lt;/name&gt;<br />
+&nbsp; &lt;value&gt;longtask&lt;/value&gt;<br />
+&nbsp; &lt;description&gt;HTTP 'User-Agent' request header. &lt;/description&gt;<br />
+&lt;/property&gt;<br />
+&lt;property&gt;<br />
+&nbsp; &lt;name&gt;http.agent.description&lt;/name&gt;<br />
+&nbsp; &lt;value&gt;longtask&lt;/value&gt;<br />
+&nbsp; &lt;description&gt;Further description of our bot- this text is used in the User-Agent header.&nbsp; <br />
+&nbsp; &lt;/description&gt;<br />
+&lt;/property&gt;<br />
+&lt;property&gt;<br />
+&nbsp; &lt;name&gt;http.agent.url&lt;/name&gt;<br />
+&nbsp; &lt;value&gt;http://www.longtask.com/blog/&lt;/value&gt;<br />
+&nbsp; &lt;description&gt;A URL to advertise in the User-Agent header.&nbsp; <br />
+&nbsp; &lt;/description&gt;<br />
+&lt;/property&gt;<br />
+&lt;property&gt;<br />
+&nbsp; &lt;name&gt;http.agent.email&lt;/name&gt;<br />
+&nbsp; &lt;value&gt;longtask@gmail.com&lt;/value&gt;<br />
+&nbsp; &lt;description&gt;An email address to advertise in the HTTP 'From' reques header and User-Agent header. <br />
+&nbsp; &lt;/description&gt;<br />
+&lt;/property&gt;<br />
+&nbsp;&nbsp;&nbsp;&nbsp; <strong>3：</strong>回到到nutch的根目录，进入bin目录，<strong>建一个urls的文件夹，在文件夹中建一个nutch.txt的问题件</strong>，在文件中加入上面要鉴权的Url地址（抓取的网址(nutch.txt)经过(crawl-urlfilters.xml)过滤后，如果没有内容会在log中报错：Stopping at depth=0 - no more URLs to fetch.）。这个地方用nutch1.0怎么都跑不过，只能换回0.9的版本了。<br />
+</p>
+<p><big><strong>三：解决搜索动态内容的问题：</strong></big><br />
+&nbsp;&nbsp;&nbsp;&nbsp; 需要注意在conf下面的2个文件：regex-urlfilter.txt，crawl-urlfilter.txt <br />
+&nbsp;&nbsp;&nbsp;&nbsp; # skip URLs containing certain characters as probable queries, etc.<br />
+&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: rgb(255, 0, 0);">-[?*!@=] （-改+）</span><br />
+&nbsp;&nbsp;&nbsp;&nbsp; 这段意思是跳过在连接中存在? * ! @ = 的页面，因为默认是跳过所以，在动态页中存在？一般按照默认的是不能抓取到的。可以在上面2个文件中都修改成：<br />
+&nbsp;&nbsp;&nbsp;&nbsp; # skip URLs containing certain characters as probable queries, etc.<br />
+&nbsp;&nbsp;&nbsp;&nbsp; # -[?*!@=]<br />
+&nbsp;&nbsp;&nbsp;&nbsp; 另外增加允许的一行<br />
+&nbsp;&nbsp;&nbsp;&nbsp; # accept URLs containing certain characters as probable queries, etc.<br />
+&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: rgb(255, 0, 0);">+[?=&amp;]</span><br />
+&nbsp;&nbsp;&nbsp; 意思是抓取时候允许抓取连接中带 ? = &amp; 这三个符号的连接<br />
+&nbsp;&nbsp;&nbsp;&nbsp; 注意：两个文件都需要修改，因为NUTCH加载规则的顺序是crawl-urlfilter.txt-&gt; regex-urlfilter.txt<br />
+</p>
+<p><strong><big>四：运行爬虫，抓取内容：</big></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp; 打开Cygwin,<br />
+&nbsp;&nbsp;&nbsp;&nbsp; 在命令行窗口中输入：&nbsp; cd nutch的目录/bin<br />
+&nbsp;&nbsp;&nbsp;&nbsp; 执行命令： <br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color: rgb(255, 0, 0);">sh nutch crawl urls -dir e:/index -depth 3 -threads 4 -topN 50 &gt;&amp; ./log.txt</span><br />
+说明：<br />
+-dir&nbsp; dirnames&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 设置保存所抓取网页的目录. <br />
+-depth&nbsp; depth&nbsp;&nbsp; 表明抓取网页的层次深度<br />
+-delay&nbsp; delay&nbsp;&nbsp;&nbsp; 表明访问不同主机的延时，单位为&ldquo;秒&rdquo;<br />
+-threads&nbsp; threads&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 表明需要启动的线程数<br />
+-topN number&nbsp;&nbsp;&nbsp; 在每次迭代中限制爬行的头几个链接数,默认是Integer.MAX_VALUE<br />
+运行结束后，查看log.txt日志，会有爬虫检索网页的详细信息。<br />
+&nbsp;&nbsp;&nbsp;&nbsp; 问题的解决：运行的过程中报错：<br />
+Stopping at depth=0 - no more URLs to fetch.<br />
+No URLs to fetch - check your seed list and URL filters.<br />
+在urls的nutch.txt中再添加一个URL即可，<strong>这个是nutch0.9的bug（<span style="color: rgb(255, 0, 255);">如果是1.0这个地方不知道怎么搞定，所以改回0.9来部署了。</span>）</strong><br />
+</p>
+<p><big><strong>五：部署到tomcat下面：</strong></big><br />
+&nbsp;&nbsp;&nbsp;&nbsp; <strong>1:配置nutch-0.9.war包中的文件</strong><br />
+a：修改nutch-0.9.war\WEB-INF\web.xml<br />
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;ISO-8859-1&quot;?&gt;<br />
+为<br />
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;<br />
+b：修改nutch-0.9.war\WEB-INF\class\nutch-site.xml<br />
+注意：不要让你的config中有2个&lt;configuration&gt;，否则的话检索不出来东西。<br />
+&lt;configuration&gt;<br />
+&nbsp; &lt;property&gt;<br />
+&nbsp;&nbsp;&nbsp; &lt;name&gt;searcher.dir&lt;/name&gt;<br />
+&nbsp;&nbsp;&nbsp; &lt;value&gt;e:/index&lt;/value&gt;<br />
+&nbsp; &lt;/property&gt;<br />
+&lt;/configuration&gt;<br />
+&nbsp;&nbsp;&nbsp;&nbsp; <strong>2:把应用部署到tomcat的webapps下面</strong>，启动tomcat，访问应用：http://localhost:8080/nutch-0.9就可以得到以下界面：<br />
+<a href="http://farm4.static.flickr.com/3318/3616233275_7e0505e718.jpg?v=0"><img alt="" src="http://farm4.static.flickr.com/3318/3616233275_7e0505e718.jpg?v=0" /></a><br />
+输入访问的条件后，结果如下：<br />
+<a href="http://farm4.static.flickr.com/3301/3616233279_6403c18f4f.jpg?v=0"><img alt="" src="http://farm4.static.flickr.com/3301/3616233279_6403c18f4f.jpg?v=0" /></a><br />
+<br />
+&nbsp;</p>

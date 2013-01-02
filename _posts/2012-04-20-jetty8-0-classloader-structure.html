@@ -1,0 +1,108 @@
+---
+comments: true
+date: 2012-04-20 04:19:31
+layout: post
+slug: jetty8-0-4%e7%9a%84classloader%e7%ae%80%e4%bb%8b
+title: Jetty8.0.4的ClassLoader的体系结构
+wordpress_id: 755
+categories:
+- Java
+tag:
+- classloader
+- jetty
+- webserver
+---
+
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp;1：JDK的ClassLoader基础 </strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p><strong>Bootstrap ClassLoader/启动类加载器&nbsp;</strong></p>
+	<p>主要负责jdk_home/lib目录下的核心 api 或 -Xbootclasspath 选项指定的jar包装入工作。</p>
+	<p><strong>Extension ClassLoader/扩展类加载器&nbsp;</strong></p>
+	<p>主要负责jdk_home/lib/ext目录下的jar包或 -Djava.ext.dirs 指定目录下的jar包装入工作。</p>
+	<p><strong>System ClassLoader/系统类加载器&nbsp;</strong></p>
+	<p>主要负责java -classpath/-Djava.class.path所指的目录下的类与jar包装入工作。</p>
+	<p><strong>User Custom ClassLoader/用户自定义类加载器(java.lang.ClassLoader的子类)&nbsp;</strong></p>
+	<p>在程序运行期间, 通过java.lang.ClassLoader的子类动态加载class文件, 体现java动态实时类装入特性。</p>
+	<p>&nbsp;</p>
+	<p><strong>自User Custom向Bootstrap的检查类是否已经加载；自Bootstrap向User Custom的尝试加载类</strong></p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<div>
+			<div><span style="border-collapse: separate; color: rgb(0, 0, 0); font-family: Tahoma; -webkit-border-horizontal-spacing: 0px; -webkit-border-vertical-spacing: 0px; font-size: medium; "><font face="Tahoma, Helvetica, Arial, 宋体, sans-serif"><span style="line-height: 20px;">&nbsp;//检查类是否被装载过</span></font></span></div>
+			<div align="left" style="line-height: 20px;"><font face="Tahoma, Helvetica, Arial, 宋体, sans-serif"><font face="Courier New" size="2"><span style="font-size: 10pt;">&nbsp; &nbsp; &nbsp; Class c = findLoadedClass(name);</span></font></font></div>
+			<div align="left" style="line-height: 20px;"><font face="Tahoma, Helvetica, Arial, 宋体, sans-serif"><font face="Courier New" size="2"><span style="font-size: 10pt;">&nbsp; &nbsp; &nbsp; //指定类未被装载过，自顶部向下的尝试加载类</span></font></font></div>
+			<div align="left" style="line-height: 20px;"><font face="Tahoma, Helvetica, Arial, 宋体, sans-serif"><font face="Courier New" size="2"><span style="font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></font><font color="#7F0055" face="Courier New" size="2"><span style="font-size: 10pt;"><b>if</b></span></font>&nbsp;<font face="Courier New" size="2"><span style="font-size: 10pt;">(c ==</span></font>&nbsp;<font color="#7F0055" face="Courier New" size="2"><span style="font-size: 10pt;"><b>null</b></span></font><font face="Courier New" size="2"><span style="font-size: 10pt;">) {</span></font></font></div>
+			<div align="left" style="line-height: 20px;"><font face="Tahoma, Helvetica, Arial, 宋体, sans-serif"><font face="Courier New" size="2"><span style="font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></font>&nbsp;<font color="#7F0055" face="Courier New" size="2"><span style="font-size: 10pt;"><b>try</b></span></font>&nbsp;<font face="Courier New" size="2"><span style="font-size: 10pt;">{</span></font></font></div>
+			<div align="left" style="line-height: 20px;">
+				<div><font face="Tahoma, Helvetica, Arial, 宋体, sans-serif"><font face="Courier New" size="2"><span style="font-size: 10pt;"><span style="border-collapse: separate; color: rgb(0, 0, 0); font-family: Tahoma; line-height: normal; text-align: -webkit-auto; -webkit-border-horizontal-spacing: 0px; -webkit-border-vertical-spacing: 0px; font-size: medium; "><span style="font-family: 'Courier New'; font-size: 13px; line-height: 20px; text-align: -webkit-left;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; //如果父类加载器不为空，指定为父类加载器加载</span></span></span></font></font></div>
+				<font face="Tahoma, Helvetica, Arial, 宋体, sans-serif">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color="#7F0055" face="Courier New" size="2"><span style="font-size: 10pt;"><b>if</b></span></font>&nbsp;<font face="Courier New" size="2"><span style="font-size: 10pt;">(</span></font><font color="#0000C0" face="Courier New" size="2"><span style="font-size: 10pt;">parent</span></font>&nbsp;<font face="Courier New" size="2"><span style="font-size: 10pt;">!=</span></font>&nbsp;<font color="#7F0055" face="Courier New" size="2"><span style="font-size: 10pt;"><b>null</b></span></font><font face="Courier New" size="2"><span style="font-size: 10pt;">) {</span></font></div>
+			<div align="left" style="line-height: 20px;"><font face="Courier New" size="2"><span style="font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; c =</span></font>&nbsp;<font color="#0000C0" face="Courier New" size="2"><span style="font-size: 10pt;">parent</span></font><font face="Courier New" size="2"><span style="font-size: 10pt;">.loadClass(name,</span></font>&nbsp;<font color="#7F0055" face="Courier New" size="2"><span style="font-size: 10pt;"><b>false</b></span></font><font face="Courier New" size="2"><span style="font-size: 10pt;">);</span></font></div>
+			<div align="left" style="line-height: 20px;"><font face="Courier New" size="2"><span style="font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</span></font>&nbsp;<font color="#7F0055" face="Courier New" size="2"><span style="font-size: 10pt;"><b>else</b></span></font>&nbsp;<font face="Courier New" size="2"><span style="font-size: 10pt;">{</span></font></div>
+			<div align="left" style="line-height: 20px;"><font face="Courier New" size="2"><span style="font-size: 10pt;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; //在父类加载器为空的情况下，指定为系统启动类加载（native），不存在则返回null</span></font></div>
+			<div align="left" style="line-height: 20px;"><font face="Courier New" size="2"><span style="font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; c = findBootstrapClassOrNull(name);</span></font></div>
+			<div align="left" style="line-height: 20px;"><font face="Courier New" size="2"><span style="font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</span></font></div>
+			<div align="left" style="line-height: 20px;"><font face="Courier New" size="2"><span style="font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</span></font>&nbsp;<font color="#7F0055" face="Courier New" size="2"><span style="font-size: 10pt;"><b>catch</b></span></font>&nbsp;<font face="Courier New" size="2"><span style="font-size: 10pt;">(ClassNotFoundException e) {</span></font></div>
+			<div align="left" style="line-height: 20px;"><font face="Courier New" size="2"><span style="font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></font>&nbsp;<font color="#3F7F5F" face="Courier New" size="2"><span style="font-size: 10pt;">// ClassNotFoundException thrown if class not found</span></font></div>
+			<div align="left" style="line-height: 20px;"><font face="Courier New" size="2"><span style="font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></font>&nbsp;<font color="#3F7F5F" face="Courier New" size="2"><span style="font-size: 10pt;">// from the non-null parent class loader</span></font></div>
+			<div align="left" style="line-height: 20px;"><font face="Courier New" size="2"><span style="font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</span></font></div>
+			<div align="left" style="line-height: 20px;"><font face="Courier New" size="2"><span style="font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></font>&nbsp;<font color="#7F0055" face="Courier New" size="2"><span style="font-size: 10pt;"><b>if</b></span></font>&nbsp;<font face="Courier New" size="2"><span style="font-size: 10pt;">(c ==</span></font>&nbsp;<font color="#7F0055" face="Courier New" size="2"><span style="font-size: 10pt;"><b>null</b></span></font><font face="Courier New" size="2"><span style="font-size: 10pt;">) {</span></font></div>
+			<div align="left" style="line-height: 20px;"><font face="Courier New" size="2"><span style="font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></font>&nbsp;<font color="#3F7F5F" face="Courier New" size="2"><span style="font-size: 10pt;">// If still not found, then invoke findClass in order</span></font></div>
+			<div align="left" style="line-height: 20px;"><font face="Courier New" size="2"><span style="font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></font>&nbsp;<font color="#3F7F5F" face="Courier New" size="2"><span style="font-size: 10pt;">// to find the class.</span></font></div>
+			<div align="left" style="line-height: 20px;"><font face="Courier New" size="2"><span style="font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; c = findClass(name); //通过自己的findClass来加载类</span></font></div>
+			<div align="left" style="line-height: 20px;"><font face="Courier New" size="2"><span style="font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</span></font></div>
+			<div align="left" style="line-height: 20px;"><font face="Courier New" size="2"><span style="font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</span></font></div>
+			<div align="left" style="line-height: 20px;">
+				<div align="left"><font face="Courier New" size="2"><span style="font-size: 10pt;"><font color="#7F0055" face="Courier New" size="2"><span style="font-size: 10pt;"><b>&nbsp; &nbsp; &nbsp; if</b></span></font>&nbsp;<font face="Courier New" size="2"><span style="font-size: 10pt;">(resolve) {</span></font></span></font></div>
+				<div align="left"><font face="Courier New" size="2"><font face="Courier New" size="2"><span style="font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; resolveClass(c);//用来做类链接操作</span></font></font></div>
+				<div align="left"><font face="Courier New" size="2"><font face="Courier New" size="2"><span style="font-size: 10pt;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</span></font></font></div>
+			</div>
+		</div>
+	</div>
+	<p>&nbsp; &nbsp; &nbsp;JVM在加载类时默认采用的是双亲委派机制。通俗的讲，就是某个特定的类加载器在接到加载类的请求时，首先将加载任务委托给父类加载器，依次递归，如果父类加载器可以完成类加载任务，就成功返回；只有父类加载器无法完成此加载任务时，才自己去加载。关于虚拟机默认的双亲委派机制，我们可以从系统类加载器和标准扩展类加载器为例作简单分析。</p>
+</div>
+<p>&nbsp;</p>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 2：Jetty的classloader </strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p><strong>2.1：Jetty的classloader架构</strong></p>
+	<p>&nbsp; &nbsp; web容器的classloader比普通java应用略为复杂。</p>
+	<p>&nbsp; &nbsp; 每个web上下文（web应用和war文件）的普通配置是有自身的classloader，系统的classloader是它的父类。这是普通的java classloader的层次，但是servlet规范提出了负责的层次要求：</p>
+	<p>1. 在WEB-INF/lib和WEB-INF/classes中包含的类的加载优先级高于父classloader中的类。这和普通的java2的classloader加载动作相反。</p>
+	<p>2. 像java.lang.String这样的系统类不会被WEB-INF/lib或者WEB-INF/classes中的类替代。不幸的是，servlet规范并没有清楚的规定哪些类是系统类，也没有清楚的指出javax类应该作为系统类</p>
+	<p>3. Server实现类应该对web应用和其他classloader不可见。不幸的是，servelt规范并没有规定什么是server class ，也没有清楚的指出像xerces parser 这样的common libraries应该作为实现类。</p>
+	<p><strong>2.2：如何配置classloading</strong></p>
+	<p>&nbsp; &nbsp; jetty提供配置来控制以上三个选项。org.mortbay.jetty.webapp.WebAppContext.setParentLoaderPriority(boolean) 来控制所有类是否双亲委派的方式加载，这个配置解决了web应用加载的类在web应用和系统classpath同时存在的情况。</p>
+	<p>&nbsp; &nbsp; org.mortbay.jetty.webapp.WebAppContext.setSystemClasses(String[])和org.mortbay.jetty.webapp.WebAppContext.setServerClasses(String[])用来控制那些能够被web应用看到或者覆写的类。</p>
+	<p>* SystemClasses 不能被webapp 上下文 classloaders覆写. 默认的是：&nbsp;</p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">{&quot;java.&quot;,&quot;javax.servlet.&quot;,&quot;javax.xml.&quot;,&quot;org.mortbay.&quot;,&quot;org.xml.&quot;,&quot;org.w3c.&quot;, &quot;org.apache.commons.logging.&quot;,&quot;org.eclipse.jetty.continuation.&quot;,&quot;org.eclipse.jetty.jndi.&quot;,&quot;org.eclipse.jetty.plus.jaas.&quot;,&quot;org.eclipse.jetty.websocket.WebSocket&quot;, &quot;org.eclipse.jetty.websocket.WebSocketFactory&quot;, &quot;org.eclipse.jetty.servlet.DefaultServlet&quot;}</div>
+	<p>* ServerClasses (on the container classpath) 不能被webapp 上下文 classloaders看到但是可以被webapp覆写. 默认配置是:&nbsp;</p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">{&quot;-org.eclipse.jetty.continuation.&quot;,&quot;-org.eclipse.jetty.jndi.&quot;, &quot;-org.eclipse.jetty.plus.jaas.&quot;, &quot;-org.eclipse.jetty.websocket.WebSocket&quot;,&quot;-org.eclipse.jetty.websocket.WebSocketFactory&quot;,&quot;-org.eclipse.jetty.servlet.DefaultServlet&quot;, &quot;-org.eclipse.jetty.servlet.listener.&quot;, &quot;org.eclipse.jetty.&quot;};</div>
+	<p>&nbsp; &nbsp; [<strong>这段不知道如何翻译</strong>]Absolute classname can be passed, names ending with . are treated as packages names and names starting with - are treated as negative matches and must be listed before any enclosing packages.</p>
+	<p>&nbsp; &nbsp; &nbsp; 具体的类名可以不写，名称以.结尾代表是package名称，名称以&quot;-&quot;开头被认为是负面符号， and must be listed before any enclosing packages.</p>
+	<p><strong>2.3：给jetty添加额外的classpaths</strong></p>
+	<p>&nbsp; &nbsp; 在启动时，jetty会自动加载$jetty.home/lib下所有的jars，随之加载在start.jar中的文件start.config中明确配置的子目录（例如：$jetty.home/lib/management，$jetty.home/lib/naming/ 等）中的jars。所以，给jetty添加拓展的jars，需要在$jetty.home/lib/ext中创建一个任何你想的深度的文件层次。当然，你可以在自己创建start.config来定义默认加载动作来代替系统动作，否则，你需要使用以下方法：&nbsp;&nbsp;</p>
+	<p><strong>2.4：使用 jetty.class.path 系统属性</strong></p>
+	<p>&nbsp; &nbsp; 如果你想添加一个类目录或者jar到jetty，但是你不想把东西放到$jetty.home/lib/ext/中，或者你不想自己创建start.config文件，你可以简单的使用系统属性-Djetty.class.path，示例：</p>
+	<p>&nbsp; &nbsp; java -Djetty.class.path=&quot;../my/classes:../my/jars/special.jar:../my/jars/other.jar&quot; -jar start.jar</p>
+	<p><strong>2.5：在WebAppContext中使用extraClasspath()方法</strong></p>
+	<p>&nbsp; &nbsp; 如果你因为某种原因不想把jars或者classes放到 $jetty.home/lib ,同事也不想放到WEB-INF/lib 或者 WEB-INF/classes中，你可以把它添加到 $JETTY_HOME/contexts/mycontext.xml 文件中</p>
+	<p>&nbsp; &nbsp; &lt;Configure class=&quot;org.mortbay.jetty.webapp.WebAppContext&quot;&gt;</p>
+	<p>&nbsp; &nbsp; &nbsp; ...</p>
+	<p>&nbsp; &nbsp; &nbsp; &lt;Set name=&quot;extraClasspath&quot;&gt;../my/classes:../my/jars/special.jar:../my/jars/other.jar&lt;/Set&gt;</p>
+	<p>&nbsp; &nbsp; &nbsp; ...</p>
+	<p><strong>2.6：使用惯用的WebAppClassLoader</strong></p>
+	<p>&nbsp; &nbsp;最后，没有其他替代方案满足你的需求，你可以在自己的webapp中定制classloader，建议你的classloader是 &nbsp; &nbsp;org.mortbay.jetty.webapp.WebAppClassLoader的子类，但这不是必须的。你可以像如下的方式配置自己的webapp的classloader：</p>
+	<p>&nbsp; &nbsp; &nbsp;MyCleverClassLoader myCleverClassLoader = new MyCleverClassLoader();</p>
+	<p>&nbsp; &nbsp; &nbsp;...</p>
+	<p>&nbsp; &nbsp; &nbsp;WebAppContext webapp = new WebAppContext();</p>
+	<p>&nbsp; &nbsp; &nbsp;...</p>
+	<p>&nbsp; &nbsp; &nbsp;webapp.setClassLoader(myCleverClassLoader);</p>
+</div>
+<p>&nbsp;</p>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 参考资料： </strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<ul>
+		<li><a href="http://docs.codehaus.org/display/JETTY/Classloading">What is Jetty&#39;s classloading architecture?</a></li>
+		<li><a href="http://docs.codehaus.org/display/JETTY/SystemProperties">如何设置children/parent frist</a></li>
+		<li><a href="http://docs.codehaus.org/display/JETTY/WebAppDeployer">Web Application Deployer</a></li>
+		<li><a href="http://onjava.com/pub/a/onjava/2003/11/12/classloader.html">Inside Class Loaders</a></li>
+	</ul>
+</div>

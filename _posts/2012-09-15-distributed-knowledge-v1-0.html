@@ -1,0 +1,238 @@
+---
+comments: true
+date: 2012-09-15 02:32:30
+layout: post
+slug: '%e5%88%86%e5%b8%83%e5%bc%8f%e7%9f%a5%e8%af%86%e7%9a%84%e6%80%bb%e7%bb%93v1-0'
+title: 分布式知识的总结(V1.0)
+wordpress_id: 761
+categories:
+- Java
+- Web Service
+tag:
+- acid
+- base
+- cap
+- 分布式
+---
+
+<div>
+	<div style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; font-size: medium; ">
+		<h2 style="background-image: none; margin: 0px 0px 0.6em; padding-top: 0.5em; padding-bottom: 0.17em; border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(170, 170, 170); line-height: 19px; font-size: 23px; "><strong><font size="3" style="font-size: 16px;">1：分布式理论</font></strong></h2>
+	</div>
+	<div style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; font-size: medium; "><b>CAP(Eric Brewer)</b><br />
+		&nbsp; &nbsp; Web服务无法同时满足以下3个属性</div>
+	<ul>
+		<li><font color="#7600D8">Consistency(一致性)</font>，数据一致更新，所有数据变动都是同步的</li>
+		<li><font color="#7600D8">Availability(可用性)</font>，每个操作都必须以可预期的响应结束</li>
+		<li><font color="#7600D8">Partition tolerance(分区容错性)</font>，即使出现单个组件无法可用,操作依然可以完成</li>
+	</ul>
+	<div style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; font-size: medium; ">&nbsp; &nbsp; 在任何数据库设计中,一个Web应用至多只能同时支持上面的两个属性，不可能三者兼顾。对于分布式系统来说，分区容错是基本要求，所以必然要放弃一致性。对于大型网站来说， 分区容错和可用性的要求更高，所以一般都会选择适当放弃一致性。对应CAP理论，NoSQL追求的是AP，而传统数据库追求的是CA，这也可以解释为什么 传统数据库的扩展能力有限的原因。<br />
+		<br />
+		<b>ACID解决方案</b><br />
+		&nbsp; &nbsp; ACID数据库事务极大地简化了应用开发人员的工作.正如其缩写标识所示,ACID事务提供以下几种保证:</div>
+	<ul>
+		<li><font color="#7600D8">Atomicity（原子性）</font>，事务中的所有操作,要么全部成功,要么全部不做.</li>
+		<li><font color="#7600D8">Consistency（一致性）</font>在事务开始与结束时,数据库处于一致状态.</li>
+		<li><font color="#7600D8">Isolation（隔离性）</font>&nbsp;事务如同只有这一个操作在被数据库所执行一样.</li>
+		<li><font color="#7600D8">Durability（持久性）</font>. 在事务结束时,此操作将不可逆转.(也就是只要事务提交,系统将保证数据不会丢失,即使出现系统Crash,译者补充).</li>
+	</ul>
+	<div style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; font-size: medium; ">&nbsp; &nbsp; 数据库厂商在很久以前就认识到数据库分区的必要性,并引入了一种称为2PC(两阶段提交)的技术来提供跨越多个数据库实例的ACID保证<br />
+		<br />
+		<b>BASE解决方案</b></div>
+	<ul>
+		<li><font color="#7600D8">Basically Available（基本可用）</font></li>
+		<li><font color="#7600D8">Soft-state（ 软状态/柔性事务）</font></li>
+		<li><font color="#7600D8">Eventual Consistency（最终一致性）</font></li>
+	</ul>
+	<div style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; font-size: medium; ">&nbsp; &nbsp; BASE模型是传统ACID模型的反面，不同与ACID，BASE强调牺牲高一致性，从而获得可用性，数据允许在一段时间内的不一致，只要保证最终一致就可以了。</div>
+	<div style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; font-size: medium; ">&nbsp;</div>
+	<h2 style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; background-image: none; margin: 0px 0px 0.6em; padding-top: 0.5em; padding-bottom: 0.17em; border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(170, 170, 170); line-height: 19px; "><strong><font size="3">2：分布式系统基础组件</font></strong></h2>
+	<a name="RPC" style="font-family: Tahoma; text-align: -webkit-auto; font-size: medium; color: rgb(0, 43, 184); background-image: none; line-height: 19px; "></a>
+	<h3 style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; background-image: none; margin: 0px 0px 0.3em; padding-top: 0.5em; padding-bottom: 0.17em; border-bottom-style: none; line-height: 19px; "><font size="3">RPC</font></h3>
+	<ul style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; font-size: medium; line-height: 19px; list-style: square url(http://www.gonggeng.org/mediawiki/skins/monobook/bullet.gif); margin: 0.3em 0px 0px 1.5em; padding: 0px; ">
+		<li style="margin-bottom: 0.1em;">Google Protocol Buffer
+			<ul>
+				<li style="margin-bottom: 0.1em;"><a href="http://code.google.com/p/protobuf/">http://code.google.com/p/protobuf/</a></li>
+				<li style="margin-bottom: 0.1em;"><span style="line-height: 16px; text-align: -webkit-auto; ">Protocol Buffers are a way of encoding structured data in an efficient yet extensible format.</span></li>
+			</ul>
+		</li>
+		<li style="margin-bottom: 0.1em;">Thrift
+			<ul style="line-height: 1.5em; list-style: square url(http://www.gonggeng.org/mediawiki/skins/monobook/bullet.gif); margin: 0.3em 0px 0px 1.5em; padding: 0px;">
+				<li style="margin-bottom: 0.1em;">&quot;Thrift: Scalable Cross-Language Services Implementation&quot;</li>
+				<li style="margin-bottom: 0.1em;"><a href="http://incubator.apache.org/thrift/" rel="nofollow" style="text-decoration: none; color: rgb(51, 102, 187); background-image: url(http://www.gonggeng.org/mediawiki/skins/monobook/external.png); padding: 0px 13px 0px 0px; background-position: 100% 50%; background-repeat: no-repeat no-repeat;" title="http://incubator.apache.org/thrift/">Thrift 主页</a></li>
+			</ul>
+		</li>
+		<li style="margin-bottom: 0.1em;">SEDA，论文 &quot;<a href="http://www.eecs.harvard.edu/~mdw/talks/seda-sosp01-talk.pdf">SEDA: An Architecture for Well-Conditioned, Scalable Internet Services</a>&quot;</li>
+	</ul>
+	<a name="message_queue" style="font-family: Tahoma; text-align: -webkit-auto; font-size: medium; color: rgb(0, 43, 184); background-image: none; line-height: 19px; "></a>
+	<h3 style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; background-image: none; margin: 0px 0px 0.3em; padding-top: 0.5em; padding-bottom: 0.17em; border-bottom-style: none; line-height: 19px; "><font size="3">message queue</font></h3>
+	<ul style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; font-size: medium; line-height: 19px; list-style: square url(http://www.gonggeng.org/mediawiki/skins/monobook/bullet.gif); margin: 0.3em 0px 0px 1.5em; padding: 0px; ">
+		<li style="margin-bottom: 0.1em;">RabbitMQ:&nbsp;<a href="http://www.rabbitmq.com/" rel="nofollow" style="text-decoration: none; color: rgb(51, 102, 187); background-image: url(http://www.gonggeng.org/mediawiki/skins/monobook/external.png); padding: 0px 13px 0px 0px; background-position: 100% 50%; background-repeat: no-repeat no-repeat;" title="http://www.rabbitmq.com/">http://www.rabbitmq.com/</a></li>
+		<li style="margin-bottom: 0.1em;">ZeroMQ:&nbsp;<a href="http://www.zeromq.org/" rel="nofollow" style="text-decoration: none; color: rgb(51, 102, 187); background-image: url(http://www.gonggeng.org/mediawiki/skins/monobook/external.png); padding: 0px 13px 0px 0px; background-position: 100% 50%; background-repeat: no-repeat no-repeat;" title="http://www.zeromq.org/">http://www.zeromq.org/</a></li>
+		<li style="margin-bottom: 0.1em;">celery:&nbsp;<a href="http://celeryq.org/">http://celeryq.org/</a></li>
+		<li style="margin-bottom: 0.1em;">ActiveMQ:&nbsp;<a href="http://activemq.apache.org/">http://activemq.apache.org/</a></li>
+	</ul>
+	<a name="failure_detection" style="font-family: Tahoma; text-align: -webkit-auto; font-size: medium; color: rgb(0, 43, 184); background-image: none; line-height: 19px; "></a>
+	<h3 style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; background-image: none; margin: 0px 0px 0.3em; padding-top: 0.5em; padding-bottom: 0.17em; border-bottom-style: none; line-height: 19px; "><font size="3">failure detection</font></h3>
+	<ul style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; font-size: medium; line-height: 19px; list-style: square url(http://www.gonggeng.org/mediawiki/skins/monobook/bullet.gif); margin: 0.3em 0px 0px 1.5em; padding: 0px; ">
+		<li style="margin-bottom: 0.1em;">&ldquo;The &phi; Accrual Failure Detector&rdquo;</li>
+	</ul>
+	<a name=".E5.88.86.E5.B8.83.E5.BC.8F.E7.B3.BB.E7.BB.9F.E4.B8.AD.E7.9A.84.E4.B8.80.E8.87.B4.E6.80.A7" style="font-family: Tahoma; text-align: -webkit-auto; font-size: medium; color: rgb(0, 43, 184); background-image: none; line-height: 19px; "></a>
+	<h3 style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; background-image: none; margin: 0px 0px 0.3em; padding-top: 0.5em; padding-bottom: 0.17em; border-bottom-style: none; line-height: 19px; "><font size="3">分布式系统中的一致性</font></h3>
+	<ul style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; font-size: medium; line-height: 19px; list-style: square url(http://www.gonggeng.org/mediawiki/skins/monobook/bullet.gif); margin: 0.3em 0px 0px 1.5em; padding: 0px; ">
+		<li style="margin-bottom: 0.1em;">&quot;Principles of Computer Systems Design&quot; 第十章（可以到<a href="http://ocw.mit.edu/resources/res-6-004-principles-of-computer-system-design-an-introduction-spring-2009/online-textbook/" rel="nofollow" style="text-decoration: none; color: rgb(51, 102, 187); background-image: url(http://www.gonggeng.org/mediawiki/skins/monobook/external.png); padding: 0px 13px 0px 0px; background-position: 100% 50%; background-repeat: no-repeat no-repeat;" title="http://ocw.mit.edu/resources/res-6-004-principles-of-computer-system-design-an-introduction-spring-2009/online-textbook/">MIT 网站</a>下载）</li>
+		<li style="margin-bottom: 0.1em;">虚拟同步（virtual synchrony）系统
+			<ul style="line-height: 1.5em; list-style: square url(http://www.gonggeng.org/mediawiki/skins/monobook/bullet.gif); margin: 0.3em 0px 0px 1.5em; padding: 0px;">
+				<li style="margin-bottom: 0.1em;">K.P. Birman 的两篇论文，讲述虚拟同步的概念的实现方法
+					<ul style="line-height: 1.5em; list-style-image: url(http://www.gonggeng.org/mediawiki/skins/monobook/bullet.gif); list-style-position: initial; margin: 0.3em 0px 0px 1.5em; padding: 0px; ">
+						<li style="margin-bottom: 0.1em;">Reliable Communication in the Presence of Failures</li>
+						<li style="margin-bottom: 0.1em;">Exploiting virtual synchrony in distributed systems</li>
+					</ul>
+				</li>
+				<li style="margin-bottom: 0.1em;">扩展的虚拟同步（Extended Virtual Synchrony），也称为 TOTEM 协议
+					<ul style="line-height: 1.5em; list-style-image: url(http://www.gonggeng.org/mediawiki/skins/monobook/bullet.gif); list-style-position: initial; margin: 0.3em 0px 0px 1.5em; padding: 0px; ">
+						<li style="margin-bottom: 0.1em;">Y. Amir 等，&quot;The Totem Single Ring Ordering and Membership Protocol&quot;</li>
+						<li style="margin-bottom: 0.1em;">L.E. Moser 等，&quot;Extended Virtual Synchrony&quot;</li>
+					</ul>
+				</li>
+				<li style="margin-bottom: 0.1em;"><a href="http://corosync.org/" rel="nofollow" style="text-decoration: none; color: rgb(51, 102, 187); background-image: url(http://www.gonggeng.org/mediawiki/skins/monobook/external.png); padding: 0px 13px 0px 0px; background-position: 100% 50%; background-repeat: no-repeat no-repeat;" title="http://corosync.org">Corosync</a>&nbsp;是 TOTEM 协议的一个开源实现，当前 RedHat 等提供的企业集群使用它作为一致性协议。
+					<ul style="line-height: 1.5em; list-style-image: url(http://www.gonggeng.org/mediawiki/skins/monobook/bullet.gif); list-style-position: initial; margin: 0.3em 0px 0px 1.5em; padding: 0px; ">
+						<li style="margin-bottom: 0.1em;">Corosync 的相关资料&nbsp;<a href="http://en.wikipedia.org/wiki/Corosync_(project)" rel="nofollow" style="text-decoration: none; color: rgb(51, 102, 187); background-image: url(http://www.gonggeng.org/mediawiki/skins/monobook/external.png); padding: 0px 13px 0px 0px; background-position: 100% 50%; background-repeat: no-repeat no-repeat;" title="http://en.wikipedia.org/wiki/Corosync_(project)">http://en.wikipedia.org/wiki/Corosync_(project)</a></li>
+					</ul>
+				</li>
+			</ul>
+		</li>
+		<li style="margin-bottom: 0.1em;">采用类似 Paxos 算法的系统
+			<ul style="line-height: 1.5em; list-style: square url(http://www.gonggeng.org/mediawiki/skins/monobook/bullet.gif); margin: 0.3em 0px 0px 1.5em; padding: 0px;">
+				<li style="margin-bottom: 0.1em;">Leslie Lamport, &quot;Paxos Made Simple&quot;</li>
+				<li style="margin-bottom: 0.1em;">&quot;Paxos Made Live - An Engineering Perspective&quot; Google 实现 Paxos 算法时的工程考虑。</li>
+				<li style="margin-bottom: 0.1em;"><a href="http://wiki.apache.org/hadoop/ZooKeeper" rel="nofollow" style="text-decoration: none; color: rgb(51, 102, 187); background-image: url(http://www.gonggeng.org/mediawiki/skins/monobook/external.png); padding: 0px 13px 0px 0px; background-position: 100% 50%; background-repeat: no-repeat no-repeat;" title="http://wiki.apache.org/hadoop/ZooKeeper">Zookeeper</a>，两篇介绍 ZooKeeper 的论文
+					<ul style="line-height: 1.5em; list-style-image: url(http://www.gonggeng.org/mediawiki/skins/monobook/bullet.gif); list-style-position: initial; margin: 0.3em 0px 0px 1.5em; padding: 0px; ">
+						<li style="margin-bottom: 0.1em;">ZooKeeper: Wait-free coordination for Internet-scale systems</li>
+						<li style="margin-bottom: 0.1em;">A simple totally ordered broadcast protocol</li>
+					</ul>
+				</li>
+				<li style="margin-bottom: 0.1em;">Google 的 Chubby，&quot;The Chubby lock service for loosely-coupled distributed systems&quot;</li>
+			</ul>
+		</li>
+		<li style="margin-bottom: 0.1em;">最终一致性
+			<ul style="line-height: 1.5em; list-style: square url(http://www.gonggeng.org/mediawiki/skins/monobook/bullet.gif); margin: 0.3em 0px 0px 1.5em; padding: 0px;">
+				<li style="margin-bottom: 0.1em;"><a href="http://www.allthingsdistributed.com/2007/12/eventually_consistent.html" rel="nofollow" style="text-decoration: none; color: rgb(51, 102, 187); background-image: url(http://www.gonggeng.org/mediawiki/skins/monobook/external.png); padding: 0px 13px 0px 0px; background-position: 100% 50%; background-repeat: no-repeat no-repeat;" title="http://www.allthingsdistributed.com/2007/12/eventually_consistent.html">最终一致性概念</a></li>
+				<li style="margin-bottom: 0.1em;">Cassandra 中最终一致性的应用
+					<ul style="line-height: 1.5em; list-style-image: url(http://www.gonggeng.org/mediawiki/skins/monobook/bullet.gif); list-style-position: initial; margin: 0.3em 0px 0px 1.5em; padding: 0px; ">
+						<li style="margin-bottom: 0.1em;">基于 Gossip 协议的组成员管理，论文 &quot;Efficient Reconciliation and Flow Control for Anti-Entropy Protocols&quot;</li>
+						<li style="margin-bottom: 0.1em;">基于 Merkle tree 的数据同步算法：&ldquo;Informed content delivery across adaptive overlay networks&rdquo;</li>
+					</ul>
+				</li>
+			</ul>
+		</li>
+		<li style="margin-bottom: 0.1em;">CAP 理论
+			<ul>
+				<li style="margin-bottom: 0.1em;">&nbsp;<a href="http://lpd.epfl.ch/sgilbert/pubs/BrewersConjecture-SigAct.pdf">http://lpd.epfl.ch/sgilbert/pubs/BrewersConjecture-SigAct.pdf</a></li>
+				<li style="margin-bottom: 0.1em;">&nbsp;<a href="http://www.julianbrowne.com/article/viewer/brewers-cap-theorem">http://www.julianbrowne.com/article/viewer/brewers-cap-theorem</a></li>
+			</ul>
+		</li>
+		<li style="margin-bottom: 0.1em;">BASE&nbsp;理论&nbsp;<a href="http://queue.acm.org/detail.cfm?id=1394128">http://queue.acm.org/detail.cfm?id=1394128</a></li>
+	</ul>
+	<a name=".E5.88.86.E5.B8.83.E5.BC.8F.E6.95.B0.E6.8D.AE.E5.BA.93.E5.92.8C.E5.88.86.E5.B8.83.E5.BC.8F.E6.96.87.E4.BB.B6.E7.B3.BB.E7.BB.9F" style="font-family: Tahoma; text-align: -webkit-auto; font-size: medium; color: rgb(0, 43, 184); background-image: none; line-height: 19px; "></a>
+	<h2 style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; background-image: none; margin: 0px 0px 0.6em; padding-top: 0.5em; padding-bottom: 0.17em; border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(170, 170, 170); line-height: 19px; "><strong><font size="3">3：分布式数据库和分布式文件系统</font></strong></h2>
+	<a name="Google_File_System" style="font-family: Tahoma; text-align: -webkit-auto; font-size: medium; color: rgb(0, 43, 184); background-image: none; line-height: 19px; "></a>
+	<h3 style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; background-image: none; margin: 0px 0px 0.3em; padding-top: 0.5em; padding-bottom: 0.17em; border-bottom-style: none; line-height: 19px; "><font size="3">Google File System</font></h3>
+	<ul style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; font-size: medium; line-height: 19px; list-style: square url(http://www.gonggeng.org/mediawiki/skins/monobook/bullet.gif); margin: 0.3em 0px 0px 1.5em; padding: 0px; ">
+		<li style="margin-bottom: 0.1em;">Hadoop Distributed File System (HDFS)，<a href="http://hadoop.apache.org/hdfs/" rel="nofollow" style="text-decoration: none; color: rgb(51, 102, 187); background-image: url(http://www.gonggeng.org/mediawiki/skins/monobook/external.png); padding: 0px 13px 0px 0px; background-position: 100% 50%; background-repeat: no-repeat no-repeat;" title="http://hadoop.apache.org/hdfs/">http://hadoop.apache.org/hdfs/</a></li>
+		<li style="margin-bottom: 0.1em;">论文 &ldquo;The Google file system&rdquo;</li>
+	</ul>
+	<a name="MooseFS" style="font-family: Tahoma; text-align: -webkit-auto; font-size: medium; color: rgb(0, 43, 184); background-image: none; line-height: 19px; "></a>
+	<h3 style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; background-image: none; margin: 0px 0px 0.3em; padding-top: 0.5em; padding-bottom: 0.17em; border-bottom-style: none; line-height: 19px; "><font size="3">MooseFS</font></h3>
+	<ul style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; font-size: medium; line-height: 19px; list-style: square url(http://www.gonggeng.org/mediawiki/skins/monobook/bullet.gif); margin: 0.3em 0px 0px 1.5em; padding: 0px; ">
+		<li style="margin-bottom: 0.1em;"><a href="http://www.moosefs.org/" rel="nofollow" style="text-decoration: none; color: rgb(51, 102, 187); background-image: url(http://www.gonggeng.org/mediawiki/skins/monobook/external.png); padding: 0px 13px 0px 0px; background-position: 100% 50%; background-repeat: no-repeat no-repeat;" title="http://www.moosefs.org/">http://www.moosefs.org/</a></li>
+	</ul>
+	<a name="Ceph" style="font-family: Tahoma; text-align: -webkit-auto; font-size: medium; color: rgb(0, 43, 184); background-image: none; line-height: 19px; "></a>
+	<h3 style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; background-image: none; margin: 0px 0px 0.3em; padding-top: 0.5em; padding-bottom: 0.17em; border-bottom-style: none; line-height: 19px; "><font size="3">Ceph</font></h3>
+	<ul style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; font-size: medium; line-height: 19px; list-style: square url(http://www.gonggeng.org/mediawiki/skins/monobook/bullet.gif); margin: 0.3em 0px 0px 1.5em; padding: 0px; ">
+		<li style="margin-bottom: 0.1em;"><a href="http://ceph.newdream.net/" rel="nofollow" style="text-decoration: none; color: rgb(51, 102, 187); background-image: url(http://www.gonggeng.org/mediawiki/skins/monobook/external.png); padding: 0px 13px 0px 0px; background-position: 100% 50%; background-repeat: no-repeat no-repeat;" title="http://ceph.newdream.net/">http://ceph.newdream.net/</a></li>
+		<li style="margin-bottom: 0.1em;">论文 &quot;CEPH: RELIABLE, SCALABLE, AND HIGH-PERFORMANCE DISTRIBUTED STORAGE&quot;</li>
+	</ul>
+	<a name="Dynamo" style="font-family: Tahoma; text-align: -webkit-auto; font-size: medium; color: rgb(0, 43, 184); background-image: none; line-height: 19px; "></a>
+	<h3 style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; background-image: none; margin: 0px 0px 0.3em; padding-top: 0.5em; padding-bottom: 0.17em; border-bottom-style: none; line-height: 19px; "><font size="3">Dynamo</font></h3>
+	<ul style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; font-size: medium; line-height: 19px; list-style: square url(http://www.gonggeng.org/mediawiki/skins/monobook/bullet.gif); margin: 0.3em 0px 0px 1.5em; padding: 0px; ">
+		<li style="margin-bottom: 0.1em;">论文 &quot;Dynamo: Amazon&rsquo;s Highly Available Key-value Store&quot;</li>
+	</ul>
+	<a name="Big_Table" style="font-family: Tahoma; text-align: -webkit-auto; font-size: medium; color: rgb(0, 43, 184); background-image: none; line-height: 19px; "></a>
+	<h3 style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; background-image: none; margin: 0px 0px 0.3em; padding-top: 0.5em; padding-bottom: 0.17em; border-bottom-style: none; line-height: 19px; "><font size="3">Big Table</font></h3>
+	<ul style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; font-size: medium; line-height: 19px; list-style: square url(http://www.gonggeng.org/mediawiki/skins/monobook/bullet.gif); margin: 0.3em 0px 0px 1.5em; padding: 0px; ">
+		<li style="margin-bottom: 0.1em;"><a href="http://hbase.apache.org/" rel="nofollow" style="text-decoration: none; color: rgb(51, 102, 187); background-image: url(http://www.gonggeng.org/mediawiki/skins/monobook/external.png); padding: 0px 13px 0px 0px; background-position: 100% 50%; background-repeat: no-repeat no-repeat;" title="http://hbase.apache.org/">http://hbase.apache.org/</a></li>
+		<li style="margin-bottom: 0.1em;">论文 &quot;Bigtable: A Distributed Storage System for Structured Data&quot;</li>
+	</ul>
+	<a name="Cassandra" style="font-family: Tahoma; text-align: -webkit-auto; font-size: medium; color: rgb(0, 43, 184); background-image: none; line-height: 19px; "></a>
+	<h3 style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; background-image: none; margin: 0px 0px 0.3em; padding-top: 0.5em; padding-bottom: 0.17em; border-bottom-style: none; line-height: 19px; "><font size="3">Cassandra</font></h3>
+	<ul style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; font-size: medium; line-height: 19px; list-style: square url(http://www.gonggeng.org/mediawiki/skins/monobook/bullet.gif); margin: 0.3em 0px 0px 1.5em; padding: 0px; ">
+		<li style="margin-bottom: 0.1em;"><a href="http://cassandra.apache.org/" rel="nofollow" style="text-decoration: none; color: rgb(51, 102, 187); background-image: url(http://www.gonggeng.org/mediawiki/skins/monobook/external.png); padding: 0px 13px 0px 0px; background-position: 100% 50%; background-repeat: no-repeat no-repeat;" title="http://cassandra.apache.org/">http://cassandra.apache.org/</a></li>
+		<li style="margin-bottom: 0.1em;">论文 &quot;Cassandra - A Decentralized Structured Storage System&quot;</li>
+	</ul>
+	<a name="Parallel_Database" style="font-family: Tahoma; text-align: -webkit-auto; font-size: medium; color: rgb(0, 43, 184); background-image: none; line-height: 19px; "></a>
+	<h3 style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; background-image: none; margin: 0px 0px 0.3em; padding-top: 0.5em; padding-bottom: 0.17em; border-bottom-style: none; line-height: 19px; "><font size="3">Parallel Database</font></h3>
+	<ul style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; font-size: medium; line-height: 19px; list-style: square url(http://www.gonggeng.org/mediawiki/skins/monobook/bullet.gif); margin: 0.3em 0px 0px 1.5em; padding: 0px; ">
+		<li style="margin-bottom: 0.1em;">Yahoo! PNUTS 论文 &quot;PNUTS: Yahoo!&rsquo;s Hosted Data Serving Platform&quot;</li>
+		<li style="margin-bottom: 0.1em;"><a href="http://www.greenplum.com/" rel="nofollow" style="text-decoration: none; color: rgb(51, 102, 187); background-image: url(http://www.gonggeng.org/mediawiki/skins/monobook/external.png); padding: 0px 13px 0px 0px; background-position: 100% 50%; background-repeat: no-repeat no-repeat;" title="http://www.greenplum.com/">GreenPlum 并行数据库</a>，私有软件，非开源</li>
+		<li style="margin-bottom: 0.1em;"><a href="http://db.cs.yale.edu/hadoopdb/hadoopdb.html" rel="nofollow" style="text-decoration: none; color: rgb(51, 102, 187); background-image: url(http://www.gonggeng.org/mediawiki/skins/monobook/external.png); padding: 0px 13px 0px 0px; background-position: 100% 50%; background-repeat: no-repeat no-repeat;" title="http://db.cs.yale.edu/hadoopdb/hadoopdb.html">HadoopDB</a>，论文 &quot;HadoopDB: An Architectural Hybrid of MapReduce and DBMS Technologies for Analytical Workloads&quot;</li>
+	</ul>
+	<a name=".E5.88.86.E5.B8.83.E5.BC.8F.E6.95.B0.E6.8D.AE.E5.BA.93.E5.AF.B9.E6.AF.94" style="font-family: Tahoma; text-align: -webkit-auto; font-size: medium; color: rgb(0, 43, 184); background-image: none; line-height: 19px; "></a>
+	<h3 style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; background-image: none; margin: 0px 0px 0.3em; padding-top: 0.5em; padding-bottom: 0.17em; border-bottom-style: none; line-height: 19px; "><font size="3">分布式数据库对比</font></h3>
+	<p style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; font-size: medium; margin: 0.4em 0px 0.5em; line-height: 19px; ">论文 &quot;Benchmarking Cloud Serving Systems with YCSB&quot;</p>
+	<a name=".E5.A4.A7.E8.A7.84.E6.A8.A1.E6.95.B0.E6.8D.AE.E5.A4.84.E7.90.86" style="font-family: Tahoma; text-align: -webkit-auto; font-size: medium; color: rgb(0, 43, 184); background-image: none; line-height: 19px; "></a>
+	<h2 style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; background-image: none; margin: 0px 0px 0.6em; padding-top: 0.5em; padding-bottom: 0.17em; border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(170, 170, 170); line-height: 19px; "><strong><font size="3">4：大规模数据处理</font></strong></h2>
+	<ul style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; font-size: medium; line-height: 19px; list-style: square url(http://www.gonggeng.org/mediawiki/skins/monobook/bullet.gif); margin: 0.3em 0px 0px 1.5em; padding: 0px; ">
+		<li style="margin-bottom: 0.1em;">MapReduce</li>
+		<li style="margin-bottom: 0.1em;">Hive, Pig
+			<ul style="margin-bottom: 0.1em;">
+				<li style="margin-bottom: 0.1em;">Hive 论文 &quot;Hive &ndash; A Petabyte Scale Data Warehouse Using Hadoop&quot;</li>
+				<li style="margin-bottom: 0.1em;">Pig 论文 &quot;Pig Latin: A Not-So-Foreign Language for Data Processing&quot;</li>
+			</ul>
+		</li>
+		<li style="margin-bottom: 0.1em;">search engine (Lucene)</li>
+	</ul>
+	<a name=".E5.85.B3.E7.B3.BB.E6.95.B0.E6.8D.AE.E5.BA.93" style="font-family: Tahoma; text-align: -webkit-auto; font-size: medium; color: rgb(0, 43, 184); background-image: none; line-height: 19px; "></a>
+	<h2 style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; background-image: none; margin: 0px 0px 0.6em; padding-top: 0.5em; padding-bottom: 0.17em; border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(170, 170, 170); line-height: 19px; "><strong><font size="3">5：关系数据库</font></strong></h2>
+	<ul style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; font-size: medium; line-height: 19px; list-style: square url(http://www.gonggeng.org/mediawiki/skins/monobook/bullet.gif); margin: 0.3em 0px 0px 1.5em; padding: 0px; ">
+		<li style="margin-bottom: 0.1em;">数据库设计与实现基本理论
+			<ul style="line-height: 1.5em; list-style: square url(http://www.gonggeng.org/mediawiki/skins/monobook/bullet.gif); margin: 0.3em 0px 0px 1.5em; padding: 0px;">
+				<li style="margin-bottom: 0.1em;">Book &quot;Database System Implementation&quot;</li>
+			</ul>
+		</li>
+		<li style="margin-bottom: 0.1em;">transaction processing
+			<ul style="line-height: 1.5em; list-style: square url(http://www.gonggeng.org/mediawiki/skins/monobook/bullet.gif); margin: 0.3em 0px 0px 1.5em; padding: 0px;">
+				<li style="margin-bottom: 0.1em;">Book &quot;Transaction Processing: Concepts and Techniques&quot;</li>
+				<li style="margin-bottom: 0.1em;">Book &quot;Principles of Transaction Processing, Second Edition&quot;</li>
+			</ul>
+		</li>
+		<li style="margin-bottom: 0.1em;">性能优化
+			<ul style="line-height: 1.5em; list-style: square url(http://www.gonggeng.org/mediawiki/skins/monobook/bullet.gif); margin: 0.3em 0px 0px 1.5em; padding: 0px;">
+				<li style="margin-bottom: 0.1em;">Book &quot;High Performance MySQL&quot;</li>
+				<li style="margin-bottom: 0.1em;">Book &quot;Physical Database Design&quot;</li>
+			</ul>
+		</li>
+		<li style="margin-bottom: 0.1em;">SQLite 代码分析</li>
+		<li style="margin-bottom: 0.1em;">PostgreSQL</li>
+	</ul>
+	<a name=".E5.88.86.E5.B8.83.E5.BC.8F.E7.B3.BB.E7.BB.9F.E7.90.86.E8.AE.BA" style="font-family: Tahoma; text-align: -webkit-auto; font-size: medium; color: rgb(0, 43, 184); background-image: none; line-height: 19px; "></a>
+	<h2 style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; background-image: none; margin: 0px 0px 0.6em; padding-top: 0.5em; padding-bottom: 0.17em; border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(170, 170, 170); line-height: 19px; "><strong><font size="3">6：分布式系统理论研究</font></strong></h2>
+	<p style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; font-size: medium; margin: 0.4em 0px 0.5em; line-height: 19px; ">&nbsp; &nbsp; 这几本书里面，&quot;distributed algorithms&quot; 比较偏重纯理论，与实际技术相关性不大，阅读优先级较低；&quot;distributed systems: principles and paradigms&quot; 讲了不少实际系统，但是讲的不是很深入（也很难讲深入），初学者可以先浏览一遍；&quot;Principles of computer systems design: an introduction&quot; 是一本新书，对系统设计的很多思想讲的很透彻清晰，优先级较高。</p>
+	<ul style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; font-size: medium; line-height: 19px; list-style: square url(http://www.gonggeng.org/mediawiki/skins/monobook/bullet.gif); margin: 0.3em 0px 0px 1.5em; padding: 0px; ">
+		<li style="margin-bottom: 0.1em;">Lynch&#39;s book &quot;distributed algorithms&quot;</li>
+		<li style="margin-bottom: 0.1em;">Tanenbaum&#39;s book &quot;distributed systems: principles and paradigms&quot;</li>
+		<li style="margin-bottom: 0.1em;">&quot;Principles of computer systems design: an introduction&quot;</li>
+		<li style="margin-bottom: 0.1em;">CAP theorem paper, &quot;Brewer&#39;s conjecture and the feasibility of consistent, available, partition-tolerant web services&quot;</li>
+	</ul>
+	<div style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; font-size: medium; "><span style="line-height: 19px;"><br />
+		</span></div>
+	<div style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; font-size: medium; "><span style="line-height: 19px;"><b>7：值得读的博客</b></span></div>
+	<hr style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; font-size: medium; " />
+	<div style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; font-size: medium; ">
+		<ul style="list-style: square url(http://www.gonggeng.org/mediawiki/skins/monobook/bullet.gif); margin: 0.3em 0px 0px 1.5em; padding: 0px; text-align: -webkit-auto; ">
+			<li style="margin-bottom: 0.1em;">Storm 作者 Nathan Marz：<a href="http://nathanmarz.com/">http://nathanmarz.com/</a>&nbsp;&nbsp;&nbsp;</li>
+			<li style="margin-bottom: 0.1em;">&nbsp;Werner Vogels -- Amazon CTO ：<a href="http://www.allthingsdistributed.com/ ">http://www.allthingsdistributed.com/&nbsp;</a></li>
+		</ul>
+	</div>
+	<div style="color: rgb(0, 0, 0); font-family: Tahoma; text-align: -webkit-auto; font-size: medium; ">&nbsp;</div>
+</div>

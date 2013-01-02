@@ -1,0 +1,108 @@
+---
+comments: true
+date: 2012-03-13 23:08:59
+layout: post
+slug: delayqueue%e5%9c%a8%e5%ae%b9%e9%94%99%e6%97%b6%e7%9a%84%e4%bd%bf%e7%94%a8
+title: DelayQueue在容错时的使用
+wordpress_id: 748
+categories:
+- Java
+tag:
+- BlockingQueue
+- concurrent
+- Java
+- QelayQueue
+---
+
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 1：异步容错的处理需求 </strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p>&nbsp; &nbsp; &nbsp;遇到错误消息后，把消息写入到表中同时写入到queue中，把这个错误的内容异步通知到其他系统中去。同步的时间间隔以2的N次方递增，设计的前提是尽量减小数据库的压力。</p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 2：设计 </strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p>&nbsp; &nbsp; &nbsp; java.util.concurrent.DelayQueue中的对象必须实现java.util.concurrent.Delayed的接口，Delayed 元素的一个无界阻塞队列，只有在延迟期满时才能从中提取元素。该队列的头部 是延迟期满后保存时间最长的 Delayed 元素。如果延迟都还没有期满，则队列没有头部，并且 poll 将返回 null。当一个元素的 getDelay(TimeUnit.NANOSECONDS) 方法返回一个小于等于 0 的值时，将发生到期。即使无法使用 take 或 poll 移除未到期的元素，也不会将这些元素作为正常元素对待。例如，size 方法同时返回到期和未到期元素的计数。此队列不允许使用 null 元素。&nbsp;</p>
+	<p><strong>&nbsp; &nbsp; 队列中的对象设计：</strong></p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p>public class DelayDomain implements Delayed{</p>
+		<p>&nbsp; &nbsp; &nbsp; /**</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp;* 处理机制：按照发送次数2的N次方秒递增。</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp;* @param payInternalNotify</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp;*/</p>
+		<p>&nbsp; &nbsp; &nbsp; public DelayDomain(int sendtime , String url){</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; this.sendTime = (new Date()).getTime() + &nbsp;(long)Math.pow(2, sendtime) * TIME_UNIT;</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; this.url = url;</p>
+		<p>&nbsp; &nbsp; &nbsp; }&nbsp; &nbsp; &nbsp;&nbsp;</p>
+		<p>&nbsp; &nbsp; &nbsp; @Override</p>
+		<p>&nbsp; &nbsp; &nbsp; public int compareTo(Delayed obj) {</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; DelayDomain delayDomain = (DelayDomain)obj;</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; long timeout = sendTime - delayDomain.sendTime;</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; return timeout &gt; 0 ? 1 : timeout &lt; 0 ? -1 : 0;</p>
+		<p>&nbsp; &nbsp; &nbsp; }</p>
+		<p>&nbsp; &nbsp; &nbsp; @Override</p>
+		<p>&nbsp; &nbsp; &nbsp; public long getDelay(TimeUnit unit) {</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; return sendTime - System.currentTimeMillis();&nbsp;</p>
+		<p>&nbsp; &nbsp; &nbsp; }</p>
+		<p>&nbsp; &nbsp; &nbsp;&nbsp;</p>
+		<p>&nbsp; &nbsp; &nbsp; private static final int TIME_UNIT = 1000 ; //按照秒来递增</p>
+		<p>&nbsp; &nbsp; &nbsp; private long sendTime ;</p>
+		<p>&nbsp; &nbsp; &nbsp; private String url ;</p>
+		<p>&nbsp; &nbsp; &nbsp; public String getUrl() {</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; return url;</p>
+		<p>&nbsp; &nbsp; &nbsp; } &nbsp; &nbsp;&nbsp;</p>
+		<p>}</p>
+	</div>
+	<p><strong>&nbsp; &nbsp; &nbsp;Queue的代码：</strong></p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p>&nbsp; &nbsp; &nbsp;public class SendQueue {</p>
+		<p>&nbsp; &nbsp; &nbsp; public static void put(DelayDomain DelayDomain)</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; throws InterruptedException{</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; QUEUE.put(DelayDomain);</p>
+		<p>&nbsp; &nbsp; &nbsp; }</p>
+		<p>&nbsp; &nbsp; &nbsp; public static DelayDomain take()throws InterruptedException{</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; return QUEUE.take();</p>
+		<p>&nbsp; &nbsp; &nbsp; }&nbsp; &nbsp; &nbsp;</p>
+		<p>&nbsp; &nbsp; &nbsp; /**</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp;* 添加错误消息到队列中,</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp;* @param payInternalNotify</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp;*/</p>
+		<p>&nbsp; &nbsp; &nbsp; public static void addSendUrl(int sendTime , String url)</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; throws InterruptedException{</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; DelayDomain DelayDomain = new DelayDomain(sendTime , url);</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; put(DelayDomain);</p>
+		<p>&nbsp; &nbsp; &nbsp; }&nbsp;&nbsp;</p>
+		<p>&nbsp; &nbsp; &nbsp; private SendQueue(){};</p>
+		<p>&nbsp; &nbsp; &nbsp; //服务队列</p>
+		<p>&nbsp; &nbsp; &nbsp; private static final BlockingQueue&lt;DelayDomain&gt; QUEUE = &nbsp;new DelayQueue&lt;DelayDomain&gt;();</p>
+		<p>&nbsp; &nbsp;}</p>
+	</div>
+	<p><strong>&nbsp; &nbsp; &nbsp;测试代码：</strong></p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p>&nbsp; &nbsp; &nbsp;public class DelayMain {</p>
+		<p>&nbsp; &nbsp; &nbsp; public static void main(String[] args) throws Exception{</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; System.out.println(&quot;Start time @ &quot; + getNow());</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; SendQueue.addSendUrl(2 , &quot;www.baidu.com&quot;);</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; SendQueue.addSendUrl(1 , &quot;www.google.com&quot;);</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; SendQueue.addSendUrl(3 , &quot;www.hao123.com&quot;);</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; while(true){</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; DelayDomain domain = SendQueue.take();</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; System.out.println(domain.getUrl() + &quot; @ &quot; + getNow());</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</p>
+		<p>&nbsp; &nbsp; &nbsp; }&nbsp; &nbsp; &nbsp;&nbsp;</p>
+		<p>&nbsp; &nbsp; &nbsp; private static String getNow(){</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; SimpleDateFormat sdf = new SimpleDateFormat(&quot;HH:mm:ss&quot;);</p>
+		<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; return sdf.format(new Date());</p>
+		<p>&nbsp; &nbsp; &nbsp; }</p>
+		<p>&nbsp; &nbsp;}</p>
+	</div>
+	<p><strong>&nbsp; &nbsp; &nbsp;输出结果：</strong></p>
+	<p>&nbsp; &nbsp; &nbsp;Start time : 11:20:21</p>
+	<p>&nbsp; &nbsp; &nbsp;www.google.com @ 11:20:23</p>
+	<p>&nbsp; &nbsp; &nbsp;www.baidu.com @ 11:20:25</p>
+	<p>&nbsp; &nbsp; &nbsp;www.hao123.com @ 11:20:29</p>
+	<p><u>&nbsp; &nbsp; 我们看到google在2秒后出队列，百度的4秒，hao123的8秒。放到队列中会自动按照时间顺序来排序，只有时间到了才会被take出队列，否则一直等待。</u></p>
+	<p>&nbsp;</p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 3：设计缺点 </strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p>&nbsp; &nbsp; 修改数据库状态不能自动同步了。需要通过脚本来执行一些过期的内容，或者通过接口方式处罚容错。</p>
+</div>

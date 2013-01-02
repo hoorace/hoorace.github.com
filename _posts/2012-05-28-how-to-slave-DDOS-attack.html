@@ -1,0 +1,66 @@
+---
+comments: true
+date: 2012-05-28 01:52:19
+layout: post
+slug: ddos%e6%94%bb%e5%87%bb%e8%a7%a3%e5%86%b3%e8%bf%87%e7%a8%8b
+title: DDOS攻击解决过程
+wordpress_id: 759
+categories:
+- Linux
+tag:
+- ddos
+- iptables
+---
+
+<p>网站受到DDOS的攻击，Inbound最高请求58.85Mb/sec 。尽管一开始解决问题的思路是错误的，但是在这个过程中，我们思考问题的思路对团队的成长有所帮助，我们知道什么方法无法解决问题。解决问题的过程分为3个阶段：</p>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 1：nginx端屏蔽访问 </strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p>修改nginx配置文件，添加如下记录</p>
+	<p>location ~ /\/<strong>you_url</strong> {</p>
+	<p>&nbsp; &nbsp; return 404;</p>
+	<p>}</p>
+	<p>问题：发现请求堵塞在haproxy上面去了</p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 2：修改haproxy的配置 </strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p>acl invalid_req url_sub -i c=220</p>
+	<p>block if invalid_req&nbsp;</p>
+	<p>问题：依然不能解决haproxy堵塞的问题</p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 3：在haproxy机器上禁止IP访问。 </strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p>在nginx下找到IP最多的几个IP，到/data/management/logs中去执行</p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">cat www.access.log | awk -F \&quot; &#39;{print $7}&#39; | sort | uniq -c | sort -rn | head -n 300&nbsp;</div>
+	<p>得到访问最多的IP列表</p>
+	<p>通过vim的列编辑功能，限制这些ip的访问。（300个是可以继续加大的，看最后一行的最小值）</p>
+	<p>iptables -I INPUT -s 218.66.51.197 -j DROP</p>
+	<p>iptables -I INPUT -s 183.205.228.248 -j DROP</p>
+	<p>iptables -I INPUT -s 59.39.181.217 -j DROP</p>
+	<p>iptables -I INPUT -s 218.76.255.3 -j DROP</p>
+	<p>iptables -I INPUT -s 110.81.116.67 -j DROP</p>
+	<p>iptables -I INPUT -s 220.178.35.226 -j DROP</p>
+	<p>iptables -I INPUT -s 218.207.198.17 -j DROP</p>
+	<p>iptables -I INPUT -s 61.175.231.96 -j DROP</p>
+	<p>iptables -I INPUT -s 221.193.244.115 -j DROP</p>
+	<p>iptables -I INPUT -s 171.36.103.115 -j DROP</p>
+	<p>&nbsp;</p>
+	<p><strong>解封1：</strong></p>
+	<p>iptables -L INPUT</p>
+	<p>iptables -L --line-numbers 然后 iptable -D INPUT 序号</p>
+	<p><strong>解封2：</strong></p>
+	<p>&nbsp;iptables -F &nbsp; 来清空，（比较危险）</p>
+	<p>iptables -D INPUT 数字</p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 4：网上防止DDOS攻击的方法（我们的思路是错误的，这个脚本的思路才是王道） </strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p>正确的思路是查找Haproxy机器的所有连接IP数，然后查找IP数大于某个值的IP，在防火墙层面静止这些IP访问。</p>
+	<p><strong>安装</strong></p>
+	<p>wget http://www.inetbase.com/scripts/ddos/install.sh</p>
+	<p>chmod +x install.sh</p>
+	<p>./install.sh</p>
+	<p><strong>卸载</strong></p>
+	<p>wget http://www.inetbase.com/scripts/ddos/uninstall.sh</p>
+	<p>chmod +x uninstall.sh</p>
+	<p>./uninstall.sh</p>
+	<p>具体使用可以去自行研究，可以把里面的脚本挪出来，简单粗暴的防止DDOS！</p>
+</div>

@@ -1,0 +1,103 @@
+---
+comments: true
+date: 2008-02-18 23:33:08
+layout: post
+slug: wordpress%e7%9a%84%e5%ae%89%e8%a3%85%e7%ae%80%e4%bb%8b
+title: WORDPRESS的安装简介
+wordpress_id: 6
+categories:
+- web-style
+tag:
+- apache
+---
+
+php和apache的安装：
+1：Apache官方网站:http://www.apache.org（本人下载的版本是apache2.2）
+2：最新的PHP程序代码你可以在它的官方网站<a href="http://www.php.net/downloads.php">http://www.php.net/downloads.php</a>（本人下载的版本是PHP5.25，最好下载解压缩版的，不要下载安装版的）
+在这里以PHP5为例介绍一下Windows下Apache和PHP5的安装与配置方法.
+一 下载安装程序
+Apache可以从<a href="http://www.apache.org/dyn/closer.cgi/httpd/binaries/win32/">http://www.apache.org/dyn/closer.cgi/httpd/binaries/win32/</a>下载
+PHP可以从<a href="http://www.php.net/">http://www.php.net</a>下载.
+二 安装程序
+1 Apache的程序安装相对来说要较为的简单一些,我们从网站下来的是一个Windows下的安装程序,我们可以直接双击运行,这样我们就便利Apache在我们的电脑上安下家来了.
+2 我们在这里要注意的就是在下载PHP时一定要下载那个zip包的,而不要下载Installer的.将我们下载下来的PHP包解压到C盘下的根目录下,并将解压出来的文件夹改名为php.
+三 配置
+1 最好是无论使用何种接口（CGI 或者 SAPI）都确保 php5ts.dll 可用，因此必须将此文件放到 Windows 路径中。最好的位置是 Windows 的 system 目录：
+
+c:\windows\system for Windows 9x/ME 
+c:\winnt\system32 for Windows NT/2000 或者 c:\winnt40\system32 for Windows NT/2000 服务器版 
+c:\windows\system32 for Windows XP 
+2 下一步是设定有效的 PHP 配置文件，php.ini。压缩包中包括两个 ini 文件，php.ini-dist 和 php.ini-recommended。建议使用 php.ini-recommended，因为此文件对默认设置作了性能和安全上的优化。
+将选择的 ini 文件拷贝到 PHP 能够找到的目录下并改名为 php.ini。PHP 默认在 Windows 目录下搜索 php.ini：
+
+3 在 Windows 9x/ME/XP 下将选择的 ini 文件拷贝到 %WINDIR%，通常为 c:\windows。 
+在 Windows NT/2000 下将选择的 ini 文件拷贝到 %WINDIR% 或 %SYSTEMROOT% 下，通常为 c:\winnt 或 c:\winnt40 对应于服务器版本。 
+
+4 Apache中PHP的设置
+有两种方法使得 PHP 工作在 Windows 下的 Apache。一是使用 CGI 二进制文件，另一是使用 Apache 模块 DLL。无论那种方法，您首先必须停止 Apache 服务器，然后编辑 httpd.conf，以配置 Apache 和 PHP 协同工作。
+
+如果我们要使用CGI二进制文件,那么我们要将如下指令插入到 Apache 的 httpd.conf 配置文件中，以设置 CGI 二进制文件：
+ 
+PHP 以 CGI 方式安装到 Apache 2.0:
+
+ScriptAlias /php/ “c:/php/”
+AddType application/x-httpd-php .php
+Action application/x-httpd-php “/php/php.exe”
+
+如果我们想把 PHP 作为 Apache 2.0 的模块，那么就一定要移动 php4ts.dll 到 winnt/system32（Windows NT/2000）或 windows/system32（Windows XP），覆盖原有文件（如果有的话），对于 PHP 5，这个文件是 php5ts.dll。然后我们要插入如下两行到 httpd.conf 中，以使我们的 PHP 作为 Apache 的 PHP-Module 安装：
+
+PHP 以模块方式安装到 Apache 2.0:
+
+; For PHP 4 do something like this:
+LoadModule php4_module “c:/php/php4apache2.dll”
+AddType application/x-httpd-php .php
+
+; For PHP 5 do something like this:
+LoadModule php5_module “c:/php/php5apache2.dll”
+AddType application/x-httpd-php .php
+
+经过这样的配置以后,我们就安装好了我们的PHP和Apache服务器了.我们可以简单的测试一下:
+1 测试Apache:
+我们打开浏览器,在地址栏中输入localhost,如果可以出现Apache页面,则说明我们的Apache可以正常工作了.
+2测试PHP设置:
+我们可以简单的编写一个PHP页面,我们可以用文本编辑器,输入下面的代码:
+&lt;html&gt;
+&lt;head&gt;
+&lt;title&gt;
+hello
+&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;?php echo “hello,php”; ?&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+然后将这个文件存为hello.php,将其放在Apache的htdocs目录中(我们也可以在http.conf文件中来更改这个目录的),然后在我们的浏览器中输入<a href="http://localhost/hello.php">http://localhost/hello.php</a>,如果能够正确的显示hello,php就说明我们的PHP配置是可以正常工作的.
+wordpress的安装过程
+1：mysql的创建数据库
+create database wordpress;
+GRANT ALL PRIVILEGES ON wordpress.* TO <a href="mailto:wordpress@localhost">wordpress@localhost</a> IDENTIFIED BY “password”;
+FLUSH PRIVILEGES;
+
+2：PHP5在默认情况下，不再提供mysql的支持，必须手动的设置：
+将php目录下的libmysql.dll 和php/ext目录下的php_mysql.dll放到c:window/ssystem32下, 编辑php.ini,
+将extension_dir = “./” 改为 extension_dir = “c:windowssystem32″. 找到;extension=php_mysql.dll, 将’;'去掉改为extension=php_mysql.dll , 重启apache
+
+3：修改apache的主页指向的配置文件；
+&lt;IfModule dir_module&gt;
+    DirectoryIndex index.html index.htm index.jsp index.php
+&lt;/IfModule&gt;
+
+4：快速安装：
+这是快速安装指南，适用于那些习惯这样安装的人们。更多详细说明如下。
+
+如果你还没有WordPress软件包，那你需要下载并解压缩它。
+在你的主机上为WordPress建立一个数据库，以及一个具有访问和修改权限的MySQL用户。
+将wp-config-sample.php改名为wp-config.php.
+用你最喜欢的文字编辑器(记事本)打开wp-config.php，填入你的数据库信息。
+将WordPress文件上传至你的网站服务器上适当的地方：
+如果你想直接使用顶级域名(例如<a href="http://example.com/">http://example.com/</a>)访问Blog, 将解压後的WordPress目录中的所有内容（不包含最外层的WordPress文件夹）上传至你的空间顶级目录。
+如果你想使用子域名(例如<a href="http://example.com/blog/">http://example.com/blog/</a>), 将目录wordpress改名为你所想要的子域名，比如Blog，再上传到你的空间顶级目录。
+在浏览器中访问wp-admin/install.php运行WordPress脚本。
+如果你将WordPress安装在顶级目录中，你需要访问<a href="http://example.com/wp-admin/install.php">http://example.com/wp-admin/install.php</a>
+如果你将WordPress安装在子目录中，比如blog，你应该访问<a href="http://example.com/blog/wp-admin/install.php">http://example.com/blog/wp-admin/install.php</a>
+行了！WordPress应该已经安装好了。

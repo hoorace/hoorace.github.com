@@ -1,0 +1,47 @@
+---
+comments: true
+date: 2009-02-27 15:37:49
+layout: post
+slug: springibatis-%e6%89%b9%e9%87%8f%e6%8f%90%e4%ba%a4%e6%95%b0%e6%8d%ae%e6%8f%90%e5%8d%87%e6%80%a7%e8%83%bd
+title: spring+ibatis 批量提交数据提升性能
+wordpress_id: 172
+categories:
+- Java
+tag:
+- ibatis
+- Java
+---
+
+<p>&nbsp;</p>
+<p>&nbsp;&nbsp;&nbsp; 在系统中，提取数据循环计算后，每次需要有大概3000条左右的数据需要提交到数据库。以前在循环中单条插入，开始只有200条左右的数据，看不出性能上的问题，现在数据量增长了很多，所以需要对提交功能做一下优化。spring集成了ibatis的批量提交的功能，我们只要调用API就可以了<br />
+&nbsp;&nbsp;&nbsp; 首先在你的dao中需要继承org.springframework.orm.ibatis.support.SqlMapClientDaoSupport<br />
+&nbsp;&nbsp;&nbsp; 然后在代码中调用getSqlMapClientTemplate方法， 覆写SqlMapClientCallback类中的doInSqlMapClient的方法</p>
+<p>&nbsp;</p>
+<pre lang="java" line="1">
+public void insertCreditItemBatch(final List<credititem></credititem> creditItemList)
+    throws DataAccessException{
+    	this.getSqlMapClientTemplate().execute(new SqlMapClientCallback(){
+    		public Object doInSqlMapClient(SqlMapExecutor executor)
+            throws SQLException {
+    		executor.startBatch();
+    		int batch = 0;
+    		for(CreditItem creditItem:creditItemList){
+    			//调用获取sequence的方法。如果没有的话就去掉这行代码。
+    			creditItem.setCreditItemId(getNextId());
+			//参数1为：ibatis中需要执行的语句的id
+    			executor.insert(&quot;CreditItem_insertCreditItem&quot;, creditItem);
+    			batch++;
+    			//每500条批量提交一次。
+    			if(batch==500){
+    				executor.executeBatch();
+    				batch = 0;
+    			}
+    		}
+    		executor.executeBatch();
+    		return null;
+    	    }
+    	});
+}
+</pre>
+<p><br />
+&nbsp;&nbsp;&nbsp; 批量插入减少了获取数据库连接池的次数，经过测试可以提高60%到70%的性能，大家不妨在项目中使用一下。</p>

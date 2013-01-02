@@ -68,4 +68,5 @@ html, body {
 	border:1px solid #4C964D;
 	color:#FFF;
 }
+.artice_bottom{color:#c00; padding:3px 0 3px 0; font-weight:bolder; border-bottom:1px dashed #c00; border-top:1px dashed #c00; margin-bottom:10px;}
 	

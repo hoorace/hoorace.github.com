@@ -1,0 +1,41 @@
+---
+comments: true
+date: 2010-05-11 05:35:53
+layout: post
+slug: ken-thompson%e7%9a%84%e7%bb%8f%e5%85%b8%e5%91%bd%e9%a2%98%ef%bc%9a%e8%be%93%e5%87%ba%e8%87%aa%e8%ba%ab%e6%ba%90%e4%bb%a3%e7%a0%81%e7%9a%84%e7%a8%8b%e5%ba%8fcpythonjava
+title: Ken Thompson的经典命题：输出自身源代码的程序(c,python,java)
+wordpress_id: 519
+categories:
+- Java
+- python
+tag:
+- Java
+- python
+---
+
+<p>&nbsp;&nbsp;&nbsp;&nbsp; <a href="http://en.wikipedia.org/wiki/Ken_Thompson" target="_blank">Ken Thompson</a>（C语言和Unix的发明者之一，目前在google搞go语言）在获得图灵奖的演说中提到：读大学的时候他曾经写出一个<a href="http://www.ece.cmu.edu/~ganger/712.fall02/papers/p761-thompson.pdf" target="_blank">输出自身代码的程序</a>（没有游戏的时代就只能玩YY了，自己出题自己做）。那个时候还没有C，python，java，实现这个问题的难度在于引用和字符串，当然也有多种经典的解法。</p>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px;"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp; C语言</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p>经典的例子 (应该以一行表示的, 虽然第一次执行后它后自我 修复):</p>
+	<div style="background-color: rgb(238, 238, 238); border: 1px solid rgb(204, 204, 204);">char*s=&quot;char*s=%c%s%c;main(){printf(s,34,s,34);}&quot;;<br />
+		main(){printf(s,34,s,34);}</div>
+	<p>这段程序有一些依赖, 忽略了 #include &lt;stdio.h&gt;, 还假设了双引号 &quot; 的值为 34, 和 ASCII 中的值一样。</p>
+	<p>还有一个由 James Hu 发布的改进版：</p>
+	<div style="background-color: rgb(238, 238, 238); border: 1px solid rgb(204, 204, 204);">#define q(k)main(){return!puts(#k&quot;\nq(&quot;#k&quot;)&quot;);}<br />
+		q(#define q(k)main(){return!puts(#k&quot;\nq(&quot;#k&quot;)&quot;);})</div>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px;"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp; Python版本</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p>解法一：</p>
+	<div style="background-color: rgb(238, 238, 238); border: 1px solid rgb(204, 204, 204);">a = &quot;print &#39;a = &#39;, repr(a), &#39;\n&#39;, repr(a)[1:-5]&#39;, a&quot;<br />
+		print &#39;a = &#39;, repr(a), &#39;\n&#39;, repr(a)[1:-5]</div>
+	<p>解法二：</p>
+	<div style="background-color: rgb(238, 238, 238); border: 1px solid rgb(204, 204, 204);">a = [&quot;print &#39;a = &#39;, a, &#39;\\n&#39;, &#39;&#39;.join(a)&quot;]<br />
+		print &#39;a = &#39;, a, &#39;\n&#39;, &#39;&#39;.join(a)</div>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px;"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp; Java版本</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p>应该考虑在一行搞定，去掉包的申明，这样实现起来就简单多了。</p>
+	<div style="background-color: rgb(238, 238, 238); border: 1px solid rgb(204, 204, 204);">class S{public static void main(String[]a){String s=&quot;class S{public static void main(String[]a){String s=;char c=34;System.out.println(s.substring(0,52)+c+s+c+s.substring(52));}}&quot;;char c=34;System.out.println(s.substring(0,52)+c+s+c+s.substring(52));}}</div>
+</div>
+<p>&nbsp;&nbsp;&nbsp; 其他语言实现起来应该也很简单，大家可以尝试用不同语言继续实现。例如：C#，ruby，C++等等。</p>

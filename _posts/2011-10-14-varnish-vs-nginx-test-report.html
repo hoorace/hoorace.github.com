@@ -1,0 +1,164 @@
+---
+comments: true
+date: 2011-10-14 04:24:32
+layout: post
+slug: varnish-vs-nginx%e6%b5%8b%e8%af%95%e6%8a%a5%e5%91%8a
+title: Varnish VS Nginx测试报告
+wordpress_id: 709
+categories:
+- Linux
+tag:
+- nginx
+- siege
+- varnish
+---
+
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 1：配置情况<br />
+	</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p><span style="font-size:14px;"><b>nginx机器配置：</b><br />
+		CPU：&nbsp;&nbsp;&nbsp;&nbsp; E7500&nbsp; @ 2.93GHz (双核)<br />
+		内存：4G<br />
+		<b>varnish机器配置：</b><br />
+		CPU：&nbsp;&nbsp;&nbsp;&nbsp; E3300&nbsp; @ 2.50GHz (双核)<br />
+		内存：2G<br />
+		<b>测试脚本执行机器配置</b>：<br />
+		CPU：&nbsp;&nbsp;&nbsp;&nbsp; AMD Phenom(tm) II X4 925 Processor<br />
+		内存：2G</span></p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 2：测试准备工作<br />
+	</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p><span style="font-size:14px;"><b>2.1：安装siege</b></span></p>
+	<p><span style="font-size:14px;">使用压力测试工具siege（<a class="external-link" href="http://www.joedog.org/index/siege-home" rel="nofollow">http://www.joedog.org/index/siege-home</a>） 来验证。可以根据路径来并发重复压力测试。安装方式：<br />
+		下载：wget <a class="external-link" href="ftp://sid.joedog.org/pub/siege/siege-latest.tar.gz" rel="nofollow">ftp://sid.joedog.org/pub/siege/siege-latest.tar.gz</a><br />
+		安装：<br />
+		#./configure<br />
+		#make &amp;&amp; make install</span></p>
+	<div class="wysiwyg-macro">
+		<div class="code panel" style="border-width: 1px;">
+			<div class="codeContent panelContent"><pre class="code-java"><span style="font-size:14px;">[root@localhost test] siege -c 100 -r 100 -f varnish_url.txt
+[root@localhost test] siege -c 100 -r 100 -f nginx_url.txt
+</span></pre></div>
+		</div>
+	</div>
+	<p><span style="font-size:14px;">参数说明：<br />
+		-c 100 并发100个用户<br />
+		-r 100 重复循环100次<br />
+		-f varnish_url.txt 任务列表：URL列表</span></p>
+	<p><span style="font-size:14px;"><b>2.2：构造URL</b><br />
+		构造了536个url测试，其中1个是错误的url。</span></p>
+	<p><span style="font-size:14px;">到测试机器上,</span></p>
+	<div class="wysiwyg-macro">
+		<div class="code panel" style="border-width: 1px;">
+			<div class="codeContent panelContent"><pre class="code-java"><span style="font-size:14px;">[root@localhost test] cd /data/htdocs/resources/web
+[root@localhost test] find . -name <span class="code-quote">&quot;*.jpg&quot;</span> -print &gt; varnish_url.txt
+</span></pre></div>
+		</div>
+	</div>
+	<p><span style="font-size:14px;"><b>2.3：开启nginx页面缓存方法</b><br />
+		开启nginx的缓存图片的方法，在nginx的conf中添加：</span></p>
+	<div class="wysiwyg-macro">
+		<div class="code panel" style="border-width: 1px;">
+			<div class="codeContent panelContent"><pre class="code-java"><span style="font-size:14px;">location ~ .*\.(gif|jpg|jpeg|png|bmp|swf|ico)$ {
+&nbsp;&nbsp;&nbsp; expires&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 30d;
+&nbsp;&nbsp;&nbsp; access_log&nbsp;&nbsp; off;
+}
+感谢鱼哥 <a href="http://twitter.com/#!/smallfishxy">@smallfishxy</a> 指导
+
+</span></pre></div>
+		</div>
+	</div>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp; 3：运行后测试结果：<br />
+	</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p><span style="font-size:14px;"><b>3.1.1：nginx开启页面缓存的情况</b></span></p>
+	<p><span style="font-size:14px;">Transactions:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 10000 hits<br />
+		Availability:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 100.00 %<br />
+		Elapsed time:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 65.83 secs<br />
+		Data transferred:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 260.83 MB<br />
+		Response time:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.01 secs<br />
+		Transaction rate:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>151.91 trans/sec</b><br />
+		Throughput:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 3.96 MB/sec<br />
+		Concurrency:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2.06<br />
+		Successful transactions:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 9900<br />
+		Failed transactions:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0<br />
+		Longest transaction:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 3.03<br />
+		Shortest transaction:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.00</span></p>
+	<p><span style="font-size:14px;"><b>3.1.2：nginx不开启页面缓存的情况</b><br />
+		Transactions:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 10000 hits<br />
+		Availability:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 100.00 %<br />
+		Elapsed time:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 63.90 secs<br />
+		Data transferred:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 266.10 MB<br />
+		Response time:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.01 secs<br />
+		Transaction rate:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>156.49 trans/sec</b><br />
+		Throughput:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 4.16 MB/sec<br />
+		Concurrency:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2.18<br />
+		Successful transactions:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 9900<br />
+		Failed transactions:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0<br />
+		Longest transaction:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.35<br />
+		Shortest transaction:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.00</span></p>
+	<p><span style="font-size:14px;"><b>3.1.3：nginx开启页面缓存第二次测试的情况</b><br />
+		Transactions:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 10000 hits<br />
+		Availability:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 100.00 %<br />
+		Elapsed time:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 63.05 secs<br />
+		Data transferred:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 266.10 MB<br />
+		Response time:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.01 secs<br />
+		Transaction rate:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>158.60 trans/sec</b><br />
+		Throughput:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 4.22 MB/sec<br />
+		Concurrency:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2.06<br />
+		Successful transactions:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 9900<br />
+		Failed transactions:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0<br />
+		Longest transaction:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.34<br />
+		Shortest transaction:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.00</span></p>
+	<p><span style="font-size:14px;"><b>3.2.1：varnish清空缓存第一次测试情况</b><br />
+		Transactions:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 10000 hits<br />
+		Availability:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 100.00 %<br />
+		Elapsed time:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 62.87 secs<br />
+		Data transferred:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 266.10 MB<br />
+		Response time:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.01 secs<br />
+		Transaction rate:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>159.06 trans/sec</b><br />
+		Throughput:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 4.23 MB/sec<br />
+		Concurrency:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1.95<br />
+		Successful transactions:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 9900<br />
+		Failed transactions:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0<br />
+		Longest transaction:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.37<br />
+		Shortest transaction:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.00</span></p>
+	<p><span style="font-size:14px;"><b>3.2.2：varnish有缓存测试</b><br />
+		Transactions:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 10000 hits<br />
+		Availability:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 100.00 %<br />
+		Elapsed time:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 61.91 secs<br />
+		Data transferred:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 266.10 MB<br />
+		Response time:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.01 secs<br />
+		Transaction rate:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>161.52 trans/sec</b><br />
+		Throughput:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 4.30 MB/sec<br />
+		Concurrency:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1.78<br />
+		Successful transactions:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 9900<br />
+		Failed transactions:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0<br />
+		Longest transaction:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.34<br />
+		Shortest transaction:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.00</span></p>
+	<p><span style="font-size:14px;"><b>3.2.3：varnish负责均衡性能</b><br />
+		Transactions:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 10000 hits<br />
+		Availability:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 100.00 %<br />
+		Elapsed time:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 59.75 secs<br />
+		Data transferred:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 266.10 MB<br />
+		Response time:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.01 secs<br />
+		Transaction rate:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>167.36 trans/sec</b><br />
+		Throughput:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 4.45 MB/sec<br />
+		Concurrency:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1.98<br />
+		Successful transactions:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 9900<br />
+		Failed transactions:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0<br />
+		Longest transaction:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 3.01<br />
+		Shortest transaction:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.00</span></p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 4：结论<br />
+	</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<ul>
+		<li><span style="font-size:14px;">在varnish机器性能较差的情况下，在高并发情况下，能够跑出比nginx更好的性能。</span></li>
+		<li><span style="font-size:14px;">线上是读取了单台图片服务器，使用varnish能够解决图片服务负责均衡的问题，减少了nginx对内存的存储双份造成浪费的问题。</span></li>
+		<li><span style="font-size:14px;">有varnish负载均衡，单台img服务器故障时能让服务继续。当然varnish故障了，需要有备份服务器。<br />
+			</span></li>
+	</ul>
+</div>

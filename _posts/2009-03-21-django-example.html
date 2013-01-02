@@ -1,0 +1,72 @@
+---
+comments: true
+date: 2009-03-21 01:54:01
+layout: post
+slug: '%e7%ac%ac%e4%b8%80%e4%b8%aa%e5%8f%af%e4%bb%a5%e8%bf%90%e8%a1%8c%e7%9a%84django%e7%9a%84%e4%be%8b%e5%ad%90'
+title: 第一个可以运行的django的例子
+wordpress_id: 233
+categories:
+- python
+tag:
+- django
+- python
+---
+
+<p>&nbsp;&nbsp;&nbsp; 在启动django后，你现在肯定想自己写一段代码来在浏览器中展示，我们就用一个简单的例子说明一下相关的配置和如何写简单的代码。Web框架一般都实现了MVC（Model-View-Controller），当然我们现在还没有涉及到相关的内容，首先我们需要做的是在view层显示我们的程序的运行结果。&nbsp;</p>
+<p><strong>&nbsp;&nbsp;&nbsp; 动态的内容放在视图的运行</strong><br />
+<br />
+&nbsp;&nbsp;&nbsp; 首先你需要把自己的应用放到自己的python patch的任何目录下面，当然，你可以自己设置一下python path，让你可以放置到自己喜欢的位置。代码中设置的方法如下：（在django中设置Python PATH是manage.py的一个工作 ）<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; import sys<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; sys.path.append(&quot;e:/python/webapp&quot;) <br />
+&nbsp;&nbsp;&nbsp; 在系统环境变量中添加DJANGO_SETTINGS_MODULE变量，将其值设置为mysite.settings 添加PYTHONPATH:C:\\python25\\DLLs;E:\python\web\myqbox(E:\python\web\myqbox为python project的工作目录，存放project, mysite是一个project目录，seetings为她的设置模块）重新启动一个cmd，进入python。<br />
+&nbsp;&nbsp;&nbsp; 在你的目录下面建一个文件views.py。代码内容是：</p>
+<pre lang="python" line="1">
+from django.http import *
+    HttpResponsedef helloworld(request):
+    return HttpResponse(&quot;Hello, World！&quot;)
+</pre>
+<p><br />
+&nbsp;&nbsp;&nbsp; <strong>配置你的URL</strong><br />
+<br />
+&nbsp;&nbsp;&nbsp; django-admin.py startproject会自动生成一个URL配置文件urls.py，默认情况下它是这样的：</p>
+<pre lang="python" line="1">
+django-admin.py startproject会自动生成一个URL配置文件urls.py，默认情况下它是这样的：
+from django.conf.urls.defaults import *
+# Uncomment the next two lines to enable the admin:
+# from django.contrib import admin
+# admin.autodiscover()
+urlpatterns = patterns('',
+    # Example:
+    # (r'^myqbox/', include('myqbox.foo.urls')),
+    # Uncomment the admin/doc line below and add 'django.contrib.admindocs'
+    # to INSTALLED_APPS to enable admin documentation:
+    # (r'^admin/doc/', include('django.contrib.admindocs.urls')),
+
+    # Uncomment the next line to enable the admin:
+    # (r'^admin/(.*)', admin.site.root),
+)
+</pre>
+<p>&nbsp;&nbsp;&nbsp; 让我们编辑urls.py来关联helloworld视图，需要加入的配置信息是：<br />
+&nbsp;&nbsp;&nbsp; from myqbox.views import helloworld <br />
+&nbsp;&nbsp;&nbsp; &hellip;&hellip;<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (r'^hello/$', helloworld),&nbsp; <br />
+<br />
+&nbsp;&nbsp;&nbsp; 这个配置用到了python的正则表达式，对正则表达式不熟悉的同学需要好好的温习一下。在python中总是把url展示出来尽量的优雅一点，所以django能够让我们配制出自己希望展示的url，不像java的struts框架，所有的信息都是用.do或者是.action带上一堆的参数来完成的。当然在java中也有urlrewrite这个包可以帮你解决这个问题，总体来说不是很方便。<br />
+&nbsp;&nbsp;&nbsp; 在浏览器中键入http://127.0.0.1:8000/hello/访问你的页面，看看是否打印出helloworld！如果打印争取就先恭喜你一下，如果失败，请查看日志排除错误，多数情况下都是python path出了问题。<br />
+<br />
+<strong>&nbsp;&nbsp;&nbsp; Django怎样处理Web过程</strong><br />
+&nbsp;&nbsp;&nbsp; 1，执行python manage.py runserver寻找settings.py，这个文件包含了这个Django实例的所有配置选项。最重要的设置是ROOT_URLCONF，它告诉Django使用哪个Python模块作为当前站点的URL配置 <br />
+&nbsp;&nbsp;&nbsp; 2，当一个请求进来如/hello/，Django载入URL配置，然后按顺序检查每个URL模式直到找到一个匹配的URL请求模式。然后Django调用那个模式匹配的方法，并传递一个HttpRequest对象作为第一个参数 <br />
+&nbsp;&nbsp;&nbsp; 3，视图方法负责返回一个HttpResponse对象</p>
+<p><br />
+----------<strong>可以打印出所有汉字的python代码</strong>----------------------------------------------------------------</p>
+<pre lang="python" line="1">
+n=0
+for ch in xrange(0x4e00, 0x9fa6):
+    print unichr(ch),
+    n = n+1
+    if(n%50==0):
+        print '\n'
+
+print n
+</pre>

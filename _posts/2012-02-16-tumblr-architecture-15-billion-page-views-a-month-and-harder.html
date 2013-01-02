@@ -1,0 +1,296 @@
+---
+comments: true
+date: 2012-02-16 08:36:11
+layout: post
+slug: tumblr%e6%9e%b6%e6%9e%84-%e9%a1%b5%e9%9d%a2%e6%b5%8f%e8%a7%88%e9%87%8f150%e4%ba%bf%e6%9c%88%e5%b9%b6%e4%b8%94%e6%af%94twitter%e6%9b%b4%e9%9a%be%e6%8b%93%e5%b1%95
+title: Tumblr架构 - 页面浏览量150亿/月并且比Twitter更难拓展
+wordpress_id: 736
+categories:
+- Web Service
+tag:
+- finagle
+- mysql
+- redis
+- scala
+- tumblr
+---
+
+<p><span style="font-size:14px;"><br />
+	</span></p>
+<div><span style="font-size:14px;"><span style="border-collapse: separate; color: rgb(0, 0, 0); font-family: Tahoma; -webkit-border-horizontal-spacing: 0px; -webkit-border-vertical-spacing: 0px; ">&nbsp; &nbsp; 注：一些内容不熟悉，所以没有翻译。原文地址在<a href="http://highscalability.com/blog/2012/2/13/tumblr-architecture-15-billion-page-views-a-month-and-harder.html">这里</a></span></span></div>
+<div><span style="font-size:14px;"><br />
+	</span></div>
+<div><span style="font-size:14px;"><span style="border-collapse: separate; color: rgb(0, 0, 0); font-family: Tahoma; -webkit-border-horizontal-spacing: 0px; -webkit-border-vertical-spacing: 0px; ">&nbsp; &nbsp; <a href="http://Tumblr.com">Tumblr</a>每个月增长30% , 一天5亿网页浏览，40K/sec , 每天3TB的数据存储在1000+的服务器上。最开始只有4名工程师来处理所有事情，当有20多个工程师的时候，才有实力出一些有趣的解决方案。</span></span></div>
+<div><span style="font-size:14px;"><span style="border-collapse: separate; color: rgb(0, 0, 0); font-family: Tahoma; -webkit-border-horizontal-spacing: 0px; -webkit-border-vertical-spacing: 0px; ">&nbsp; &nbsp; Tumblr最开始是典型的大型LAMP应用，现在的分布式服务模型使用了Scala, HBase, Redis, <a href="http://incubator.apache.org/kafka/design.html">Kafka</a>&nbsp;, Finagle等，现在在处理PHP应用的问题，开始走向面向服务的设计。</span></span></div>
+<div><span style="font-size:14px;"><span style="border-collapse: separate; color: rgb(0, 0, 0); font-family: Tahoma; -webkit-border-horizontal-spacing: 0px; -webkit-border-vertical-spacing: 0px; ">&nbsp; &nbsp; 分布式系统工程师 Blank Matheny讲述Tumblr的架构</span></span></div>
+<div>
+	<h3 dir="ltr"><span style="font-size:14px;">现状</span></h3>
+</div>
+<ul>
+	<li><span style="font-size:14px;">每天5亿PV</span></li>
+	<li><span style="font-size:14px;">~20 工程师</span></li>
+	<li><span style="font-size:14px;">平均每秒4W请求</span></li>
+	<li><span style="font-size:14px;">每天1+ TB 数据写入到Hadoop集群</span></li>
+	<li><span style="font-size:14px;">每天更多TB的数据写入到 MySQL/HBase/Redis/Memcache</span></li>
+	<li><span style="font-size:14px;">每月增长超过30%</span></li>
+	<li><span style="font-size:14px;">~1000 硬件服务器</span></li>
+	<li><span style="font-size:14px;">每个工程师每天分摊的PV将近10亿</span></li>
+	<li><span style="font-size:14px;">每天提交 50GB . Follower列表更新每天产生2.7TB 的数据。</span></li>
+	<li><span style="font-size:14px;">Dashboard 每秒百万的读取和每秒5万的写入, 并且还在增长.</span></li>
+</ul>
+<h2 dir="ltr"><span style="font-size:14px;">软件</span></h2>
+<ul>
+	<li><span style="font-size:14px;">开发使用OS X , 服务器使用Linux (CentOS, Scientific)</span></li>
+	<li><span style="font-size:14px;">Apache</span></li>
+	<li><span style="font-size:14px;">PHP, Scala, Ruby</span></li>
+	<li><span style="font-size:14px;">Redis, HBase, MySQL</span></li>
+	<li><span style="font-size:14px;">Varnish, HA-Proxy, nginx,</span></li>
+	<li><span style="font-size:14px;">Memcache, Gearman, Kafka,&nbsp;Kestrel, Finagle</span></li>
+	<li><span style="font-size:14px;">Thrift, HTTP</span></li>
+	<li><span style="font-size:14px;">Func - a secure, scriptable remote control framework and API</span></li>
+	<li><span style="font-size:14px;">Git, Capistrano, Puppet, Jenkins</span></li>
+</ul>
+<h2 dir="ltr"><span style="font-size:14px;">硬件</span></h2>
+<ul>
+	<li><span style="font-size:14px;">500 web servers</span></li>
+	<li><span style="font-size:14px;">200 database servers (许多服务器是容灾的需要)</span>
+		<ul>
+			<li><span style="font-size:14px;">47 pools</span></li>
+			<li><span style="font-size:14px;">30 shards</span></li>
+		</ul>
+	</li>
+	<li><span style="font-size:14px;">30 memcache servers</span></li>
+	<li><span style="font-size:14px;">22 redis servers</span></li>
+	<li><span style="font-size:14px;">15 varnish servers</span></li>
+	<li><span style="font-size:14px;">25 haproxy nodes</span></li>
+	<li><span style="font-size:14px;">8 nginx</span></li>
+	<li><span style="font-size:14px;">14 job queue servers (kestrel + gearman)</span></li>
+</ul>
+<h2 dir="ltr"><span style="font-size:14px;">架构设计</span></h2>
+<ul>
+	<li><span style="font-size:14px;">Tumblr 相对其他社会网络有不同的使用模式</span>
+		<ul>
+			<li><span style="font-size:14px;">网状的分发结构，每天超过5000万的提交需要分发到用户的Follower , 很多用户都有数百个Follower&nbsp;，百万Follower的用户也不是一两个。所以Tumblr的规模极具挑战性。</span></li>
+			<li><span style="font-size:14px;">由于存在图片和视频，让用户停留时间比较长。</span></li>
+			<li><span style="font-size:14px;">返回给用户的内容和用户的联系人有关，不是简单的数据流。</span></li>
+			<li><span style="font-size:14px;">需要做大量的数据分析（用户数量，用户平均活动范围，用户提交的高质量的内容等）</span></li>
+		</ul>
+	</li>
+	<li><span style="font-size:14px;">Tumblr 运行在托管服务器上 . 设计上需要考虑未来的地理分布。</span></li>
+	<li><span style="font-size:14px;">Tumblr作为一个平台有2部分组成: 公共Tumblr日志&nbsp;和面板<br />
+		</span>
+		<ul>
+			<li><span style="font-size:14px;">公共Tumblr日志是一个博客平台&nbsp;. 容易缓存</span></li>
+			<li><span style="font-size:14px;">控制面板类似&nbsp;Twitter 时间表 . 需要实时更新用户follower的内容.</span>
+				<ul>
+					<li><span style="font-size:14px;">cache不管用，尤其对活跃的用户</span></li>
+					<li><span style="font-size:14px;">需要实时和一致，不应该显示陈旧数据，所以会有每天提交50GB，Follower列表更新需要2.7TB。（多媒体存储在S3上）</span></li>
+				</ul>
+			</li>
+			<li><span style="font-size:14px;">多数用户把Tumblr作为内容消费工具, 70%浏览来自面板.</span></li>
+			<li><span style="font-size:14px;">面板的可用性非常好了，Tumblr日志因为遗留的架构问题导致可用性不好。</span></li>
+		</ul>
+	</li>
+</ul>
+<h3 dir="ltr"><span style="font-size:14px;">老的Tumblr</span></h3>
+<ul>
+	<li><span style="font-size:14px;">Tumblr公司开始托管在Rackspace&nbsp;，他们给每个自定义域blog一个A记录（域名管理方面的内容），当迁出Rackspace的时候需要迁移大量用户，2007年前，使用&nbsp;HAProxy and Varnish来负责均衡。许多像这样的遗留问题</span></li>
+	<li><span style="font-size:14px;">一个传统的 LAMP 演进.</span>
+		<ul>
+			<li><span style="font-size:14px;">历史原因，每个工程师都用PHP。</span></li>
+			<li><span style="font-size:14px;">最开始阶段一台web服务器，一台数据库服务器，一台PHP应用服务器。</span></li>
+			<li><span style="font-size:14px;">To scale they started using memcache, then put in front-end caching, then HAProxy in front of the caches, then MySQL sharding. MySQL sharding has been hugely helpful.</span></li>
+			<li><span style="font-size:14px;">最开始使用memcache ，然后转到前端缓存，使用HAProxy&nbsp;在缓存前，然后使用Mysql水平分区，Mysql水平分区非常有用。</span></li>
+			<li><span style="font-size:14px;">最开始中心化，过去的几年中采用了2台用C语言写的后端服务器来做2件事情：<b>生成ID 和 Staircar</b>&nbsp;，使用Redis来处理面板通知</span></li>
+		</ul>
+	</li>
+	<li><span style="font-size:14px;">面板采用了&nbsp;scatter-gather&nbsp;的方式，当用户访问他们面板的时候采用事件驱动的方式，由于采用事件顺序，分片方案不是工作的很好。</span></li>
+</ul>
+<h3 dir="ltr"><span style="font-size:14px;">新的Tumblr</span></h3>
+<ul>
+	<li><span style="font-size:14px;">因招聘和开发速度的原因，转向JVM。</span></li>
+	<li><span style="font-size:14px;">目标是移除PHP的所有应用，采用服务的方式。所有应用是很薄的一层，通过访问服务来鉴权和呈现。</span></li>
+	<li><span style="font-size:14px;">Scala and Finagle 的选择</span>
+		<ul>
+			<li><span style="font-size:14px;">内部人员很多回Ruby和PHP，所以Scala语言比较容易接受</span></li>
+			<li>
+				<div><span style="font-size:14px;"><span style="border-collapse: separate; color: rgb(0, 0, 0); font-family: Tahoma; -webkit-border-horizontal-spacing: 0px; -webkit-border-vertical-spacing: 0px; ">Finagle&nbsp;是Scala写的，解决了大部分的分布式问题，同时它是免费的。</span></span></div>
+			</li>
+			<li><span style="font-size:14px;">&nbsp;Finagle 提供了初始阶段所有想要的东西 (Thrift, ZooKeeper, etc).</span></li>
+			<li><span style="font-size:14px;">Finagle 被 Foursquare和Twitter使用 . Meetup在使用Scala</span></li>
+			<li><span style="font-size:14px;">喜欢Thrift的应用接口 ， 主要是高性能方面。</span></li>
+			<li><span style="font-size:14px;">喜欢Netty, 但是不喜欢Java , Scala是个不错选择</span></li>
+			<li><span style="font-size:14px;">选择 Finagle 可以通过更少的代码解决分布问题。&nbsp;</span></li>
+			<li>
+				<div><span style="font-size:14px;"><span style="border-collapse: separate; color: rgb(0, 0, 0); font-family: Tahoma; -webkit-border-horizontal-spacing: 0px; -webkit-border-vertical-spacing: 0px; ">Node.js不被选择是因为JVM平台更有优势，</span>Node.js没有开发标准和好的开发策略，没有通过大型系统的代码验证。Scala&nbsp;可以使用java代码，可拓展性好，5毫秒的响应速度，有许多大型java应用可以参考。</span></div>
+			</li>
+		</ul>
+	</li>
+	<li><span style="font-size:14px;">内部服务从基于C/libevent转向基于&nbsp;Scala/Finagle</span></li>
+	<li><span style="font-size:14px;">使用非关系型数据库HBase和Redis , &nbsp;但是大半数据存储在Mysql集群，没有使用HBase替代MySQL。</span></li>
+	<li>
+		<div><span style="font-size:14px;"><span style="border-collapse: separate; color: rgb(0, 0, 0); font-family: Tahoma; -webkit-border-horizontal-spacing: 0px; -webkit-border-vertical-spacing: 0px; ">HBase&nbsp;被用来备份数十亿的短网址和历史数据分析，被用来解决高并发写的问题，例如：每秒百万写级别的面板重置。</span>HBase&nbsp;没有替代Mysql是因为项目经验少，不能打赌。</span></div>
+	</li>
+	<li><span style="font-size:14px;">MySQL和shard(分片数据库）在时序数据上的问题是，一个分片总是热点块，并且由于在slave端的平行插入而导致读端的复制总是落后。<br />
+		</span></li>
+	<li><span style="font-size:14px;">Created a common services framework.</span>
+		<ul>
+			<li><span style="font-size:14px;">Spent a lot of time upfront solving operations problem of how to manage a distributed system.</span></li>
+			<li><span style="font-size:14px;">Built a kind of Rails scaffolding, but for services. A template is used to bootstrap services internally.</span></li>
+			<li><span style="font-size:14px;">All services look identical from an operations perspective. Checking statistics, monitoring, starting and stopping all work the same way for all services.</span></li>
+			<li><span style="font-size:14px;">Tooling is put around the build process in SBT&nbsp;(a Scala build tool) using plugins and helpers to take care of common activities like tagging things in git, publishing to the repository, etc. Most developers don&rsquo;t have to get in the guts of the build system.</span></li>
+		</ul>
+	</li>
+	<li><span style="font-size:14px;">前置层使用 HAProxy. Varnish ， 40台机器.</span></li>
+	<li><span style="font-size:14px;">500 台web服务器上跑着Apache和PHP应用.</span></li>
+	<li><span style="font-size:14px;">200台数据库服务器，部分服务器是容灾需要；成本考虑，硬件使用MTBF。</span></li>
+	<li><span style="font-size:14px;">6种后端服务支撑PHP应用。有一个小组专门来开发这种服务，每2,3周都会推出一种新的服务。包括：&nbsp;Includes dashboard notifications, dashboard secondary index, URL shortener, and a memcache proxy to handle transparent sharding.</span></li>
+	<li><span style="font-size:14px;">MySQL足够了，所以没有用MongoDB.</span></li>
+	<li>
+		<div><span style="font-size:14px;"><span style="border-collapse: separate; color: rgb(0, 0, 0); font-family: Tahoma; -webkit-border-horizontal-spacing: 0px; -webkit-border-vertical-spacing: 0px; ">Gearman , 一个工作队列系统。用来跑长时间运行的或者无需人工干预的工作。</span></span></div>
+	</li>
+	<li><span style="font-size:14px;">Availability is measured in terms of reach. Can a user reach custom domains or the dashboard? Also in terms of error rate.</span></li>
+	<li><span style="font-size:14px;">历史最高需求已经被搞定。现在，如果一部分需求不能满足要求，我们会从用户角度和应用角度对错误的模型进行分析和系统的处理来达到成功的目的。</span></li>
+	<li><span style="font-size:14px;">最初使用了Finagle的Actor模型，后来去掉了。使用了twitter的utility library的Futures接口来处理异步的需求。</span></li>
+	<li><span style="font-size:14px;">Scala鼓励不适用共享状态。Finagle&nbsp;在twitter的产品中得到了很好的测试验证，在机器上无状态运行，保证了开发人员不用去担心线程和锁。</span></li>
+	<li><span style="font-size:14px;">22 Redis servers. Each server has 8 - 32 instances so 100s of Redis instances are used in production.</span>
+		<ul>
+			<li><span style="font-size:14px;">Used for backend storage for dashboard notifications.</span></li>
+			<li><span style="font-size:14px;">A notification is something &nbsp;like a user liked your post. Notifications show up in a user&rsquo;s dashboard to indicate actions other users have taken on their content.</span></li>
+			<li><span style="font-size:14px;">High write ratio made MySQL a poor fit. &nbsp;</span></li>
+			<li><span style="font-size:14px;">Notifications are ephemeral so it wouldn&rsquo;t be horrible if they were dropped, so Redis was an acceptable choice for this function.</span></li>
+			<li><span style="font-size:14px;">Gave them a chance to learn about Redis and get familiar with how it works.</span></li>
+			<li><span style="font-size:14px;">Redis has been completely problem free and the community is great.</span></li>
+			<li><span style="font-size:14px;">A Scala futures based interface for Redis was created. This functionality is now moving into their Cell Architecture.</span></li>
+			<li><span style="font-size:14px;">URL shortener uses Redis as the first level cache and HBase as permanent storage.</span></li>
+			<li><span style="font-size:14px;">Dashboard&rsquo;s secondary index is built around Redis.</span></li>
+			<li><span style="font-size:14px;">Redis is used as Gearman&rsquo;s persistence layer using a memcache proxy built using Finagle.</span></li>
+			<li><span style="font-size:14px;">Slowly moving from memcache to Redis. Would like to eventually settle on just one caching service. Performance is on par with memcache.</span></li>
+		</ul>
+	</li>
+</ul>
+<h3 dir="ltr"><span style="font-size:14px;">内部的Firehose(通信管道)</span></h3>
+<ul>
+	<li><span style="font-size:14px;">Internally applications need access to the activity stream. An activity steam is information about users creating/deleting posts, liking/unliking posts, etc. &nbsp;A challenge is to distribute so much data in real-time. Wanted something that would scale internally and that an application ecosystem could reliably grow around. A central point of distribution was needed.</span></li>
+	<li><span style="font-size:14px;">Previously this information was distributed using Scribe/Hadoop. Services would log into Scribe and begin tailing and then pipe that data into an app. This model stopped scaling almost immediately, especially at peak where people are creating 1000s of posts a second. Didn&rsquo;t want people tailing files and piping to grep.</span></li>
+	<li><span style="font-size:14px;">An internal firehose was created as a message bus. Services and applications talk to the firehose via Thrift.</span></li>
+	<li><span style="font-size:14px;">LinkedIn&rsquo;s Kafka is used to store messages. Internally consumers use an HTTP stream to read from the firehose. MySQL wasn&rsquo;t used because the sharding implementation is changing frequently so hitting it with a huge data stream is not a good idea.</span></li>
+	<li><span style="font-size:14px;">The firehose model is very flexible, not like Twitter&rsquo;s firehose in which data is assumed to be lost. </span>
+		<ul>
+			<li><span style="font-size:14px;">The firehose stream can be rewound in time. It retains a week of data. On connection it&rsquo;s possible to specify the point in time to start reading.</span></li>
+			<li><span style="font-size:14px;">Multiple clients can connect and each client won&rsquo;t see duplicate data. Each client has a client ID. Kafka supports a consumer group idea. Each consumer in a consumer group gets its own messages and won&rsquo;t see duplicates. Multiple clients can be created using the same consumer ID and clients won&rsquo;t see duplicate data. This allows data to be processed independently and in parallel. Kafka uses ZooKeeper to periodically checkpoint how far a consumer has read.</span></li>
+		</ul>
+	</li>
+</ul>
+<h3 dir="ltr"><span style="font-size:14px;">Cell Design for Dashboard Inbox(业务方面的实现，未翻译)</span></h3>
+<ul>
+	<li><span style="font-size:14px;">The current scatter-gather model for providing Dashboard functionality has very limited runway. It won&rsquo;t last much longer.</span>
+		<ul>
+			<li><span style="font-size:14px;">The solution is to move to an inbox model implemented using a Cell Based Architecture that is similar to&nbsp;Facebook Messages.</span></li>
+			<li><span style="font-size:14px;">An inbox is the opposite of scatter-gather. A user&rsquo;s dashboard, which is made up posts from followed users and actions taken by other users, &nbsp;is logically stored together in time order.</span></li>
+			<li><span style="font-size:14px;">Solves the scatter gather problem because it&rsquo;s an inbox. You just ask what is in the inbox so it&rsquo;s less expensive then going to each user a user follows. This will scale for a very long time.</span></li>
+		</ul>
+	</li>
+	<li><span style="font-size:14px;">Rewriting the Dashboard is difficult. The data has a distributed nature, but it has a transactional quality, it&rsquo;s not OK for users to get partial updates.</span>
+		<ul>
+			<li><span style="font-size:14px;">The amount of data is incredible. Messages must be delivered to hundreds of different users on average which is a very different problem than Facebook faces. Large date + high distribution rate + multiple datacenters.</span></li>
+			<li><span style="font-size:14px;">Spec&rsquo;ed at a million writes a second and 50K reads a second. The data set size is 2.7TB of data growth with no replication or compression turned on. The million writes a second is from the 24 byte row key that indicates what content is in the inbox.</span></li>
+			<li><span style="font-size:14px;">Doing this on an already popular application that has to be kept running.</span></li>
+		</ul>
+	</li>
+	<li><span style="font-size:14px;">Cells</span>
+		<ul>
+			<li><span style="font-size:14px;">A cell is a self-contained installation that has all the data for a range of users. All the data necessary to render a user&rsquo;s Dashboard is in the cell.</span></li>
+			<li><span style="font-size:14px;">Users are mapped into cells. Many cells exist per data center.</span></li>
+			<li><span style="font-size:14px;">Each cell has an HBase cluster, service cluster, and Redis caching cluster.</span></li>
+			<li><span style="font-size:14px;">Users are homed to a cell and all cells consume all posts via firehose updates.</span></li>
+			<li><span style="font-size:14px;">Each cell is Finagle based and populates HBase via the firehose and service requests over Thrift.</span></li>
+			<li><span style="font-size:14px;">A user comes into the Dashboard, users home to a particular cell, a service node reads their dashboard via HBase, and passes the data back.</span></li>
+			<li><span style="font-size:14px;">Background tasks consume from the firehose to populate tables and process requests.</span></li>
+			<li><span style="font-size:14px;">A Redis caching layer is used for posts inside a cell.</span></li>
+		</ul>
+	</li>
+	<li><span style="font-size:14px;">Request flow: a user publishes a post, the post is written to the firehose, all of the cells consume the posts and write that post content to post database, the cells lookup to see if any of the followers of the post creator are in the cell, if so the follower inboxes are updated with the post ID.</span></li>
+	<li><span style="font-size:14px;">Advantages of cell design:</span>
+		<ul>
+			<li><span style="font-size:14px;">Massive scale requires parallelization and parallelization requires components be isolated from each other so there is no interaction. Cells provide a unit of parallelization that can be adjusted to any size as the user base grows.</span></li>
+			<li><span style="font-size:14px;">Cells isolate failures. One cell failure does not impact other cells.</span></li>
+			<li><span style="font-size:14px;">Cells enable nice things like the ability to test upgrades, implement rolling upgrades, and test different versions of software.</span></li>
+		</ul>
+	</li>
+	<li><span style="font-size:14px;">The key idea that is easy to miss is:&nbsp;&nbsp;all posts are replicated to all cells.</span>
+		<ul>
+			<li><span style="font-size:14px;">Each cell stores a single copy of all posts. Each cell can completely satisfy a Dashboard rendering request. Applications don&rsquo;t ask for all the post IDs and then ask for the posts for those IDs. It can return the dashboard content for the user. Every cell has all the data needed to fulfill a Dashboard request without doing any cross cell communication.</span></li>
+			<li><span style="font-size:14px;">Two HBase tables are used: one that stores a copy of each post. That data is small compared to the other table which stores every post ID for every user within that cell. The second table tells what the user&rsquo;s dashboard looks like which means they don&rsquo;t have to go fetch all the users a user is following. It also means across clients they&rsquo;ll know if you read a post and viewing a post on a different device won&rsquo;t mean you read the same content twice. With the inbox model state can be kept on what you&rsquo;ve read.</span></li>
+			<li><span style="font-size:14px;">Posts are not put directly in the inbox because the size is too great. So the ID is put in the inbox and the post content is put in the cell just once. This model greatly reduces the storage needed while making it simple to return a time ordered view of an users inbox. The downside is each cell contains a complete copy of call posts. Surprisingly posts are smaller than the inbox mappings. Post growth per day is 50GB per cell, inbox grows at 2.7TB a day. Users consume more than they produce.</span></li>
+			<li><span style="font-size:14px;">A user&rsquo;s dashboard doesn&rsquo;t contain the text of a post, just post IDs, and the majority of the growth is in the IDs.</span></li>
+			<li><span style="font-size:14px;">As followers change the design is safe because all posts are already in the cell. If only follower posts were stored in a cell then cell would be out of date as the followers changed and some sort of back fill process would be needed.</span></li>
+			<li><span style="font-size:14px;">An alternative design is to use a separate post cluster to store post text. The downside of this design is that if the cluster goes down it impacts the entire site. &nbsp;Using the cell design and post replication to all cells creates a very robust architecture.</span></li>
+		</ul>
+	</li>
+	<li><span style="font-size:14px;">A user having millions of followers who are really active is handled by selectively materializing user feeds by their access model (see Feeding Frenzy).</span>
+		<ul>
+			<li><span style="font-size:14px;">Different users have different access models and distribution models that are appropriate. Two different distribution modes: one for popular users and one for everyone else.</span></li>
+			<li><span style="font-size:14px;">Data is handled differently depending on the user type. Posts from active users wouldn&rsquo;t actually be published, posts would selectively materialized.</span></li>
+			<li><span style="font-size:14px;">Users who follow millions of users are treated similarly to users who have millions of followers.</span></li>
+		</ul>
+	</li>
+	<li><span style="font-size:14px;">Cell size is hard to determine. The size of cell is the impact site of a failure. The number of users homed to a cell is the impact. There&rsquo;s a tradeoff to make in what they are willing to accept for the user experience and how much it will cost.</span></li>
+	<li><span style="font-size:14px;">Reading from the firehose is the biggest network issue. Within a cell the network traffic is manageable.</span></li>
+	<li><span style="font-size:14px;">As more cells are added cells can be placed into a cell group that reads from the firehose and then replicates to all cells within the group. A hierarchical replication scheme. This will also aid in moving to multiple datacenters.</span></li>
+</ul>
+<h3 dir="ltr"><span style="font-size:14px;">团队结构</span></h3>
+<ul>
+	<li><span style="font-size:14px;">Teams: 技术设施, 平台开发，架构, SRE （侧重可靠性和可拓展性方面的问题解决）, 产品, 测试, services（趋向于战略研究）.</span></li>
+</ul>
+<h3 dir="ltr"><span style="font-size:14px;">软件部署</span></h3>
+<ul>
+	<li><span style="font-size:14px;">开发一套rsync脚本来部署PHP，当机器超过200台的时候出现各种状态问题。</span></li>
+	<li><span style="font-size:14px;">接下来，使用Capistrano（一个开源工具，可以在多台服务器上运行脚本）在服务堆栈中构建部署进程（开发、分期、生产）。在几十台机器上部署可以正常工作，但当通过SSH部署到数百台服务器时，再次失败。</span></li>
+	<li><span style="font-size:14px;">现在，所有的机器上运行一个协调软件。基于Redhat Func（一个安全的、脚本化的远程控制框架和接口）功能，一个轻量级的API用于向主机发送命令，以构建扩展性。</span></li>
+	<li><span style="font-size:14px;">建立部署是在Func的基础上向主机发送命令，避免了使用SSH。比如，想在组A上部署软件，控制主机就可以找出隶属于组A的节点，并运行部署命令。</span></li>
+	<li><span style="font-size:14px;">部署命令使用Capistrano来实现。使用http的方式从git从库上来检出和上传。</span></li>
+	<li><span style="font-size:14px;">Func API用于返回状态报告，报告机器上的软件版本号</span></li>
+	<li><span style="font-size:14px;">安全重启任何服务，因为他们先关闭连接，然后重启。</span></li>
+	<li><span style="font-size:14px;">所有功能在激活前都运行dark mode下</span></li>
+</ul>
+<h3 dir="ltr"><span style="font-size:14px;">开发</span></h3>
+<ul>
+	<li><span style="font-size:14px;">从哲学上将，任何人都可以使用自己想要的任意工具。但随着团队的发展壮大，这些工具出现了问题。新员工想要更好地融入团队，快速地解决问题，必须以他们为中心，建立操作的标准化。</span></li>
+	<li><span style="font-size:14px;">过程类似于Scrum（一种敏捷管理框架），非常敏捷。</span></li>
+	<li><span style="font-size:14px;">每个开发人员都有一台预配置的开发机器，并按照控制更新。</span></li>
+	<li><span style="font-size:14px;">开发机会出现变化，测试，分期，乃至用于生产。</span></li>
+	<li><span style="font-size:14px;">开发者使用VIM和TextMate。</span></li>
+	<li><span style="font-size:14px;">测试是对PHP程序进行代码审核。</span></li>
+	<li><span style="font-size:14px;">在服务方面，他们已经实现了一个与提交相挂钩的测试基础架构，接下来将继承并内建通知机制。<br />
+		</span></li>
+</ul>
+<h3 dir="ltr"><span style="font-size:14px;">招聘流程</span></h3>
+<ul>
+	<li><span style="font-size:14px;">面试通常避免数学、猜谜、脑筋急转弯等问题，看重实际工作技能。</span></li>
+	<li><span style="font-size:14px;">编程能力是重中之重。</span></li>
+	<li><span style="font-size:14px;">找到合适的人，不是比较人</span></li>
+	<li><span style="font-size:14px;">挑战在于找到具有可用性、扩展性经验的人才，以应对Tumblr面临的网络拥塞。<br />
+		</span>
+		<ul>
+			<li><span style="font-size:14px;">Example, for a new ID generator they needed A JVM process to generate service responses in less the 1ms at a rate at 10K requests per second with a 500 MB RAM limit with High Availability. They found the serial collector gave the lowest latency for this particular work load. Spent a lot of time on JVM tuning.</span></li>
+		</ul>
+	</li>
+</ul>
+<h2 dir="ltr"><span style="font-size:14px;">Lessons learned</span></h2>
+<ul>
+	<li><span style="font-size:14px;">无处不在的自动化。</span></li>
+	<li><span style="font-size:14px;">MySQL 添加水平分区, 应用则不需要。</span></li>
+	<li><span style="font-size:14px;">Redis是惊人的（是不是提醒大家用一下）。</span></li>
+	<li><span style="font-size:14px;">Scala应用程序执行效率和出色。</span></li>
+	<li><span style="font-size:14px;">取消不能工作的项目。</span></li>
+	<li><span style="font-size:14px;">雇佣的人不要因为他们有对团队无用的技能，雇佣的人应该适应团队和工作。</span></li>
+	<li><span style="font-size:14px;">找到帮你找到合适人的stack</span></li>
+	<li><span style="font-size:14px;">围绕团队技能开展工作</span></li>
+	<li><span style="font-size:14px;">阅读论文和博客</span></li>
+	<li><span style="font-size:14px;">多与同行交流</span></li>
+	<li><span style="font-size:14px;">技术追求需要循序渐进。在正式投入使用前，Tumblr用心研究HBase和Redis ， 这样可以降低线上服务风险。</span></li>
+</ul>
+<p><span style="font-size:14px;"><br />
+	</span></p>
+<div><span style="font-size:14px;">&nbsp; &nbsp;&nbsp;</span></div>

@@ -1,0 +1,38 @@
+---
+comments: true
+date: 2009-08-04 00:08:21
+layout: post
+slug: '%e5%88%86%e5%b8%83%e5%bc%8f%e5%bc%80%e6%ba%90%e5%b9%b6%e5%8f%91%e6%a1%86%e6%9e%b6hadoop%e7%ae%80%e4%bb%8b'
+title: 分布式开源并发框架Hadoop简介
+wordpress_id: 355
+categories:
+- Java
+tag:
+- hadoop
+- Java
+---
+
+<p>&nbsp;&nbsp; &nbsp; 系统在现网运行中，很多错误日志没能及时的分析，导致系统的问题总是用户发现，然后告诉我们来解决，而不是我们主动的去积极解决系统中的问题，因此想通过业余时间做一个日志分析系统，主要是把应用层和消息传输模块抛出的日志做分析，方便定位问题。在多核CPU的时代，并发编程是一个趋势，为了更好的利用现网和测试环境的4核CPU，需要先研究一下分布式并发框架Hadoop。</p>
+<p>&nbsp;&nbsp; &nbsp; <big><strong>什么是Hadoop？</strong></big></p>
+<p>&nbsp;&nbsp; &nbsp; <a target="_blank" href="http://hadoop.apache.org/">Hadoop</a>是apache下面的一个分布式并行计算框架，是从lunece中抽取出来的一个框架。Hadoop的核心设计思想是：MapReduce和HDFS，MapReduce是Google提出的一个软件架构，用于大规模数据集（大于1TB）的并行运算。概念&quot;Map（映射）&quot;和&quot;Reduce（化简）&quot;，和他们的主要思想，都是从函数式编程语言借来的，还有从矢量编程语言借来的特性；HDFS是<span class="Apple-style-span" style="line-height: 18px; ">Hadoop Distributed File System的缩写，即：Hadoop分布式文件系统，为分布式计算存储提供底层支持。注：<span class="Apple-style-span" style="line-height: normal; ">MapReduce (google mapreduce 论文点击<a target="_blank" href="http://labs.google.com/papers/mapreduce.html"><big>这里</big></a>)，</span>GFS（Google File System）和bigtable是google的三大核心技术。</span></p>
+<p>&nbsp;&nbsp; &nbsp;<big><strong> HadoopMapReduce介绍</strong></big></p>
+<p>&nbsp;&nbsp; &nbsp;&nbsp;<img alt="" src="http://farm3.static.flickr.com/2133/2179187226_e2e107e0cd.jpg" /></p>
+<p>&nbsp;&nbsp; &nbsp; Map(映射)和reduce(化简)是分开处理的，map是将一个任务分解为多个任务执行，reduce是将多个任务汇总起来得到想要的结果。把一个list拆解为多个放到线程池中启动多个线程计算list中值，然后把多个任务返回的结果合并为一个总的结果其实就是一个简单的MapReduce的应用。</p>
+<p>&nbsp;&nbsp; &nbsp; 在Hadoop官方文档（单击<a target="_blank" href="http://wiki.apache.org/hadoop/HadoopMapReduce">这里</a>）介绍了HadoopMapReduce的三个步骤，map（主要是分解并行的任务），combine（主要是为了提高reduce的效率），reduce（把处理后的结果再汇总起来）</p>
+<p>&nbsp;&nbsp; &nbsp;<big><strong>HDFS介绍</strong></big></p>
+<p>&nbsp;&nbsp; &nbsp;&nbsp;<a target="_blank" href="http://farm4.static.flickr.com/3473/3784740207_2eecf0f742.jpg"><img alt="" src="http://farm4.static.flickr.com/3473/3784740207_2eecf0f742.jpg" /></a></p>
+<p>&nbsp;&nbsp; &nbsp;由上图可以看出，HDFS是由Client,Datanodes,Namenode3部分组成成（详细介绍点击<a target="_blank" href="http://hadoop.apache.org/common/docs/current/hdfs_design.html#Hardware+Failure">这里</a>）。<span class="Apple-style-span" style="font-family: arial; font-size: 14px; line-height: 22px; ">NameNode可以看作是分布式文件系统中的管理者，主要负责管理文件系统的命名空间、集群配置信息和存储块的复制等。NameNode会将文件系统的Meta-data存储在内存中，这些信息主要包括了文件信息、每一个文件对应的文件块的信息和每一个文件块在DataNode的信息等。DataNode是文件存储的基本单元，它将Block存储在本地文件系统中，保存了Block的Meta-data，同时周期性地将所有存在的Block信息发送给NameNode。Client就是需要获取分布式文件系统文件的应用程序。这里通过三个操作来说明他们之间的交互关系（via&nbsp;岑文初《<span class="Apple-style-span" style="font-family: Arial; font-size: 12px; line-height: normal; "><font class="Apple-style-span" size="4"><span class="Apple-style-span" style="font-size: 14px; line-height: 22px;"><a target="_blank" href="http://www.infoq.com/cn/articles/hadoop-intro">分布式计算开源框架Hadoop介绍</a></span></font><span class="Apple-style-span" style="font-family: arial; font-size: 14px; line-height: 22px; ">》<span class="Apple-style-span" style="font-family: Arial; font-size: 12px; line-height: normal; "><span class="Apple-style-span" style="font-family: arial; font-size: 14px; line-height: 22px; ">）</span></span></span></span></span></p>
+<p>&nbsp;&nbsp; &nbsp;Hadoop非常适合海量数据分析，我们系统中的错误日志如果是GB级别的时候，估计问题早就被用户发现了。所以这种日志的分析只是借鉴Hadoop的思想，具体的实现在concurrent基础上就好了。最后共享06年Doug Cutting一个PPT一份，大家围观之！</p>
+<p>&nbsp;</p>
+<div style="width:425px;text-align:left" id="__ss_1803820"><a style="font:14px Helvetica,Arial,Sans-serif;display:block;margin:12px 0 3px 0;text-decoration:underline;" title="hadoop" href="http://www.slideshare.net/longhao/hadoop-1803820">hadoop</a><object style="margin:0px" width="425" height="355">
+<param name="movie" value="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=10345-090803094023-phpapp02&amp;stripped_title=hadoop-1803820" />
+<param name="allowFullScreen" value="true" />
+<param name="allowScriptAccess" value="always" /><embed src="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=10345-090803094023-phpapp02&amp;stripped_title=hadoop-1803820" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="425" height="355"></embed></object>
+<div style="font-size:11px;font-family:tahoma,arial;height:26px;padding-top:2px;">View more <a style="text-decoration:underline;" href="http://www.slideshare.net/">documents</a> from <a style="text-decoration:underline;" href="http://www.slideshare.net/longhao">longhao</a>.</div>
+</div>
+<p>&nbsp;</p>
+<p><big><strong>&nbsp;&nbsp; &nbsp;更多阅读：</strong></big></p>
+<p>1：<a target="_blank" href="http://www.infoq.com/cn/articles/hadoop-intro">分布式计算开源框架Hadoop介绍</a></p>
+<p>2：<a target="_blank" href="http://www.infoq.com/cn/articles/hadoop-config-tip">Hadoop中的集群配置和使用技巧</a></p>
+<p>3：<a target="_blank" href="http://www.infoq.com/cn/articles/hadoop-process-develop">Hadoop基本流程与应用开发</a></p>
+<p>4：<a target="_blank" href="http://www.ibm.com/developerworks/cn/opensource/os-cn-hadoop1/index.html">用 Hadoop 进行分布式并行编程</a></p>

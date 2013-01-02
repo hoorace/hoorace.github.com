@@ -1,0 +1,46 @@
+---
+comments: true
+date: 2008-03-27 19:32:07
+layout: post
+slug: oracle%e7%9a%84jdbc%e9%a9%b1%e5%8a%a8%e8%af%b4%e6%98%8e
+title: oracle的JDBC驱动说明
+wordpress_id: 28
+categories:
+- Java
+---
+
+        Oracle的JDBC驱动一直就是直接拿过来用，却不知道到底有什么具体的作用，今天看到lib目录下面有好几个JDBC驱动，觉得很繁琐，就上网查看了一下，发现的确是在包下面放多了东东，具体的oracle的解释如下：
+<blockquote><strong><a target="_blank" href="http://www.oracle.com/technology/software/tech/java/sqlj_jdbc/htdocs/jdbc_10201.html" title="oracle官方jdbc驱动下载">JDBC Thin for All Platforms</a></strong>
+
+<img width="16" src="http://www.oracle.com/technology/images/bullets_and_symbols/bullet.gif" height="16" />
+<a href="http://download.oracle.com/otn/utilities_drivers/jdbc/10202/classes12.jar">classes12.jar</a> (1,594,191 bytes) - for use with JDK 1.2 and JDK 1.3
+
+<img width="16" src="http://www.oracle.com/technology/images/bullets_and_symbols/bullet.gif" height="16" />
+<a href="http://download.oracle.com/otn/utilities_drivers/jdbc/10202/classes12_g.jar">classes12_g.jar</a> (2,038,127 bytes) - same as classes12.jar, except that classes were compiled with “javac -g” and contain some tracing information.
+
+<img width="16" src="http://www.oracle.com/technology/images/bullets_and_symbols/bullet.gif" height="16" />
+<a href="http://download.oracle.com/otn/utilities_drivers/jdbc/10202/classes12dms.jar">classes12dms.jar</a> (1,601,843 bytes) - same as classes12.jar, except that it contains additional code`to support Oracle Dynamic Monitoring Service.
+
+<img width="16" src="http://www.oracle.com/technology/images/bullets_and_symbols/bullet.gif" height="16" />
+<a href="http://download.oracle.com/otn/utilities_drivers/jdbc/10202/classes12dms_g.jar">classes12dms_g.jar</a> (2,046,467 bytes) - same as classes12dms.jar except that classes were compiled with “javac -g” and contain some tracing information.
+
+<img width="16" src="http://www.oracle.com/technology/images/bullets_and_symbols/bullet.gif" height="16" />
+<a href="http://download.oracle.com/otn/utilities_drivers/jdbc/10202/ojdbc14.jar">ojdbc14.jar</a> (1,540,457 bytes) - classes for use with JDK 1.4 and 1.5
+
+<img width="16" src="http://www.oracle.com/technology/images/bullets_and_symbols/bullet.gif" height="16" />
+<a href="http://download.oracle.com/otn/utilities_drivers/jdbc/10202/ojdbc14_g.jar">ojdbc14_g.jar</a> (1,932,834 bytes) - same as ojdbc14.jar, except that classes were compiled with “javac -g” and contain some tracing information.
+
+<img width="16" src="http://www.oracle.com/technology/images/bullets_and_symbols/bullet.gif" height="16" />
+<a href="http://download.oracle.com/otn/utilities_drivers/jdbc/10202/ojdbc14dms.jar">ojdbc14dms.jar</a> (1,548,006 bytes) - same as ojdbc14.jar, except that it contains additional code`to support Oracle Dynamic Monitoring Service.
+
+<img width="16" src="http://www.oracle.com/technology/images/bullets_and_symbols/bullet.gif" height="16" />
+<a href="http://download.oracle.com/otn/utilities_drivers/jdbc/10202/ojdbc14dms_g.jar">ojdbc14dms_g.jar</a> (1,940,478 bytes) - same as ojdbc14dms.jar, except that classes were compiled with “javac -g” and contain some tracing information.
+
+<img width="16" src="http://www.oracle.com/technology/images/bullets_and_symbols/bullet.gif" height="16" />
+<a href="http://download.oracle.com/otn/utilities_drivers/jdbc/10202/orai18n.jar">orai18n.jar</a> (1,645,109 bytes) - NLS classes for use with JDK 1.2, 1.3, 1.4, and 1.5. This jar file replaces the old nls_charset jar/zip files.
+
+<img width="16" src="http://www.oracle.com/technology/images/bullets_and_symbols/bullet.gif" height="16" />
+<a href="http://download.oracle.com/otn/utilities_drivers/jdbc/10202/ons.jar">ons.jar</a> (48,492 bytes) - for use by the pure Java client-side Oracle Notification Services (ONS) deamon.
+
+<img width="16" src="http://www.oracle.com/technology/images/bullets_and_symbols/bullet.gif" height="16" />
+<a href="http://download.oracle.com/otn/utilities_drivers/jdbc/10202/demo.tar">demo.tar</a> (604,160 bytes) or <a href="http://download.oracle.com/otn/utilities_drivers/jdbc/10202/demo.zip">demo.zip</a> (529,267 bytes) - contains sample JDBC programs.</blockquote>

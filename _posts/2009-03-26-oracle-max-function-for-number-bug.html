@@ -1,0 +1,33 @@
+---
+comments: true
+date: 2009-03-26 12:53:36
+layout: post
+slug: oracle%e7%9a%84max%e5%87%bd%e6%95%b0%e5%af%b9number%e7%b1%bb%e5%9e%8b%e7%9a%84bug
+title: ORACLE的max函数对number类型的bug
+wordpress_id: 248
+categories:
+- Java
+---
+
+<p><big><strong>现象：</strong></big><br />
+根据ibatis日志情况来看，当preReleaseTimes同时存在为空和不为空的数据时，如果按照以下的查询语句执行：<br />
+&nbsp;&nbsp;&nbsp; select max(m.preReleaseTimes) from SIMS_CREDITPOINT m,CP_SIMS n<br />
+&nbsp;&nbsp;&nbsp;&nbsp; where m.icpCode = n.icpCode<br />
+&nbsp;&nbsp;&nbsp; and n.icpType = '4'<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; and t.checkMonth = '200804'<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; and t.typeId = '01'<br />
+查询的结果为空，此情况在我们32个oracle数据库中，只有2个数据库会存在问题。<br />
+如果我们修改一下查询语句，在max中加上to_number：<br />
+&nbsp;&nbsp;&nbsp; select max((to_number(m.preReleaseTimes)) from SIMS_CREDITPOINT m,CP_SIMS n<br />
+&nbsp;&nbsp;&nbsp;&nbsp; where m.icpCode = n.icpCode<br />
+&nbsp;&nbsp;&nbsp; and n.icpType = '4'<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; and t.checkMonth = '200804'<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; and t.typeId = '01'<br />
+则可以查询出相关的正确结果。<br />
+在oracle中number类型的数据可以为空，当空数据和不为空的数据同时存在的时候，使用max函数查询则会偶尔为空。这样的情况不会出现在所有的场合，解决这个问题需要对表统计分析一下。<br />
+<big><strong>解决方法：</strong></big><br />
+EXEC Dbms_Stats.gather_table_stats('数据库用户名，需要全部大写','表名，需要大写');<br />
+<big><strong>程序员应该注意的：</strong></big><br />
+在写查询函数的时候，对number类型的max的时候，应该：max(to_number(col))，同时定义number类型的字段的时候尽量让它的初始值0。<br />
+<br />
+&nbsp;</p>

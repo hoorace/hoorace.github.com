@@ -1,0 +1,134 @@
+---
+comments: true
+date: 2010-03-31 05:20:45
+layout: post
+slug: python%e9%85%8d%e7%bd%ae%e6%96%87%e4%bb%b6%e9%83%a8%e7%bd%b2%e8%87%aa%e5%8a%a8%e6%9b%b4%e6%96%b0%e8%84%9a%e6%9c%ac%e6%95%99%e7%a8%8b
+title: Python配置文件部署自动更新脚本教程
+wordpress_id: 489
+categories:
+- python
+tag:
+- linux
+- python
+---
+
+<p>&nbsp;&nbsp;&nbsp; 系统中存在配置文件几乎是没有悬念的事情，每次系统升级，手动修改配置文件是一件让人非常头痛的事情，既然计算机能够自动搞定这些事情，为什么人工还要干预呢？所以写个脚本来批量处理这个事情。</p>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px;"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp; 需求分析</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px;">
+<ol>
+	<li>新添加的配置能够自动添加到生成环境中去，删除的配置能够自动从生成环境删除；</li>
+	<li>对新添加的配置能够展示给用户，当用户输入某行行号后，能够修改配置到生产环境。</li>
+</ol>
+<p>&nbsp;&nbsp;&nbsp; 用shell脚本写出第一版的程序，发现对空的判断（行内多个空格，空行）无法解决，所以还是用python来实现需求。</p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px;"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp; 实现的过程</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px;">
+<p>1：把*.properties文件内容转化为Dictionary，供后续校对2个文件使用</p>
+<p>
+<pre lang="python" line="1" escaped="true">
+def readFile(name):
+    propFile= file(name, "rb")
+    propDict= dict()
+    for propLine in propFile:
+        propDef= propLine.strip()
+        if len(propDef) == 0:
+            continue
+        if propDef[0] in ( '!', '#' ):
+            continue
+        punctuation= [ propDef.find(c) for c in ':= ' ] + [ len(propDef) ]
+        found= min( [ pos for pos in punctuation if pos != -1 ] )
+        name= propDef[:found].rstrip()
+        value= propDef[found:].lstrip(":= ").rstrip()
+        propDict[name]= value
+    propFile.close()
+    return propDict
+</pre>
+</p>
+<p>2：把生产环境A中没有，但是开发配置B中有的配置添加到A中去，同时把添加的内容放到一个Dictionary中，让后续输入行号可以修改改内容</p>
+<p>
+<pre lang="python" line="1" escaped="true">
+def diffFile(baseFile,serverFile,diffPrintFlag):
+    myFile1 = readFile(baseFile) #base file
+    myFile2 = readFile(serverFile) #the file on server
+    f = open(serverFile,"ab")
+    global count
+    for key in myFile1:
+        value = myFile1.get(key)
+        value2 = myFile2.get(key)
+        #property nedd add to server file
+        if(value != "" and not value2):
+            print str(count) + ": " + key + "=" + value
+            f.write("\r\n" + key + "=" + value)
+            dictGolable[str(count)] = key
+            count += 1
+        if(value2 != value and diffPrintFlag):
+            print "base properties:",key,"=",value,"\t","server properties:",key,"=",value2,"\n"
+        else:
+            pass
+    f.close
+</pre>
+</p>
+<p>3：删除生产环境A中有，但是开发配置B没有的配置</p>
+<p>
+<pre lang="python" line="1" escaped="true">
+for key in myFile2:
+        value = myFile1.get(key)
+        value2 = myFile2.get(key)
+        #property already delete deal;
+        if(value2 != "" and not value):
+            replaceFile(serverFile,key+"="+value2,"")
+</pre>
+</p>
+<p>4：在删除生产环境A中内容的时候需要一个公用方法：</p>
+<p>
+<pre lang="python" line="1" escaped="true">
+def replaceFile(inputFile,old,new):
+    data = open(inputFile).read()
+    data = re.sub(old,new, data)
+    open(inputFile, 'wb').write(data)
+</pre>
+</p>
+<p>5：手工输入行号，能够把前面添加的配置的value修改。</p>
+<p>
+<pre lang="python" line="1" escaped="true">
+def add2File(serverFile):
+    flag = True
+    server = readFile(serverFile)
+    if(count <= 1):
+        flag = False
+    else:
+        print 'press n to exsit!'
+    while(flag):
+        num = raw_input("which row do you want do modify:")
+        try:
+            if(num == 'n' or num == 'N'):
+                flag = False
+                break
+            key = dictGolable[str(num)]
+        except KeyError:
+            print 'error input!'
+            continue
+        if(not key):
+            print 'input wrong,need to reinput:'
+            continue
+        oldVlaue = server.get(key)
+        print 'input value: ',key+"=",
+        value = raw_input('')
+        replaceFile(serverFile,key+"="+oldVlaue,key+"="+value)
+</pre>
+</p>
+<p>当然在这个过程中会碰到KeyError的问题，注意try except一下。</p>
+<p>6：unix下面的换行和dos下面的表示有区别，当在linux下面出现^M的时候，需要用代码来处理：</p>
+<p>
+<pre lang="python" line="1" escaped="true">
+os.system("sed -i'' \"s/\r//\" "+serverFile)
+</pre>
+</p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px;"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp; 源码下载</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px;">
+<p>好了，经过一整子的整理，代码第一个版本终于出炉，满足了开始提出的需求。点击<strong><a href="http://cid-738a71b87370853d.skydrive.live.com/self.aspx/.Public/diff.rar" target="_blank">这里</a></strong>下载全部代码。水平有限，谨慎围观！</p>
+<p>最后的效果如下：<br />
+<p style="text-align: center;"><img alt="" src="http://farm3.static.flickr.com/2770/4478271641_fc199a4e07.jpg" /></p>
+<p>
+</div>

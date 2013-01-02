@@ -1,0 +1,94 @@
+---
+comments: true
+date: 2009-10-25 01:20:59
+layout: post
+slug: java%e5%b9%b6%e5%8f%91%e7%bc%96%e7%a8%8b%e5%ae%9e%e8%b7%b5%ef%bc%9acompletionservice%e5%92%8cfuture%e7%9a%84%e7%bb%93%e5%90%88
+title: Java并发编程实践：CompletionService和Future的结合
+wordpress_id: 368
+categories:
+- Java
+---
+
+<p>&nbsp;&nbsp;&nbsp;&nbsp; <big><strong>当Executor遇上BlockingQueue</strong></big></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp; 在系统中实现一个生产者和消费者的模式，最简单的方法就是使用Executor框架了。如果向Executor框架中提交一批希望得到结果的任 务，需要每个任务在执行关联Future，然后不断的调用timeout为0的get来检查任务是否完成。这样做可以实现功能，但是有点乏味。为了更好的 实现这种需求，Concurrent包中定义了CompletionService，<strong>并有实现类ExecutorCompletionService</strong>。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp; <big><strong>案例：</strong></big><br />
+&nbsp;&nbsp; &nbsp; 在积分计算的过程中，数据的读取和规则的计算和后来对分数和处罚结果的入库时2步不同的操作，可以简单的看成一个生产者和消费者模式，但是生产者的产出有消费者需要的结果，每个服务提供商的计算结果信息都是独立的，所以可以并发的处理这些事情。<br />
+&nbsp;&nbsp;&nbsp; 处理过程中的步骤：<br />
+&nbsp;&nbsp;&nbsp; （1）定义实现Callable接口的类CreditComputeConcuurent和定义来传递计算的结果Domain对象；<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;public class CallBack {</p>
+<div style="margin-left: 80px;">&nbsp;&nbsp; &nbsp;private Credit credit;<br />
+&nbsp;&nbsp; &nbsp;private CreditItem creditItem;<br />
+&nbsp;&nbsp; &nbsp;private String punishMeasures;<br />
+&nbsp;&nbsp; &nbsp;private String errorMessage;<br />
+&nbsp;&nbsp;&nbsp; // get set method;<br />
+}</div>
+<div style="margin-left: 40px;">&nbsp;&nbsp; //这个类是计算的内部类</div>
+<div style="margin-left: 40px;">&nbsp;&nbsp; private class CreditComputeConcuurent implements Callable&lt;CallBack&gt;{<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;private final CreditOperation creditOperation;<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;private final Map&lt;String,Credit&gt; lastMonthCreditMap;<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;private final Map&lt;String,Double&gt; creditItemMap;<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;private final double initScore;<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;private final Sp sp;<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;public CreditComputeConcuurent(final CreditOperation creditOperation,<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;final Map&lt;String,Credit&gt; lastMonthCreditMap,<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;final Map&lt;String,Double&gt; creditItemMap,final double initScore,final Sp sp){<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this.creditOperation = creditOperation;<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this.lastMonthCreditMap = lastMonthCreditMap;<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this.creditItemMap = creditItemMap;<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this.initScore = initScore;<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this.sp = sp;<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;public CallBack call() throws Exception {<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &hellip;&hellip;<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br />
+&nbsp; }</div>
+<p>&nbsp;&nbsp;&nbsp; （2）使用ExecutorCompletionService的构造函数构造线程池，提交CreditComputeConcuurent；</p>
+<p>&nbsp;</p>
+<p>&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;private static final int nThreads = 10;//启动的积分计算的线程数</p>
+<p>&nbsp;</p>
+<p>&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;private ExecutorService exec = Executors.newFixedThreadPool(nThreads);</p>
+<p>&nbsp;</p>
+<p>&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; CompletionService&lt;CallBack&gt; completionService=</p>
+<p>&nbsp;</p>
+<p>&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;new ExecutorCompletionService&lt;CallBack&gt;(exec);</p>
+<p>&nbsp;</p>
+<div style="margin-left: 40px;">&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if(size &gt; 0){<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Iterator&lt;Sp&gt; it = spList.iterator();<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;while(it.hasNext()){<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;sp = it.next();<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;completionService.submit(new CreditComputeConcuurent(creditOperation,<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;lastMonthCreditMap,creditItemMap,initScore,sp));<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}</div>
+<p>&nbsp;&nbsp;&nbsp; （3）通过CompletionService的take()方法获取返回的数据，然后处理数据。<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;try{<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;for(int i=0;i&lt;size;i++){<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<b>Future&lt;CallBack&gt; future = completionService.take();<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;CallBack callBack = future.get() ;</b><br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Credit creditTmp = callBack.getCredit();<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;String creditId = null;<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//写入积分信息<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if(creditTmp != null){<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;creditId = creditBiz.insertCredit(creditTmp);<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//写入积分指标项信息<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;CreditItem creditItemIns = callBack.getCreditItem();<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if(creditItemIns != null){<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;creditBiz.insertCreditItem(creditItemIns);<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//写入处罚信息；<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;String punishMeasures = callBack.getPunishMeasures();<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if(StringUtils.isNotEmpty(punishMeasures)){<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;creditPunishStrategy.insertCreditPunish(creditId, punishMeasures);<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}catch(InterruptedException e){<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;logger.error(&quot;获取completionService出错，请检查原因！&quot;,e);<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;throw new BusinessException(&quot;获取completionService出错，请检查原因！&quot;,e);<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}catch (ExecutionException e) {<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;logger.error(&quot;获取future中的信息失败，请检查原因！&quot;,e);<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;throw new BusinessException(&quot;获取future中的信息失败，请检查原因！&quot;,e);<br />
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}</p>
+<p>&nbsp;&nbsp;&nbsp; <big><strong>注意事项：</strong></big></p>
+<p><strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; A：生产者的需要处理的条数和消费者需要处理的条数数据需要一致，如果单条处理失败，则需要抛出异常，终止线程池的操作，返回错误；<br />
+&nbsp;&nbsp; &nbsp;&nbsp; B：事务控制尽量不要放在多线程中，Spring对多线程中的事务控制没有详细测试过！</strong></p>

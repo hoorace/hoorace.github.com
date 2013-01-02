@@ -1,0 +1,16 @@
+---
+comments: true
+date: 2009-06-21 14:28:11
+layout: post
+slug: jpg%e5%9b%be%e7%89%87%ef%bc%9frar%e6%96%87%e4%bb%b6%ef%bc%9f
+title: jpg图片？rar文件？
+wordpress_id: 340
+categories:
+- web-style
+---
+
+<p>&nbsp;&nbsp;&nbsp; 网上看到<a target="_blank" href="http://www.awflasher.com/blog">aw</a>分享的一个jpg的图片，修改后缀名为rar的时候，里面有相应的压缩文件。这里重现一下操作：<strong>把下图另存为到桌面，然后修改文件的后缀名修改为rar，看看里面有什么东西吧！</strong></p>
+<p><a target="_blank" href="http://www.longtask.com/blog/wp-content/uploads/189800.jpg"><img alt="" src="http://www.longtask.com/blog/wp-content/uploads/189800.jpg" /></a></p>
+<p>&nbsp;&nbsp;&nbsp; <strong>原理讲解</strong>：这实际上是用二进制的方式把jpg文件和rar文件放到了一起，jpg的文件放在前面，rar文件放在后面。在windows的资源管理器展示的时候，*.jpg会展示前面的jpg文件；而当文件后缀修改为*.rar的时候，jpg的文件解压不出来，就只能展示后面的rar文件了。</p>
+<p>&nbsp;&nbsp;&nbsp; <strong>具体的操作步骤</strong>：windows下面用type命令，linux下面用cat命令。操作为：&ldquo;type 初始jpg文件名&nbsp;&nbsp; 初始rar压缩文件名 &gt; 要保存成的jpg文件名&rdquo;</p>
+<p>&nbsp;&nbsp;&nbsp; 示例：<strong>E:\&gt;type 1898.jpg &quot;1898.rar&quot; &gt; 189800.jpg&nbsp;&nbsp;</strong>&nbsp;&nbsp;&nbsp;&nbsp; （图片里面隐藏的rar是BBC电台的网页）</p>

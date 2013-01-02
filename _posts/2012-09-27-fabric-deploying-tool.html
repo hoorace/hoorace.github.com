@@ -1,0 +1,112 @@
+---
+comments: true
+date: 2012-09-27 20:17:08
+layout: post
+slug: fabric-%e9%83%a8%e7%bd%b2%e5%b7%a5%e5%85%b7
+title: Fabric 部署工具
+wordpress_id: 772
+categories:
+- python
+tag:
+- fabric
+- python
+- scp
+- ssh
+---
+
+<p>Fabric 是基于 SSH 协议的 Python 工具，相比传统的 ssh/scp 方式，用 Python 的语法写管理命令更易读也更容易扩展，管理单台或者多台机器犹如本地操作一般。</p>
+<p>官网地址：<a href="http://fabfile.org">http://fabfile.org</a> 安装方法这里不在说明，推荐使用：pip 或者 easy_install 来安装。</p>
+<p>传统维护方法：</p>
+<div><pre style="border:1px solid #ccc ; padding:10px; background-color:#eee;"><code>    <span class="nv">$ </span>ssh x.x.x.x <span class="s1">&#39;uname -a&#39;</span> -- 输出略
+</code></pre></div>
+<p>Fabric 示例：</p>
+<div><pre style="border:1px solid #ccc ; padding:10px; background-color:#eee;"><code>    <span class="nv">$ </span>cat fabfile.py
+    from fabric.api import run
+    def uname<span class="o">()</span>:
+        run<span class="o">(</span><span class="s1">&#39;uname -a&#39;</span><span class="o">)</span>
+    <span class="nv">$ </span>fab -H x.x.x.x uname -- 输出略
+</code></pre></div>
+<p>肉眼直观看上去，貌似比 ssh 方式要写不少代码，但是基于 ssh 方式中间可控环节比较少，例如：你想判断某服务是否已经启动，没有启动则执行启动等等操作。ssh 命令式的做法稍显麻烦。（当然龌龊一点可以在被操作机器上写好一个脚本，ssh 调用这个脚本）</p>
+<p>说几个 Fabric 的优点吧：</p>
+<ol>
+	<li>角色定义</li>
+	<li>代码易读</li>
+	<li>封装了本地、远程操作（还需要自己封装system/popen/ssh操作么？）</li>
+	<li>参数灵活（动态指定 host/role 等，还有并发执行 <em>基于multiprocessing</em> ）</li>
+	<li>完整的日志输出</li>
+</ol>
+<p>罗列的这些，其实日常工作里基本都有类似的封装了，但是有现成的一个成熟的工具，干啥不用呢？对吧。</p>
+<p>常用的配置：</p>
+<div><pre style="border:1px solid #ccc ; padding:10px; background-color:#eee;"><code class="bash">    env.host           -- 主机ip，当然也可以-H参数指定
+    env.password       -- 密码，打好通道的请无视
+    env.roledefs       -- 角色分组，比如：<span class="o">{</span><span class="s1">&#39;web&#39;</span>: <span class="o">[</span><span class="s1">&#39;x&#39;</span>, <span class="s1">&#39;y&#39;</span><span class="o">]</span>, <span class="s1">&#39;db&#39;</span>: <span class="o">[</span><span class="s1">&#39;z&#39;</span><span class="o">]}</span>
+    
+    fab -l             -- 显示可用的task（命令）
+    fab -H             -- 指定host，支持多host逗号分开
+    fab -R             -- 指定role，支持多个
+    fab -P             -- 并发数，默认是串行
+    fab -w             -- warn_only，默认是碰到异常直接abort退出
+    fab -f             -- 指定入口文件，fab默认入口文件是：fabfile/fabfile.py
+    更多请参考：fab --help
+</code></pre></div>
+<p>常用的函数：</p>
+<div><pre style="border:1px solid #ccc ; padding:10px; background-color:#eee;"><code class="bash">    <span class="nb">local</span><span class="o">(</span><span class="s1">&#39;pwd&#39;</span><span class="o">)</span>                     -- 执行本地命令
+    lcd<span class="o">(</span><span class="s1">&#39;/tmp&#39;</span><span class="o">)</span>                      -- 切换本地目录
+    <span class="nb">cd</span><span class="o">(</span><span class="s1">&#39;/tmp&#39;</span><span class="o">)</span>                       -- 切换远程目录
+    run<span class="o">(</span><span class="s1">&#39;uname -a&#39;</span><span class="o">)</span>                  -- 执行远程命令
+    sudo<span class="o">(</span><span class="s1">&#39;/etc/init.d/nginx start&#39;</span><span class="o">)</span>  -- 执行远程sudo，注意pty选项
+</code></pre></div>
+<p>示例1：管理远程 nginx 服务</p>
+<div><pre style="border:1px solid #ccc ; padding:10px; background-color:#eee;"><code class="bash">    <span class="nv">$ </span>cat fabfile.py
+    from fabric.api import *
+    @task
+    def nginx_start<span class="o">()</span>:
+        <span class="s1">&#39;&#39;&#39; nginx start &#39;&#39;&#39;</span>
+    sudo<span class="o">(</span><span class="s1">&#39;/etc/init.d/nginx start&#39;</span><span class="o">)</span>
+
+    @task
+    def nginx_stop<span class="o">()</span>:
+        <span class="s1">&#39;&#39;&#39; nginx stop &#39;&#39;&#39;</span>
+        sudo<span class="o">(</span><span class="s1">&#39;/etc/init.d/nginx stop&#39;</span><span class="o">)</span>
+        
+    <span class="nv">$ </span>fab --list      -- 查看可用命令
+    Available commands:
+
+        nginx_start  nginx start 
+        nginx_stop   nginx stop
+    
+    <span class="nv">$ </span>fab -H x.x.x.x nginx_start  -- 启动 nginx
+</code></pre></div>
+<p>示例2：基于角色</p>
+<div><pre style="border:1px solid #ccc ; padding:10px; background-color:#eee;"><code class="bash">    <span class="nv">$ </span>cat fabfile.py
+    from fabric.api import *
+    env.roledefs <span class="o">=</span> <span class="o">{</span><span class="s1">&#39;nginx&#39;</span>: <span class="o">[</span><span class="s1">&#39;x.x.x.x&#39;</span>, <span class="s1">&#39;y.y.y.y&#39;</span><span class="o">]</span>, <span class="s1">&#39;mysql&#39;</span>: <span class="s1">&#39;z.z.z.z&#39;</span><span class="o">}</span>
+    @task
+    def mysql_start<span class="o">()</span>
+        <span class="s1">&#39;&#39;&#39; mysql start &#39;&#39;&#39;</span>
+        sudo<span class="o">(</span><span class="s1">&#39;/etc/init.d/mysql start&#39;</span><span class="o">)</span>
+        
+    <span class="nv">$ </span>fab --list      -- 查看可用命令
+    Available commands:
+
+        nginx_start  nginx start 
+        nginx_stop   nginx stop
+        mysql_start  mysql start
+    
+    <span class="nv">$ </span>fab -R nginx nginx_start  -- 启动 nginx
+    <span class="nv">$ </span>fab -R mysql mysql_start  -- 启动 mysql
+</code></pre></div>
+<p>示例3：混合本地和远程操作</p>
+<div><pre style="border:1px solid #ccc ; padding:10px; background-color:#eee;"><code class="bash">    <span class="nv">$ </span>cat fabfile
+    def hello<span class="o">()</span>:
+        <span class="s1">&#39;&#39;&#39; test hello &#39;&#39;&#39;</span>
+        with lcd<span class="o">(</span><span class="s1">&#39;/tmp&#39;</span><span class="o">)</span>:  <span class="c"># 切换到 /tmp 目录下</span>
+            <span class="nb">local</span><span class="o">(</span><span class="s1">&#39;svn co http://xxx xxx&#39;</span><span class="o">)</span> <span class="c"># check 代码到本地</span>
+            <span class="nb">local</span><span class="o">(</span><span class="s1">&#39;tar czf xxx.tar.gz xxx/&#39;</span><span class="o">)</span> <span class="c"># 压缩本地包</span>
+            put<span class="o">(</span><span class="s1">&#39;xxx.tar.gz&#39;</span>, <span class="s1">&#39;/tmp&#39;</span><span class="o">)</span> <span class="c"># 上传压缩包到远程 /tmp 目录下</span>
+        with <span class="nb">cd</span><span class="o">(</span><span class="s1">&#39;/tmp&#39;</span><span class="o">)</span>:   <span class="c"># 切换到远程 /tmp 目录</span>
+            run<span class="o">(</span><span class="s1">&#39;tar zxf xxx.tar.gz&#39;</span><span class="o">)</span> <span class="c"># 远程解压</span>
+</code></pre></div>
+<p>是不是看上去都是像本地一样？对吧。</p>
+<p><strong>-------------------------------------------------------------------------------------</strong></p>
+<p><a href="http://weibo.com/514561797">鱼哥</a>这篇文章写的不错，如果用<a href="http://flask.pocoo.org/">flask</a>写个界面操作就更加优美了，何不去做一个呢? &nbsp;From：<a href="http://chenxiaoyu.org/2012/08/30/deploy-with-fabric.html">http://chenxiaoyu.org/2012/08/30/deploy-with-fabric.html</a></p>

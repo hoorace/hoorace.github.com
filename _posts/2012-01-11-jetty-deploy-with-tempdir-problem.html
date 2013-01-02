@@ -1,0 +1,62 @@
+---
+comments: true
+date: 2012-01-11 00:16:25
+layout: post
+slug: jetty%e9%83%a8%e7%bd%b2%e4%b8%adtmpdir%e5%af%bc%e8%87%b4%e6%9c%8d%e5%8a%a1%e4%b8%8d%e5%8f%af%e7%94%a8%e7%9a%84%e9%97%ae%e9%a2%98
+title: Jetty部署中tmpdir导致服务不可用的问题
+wordpress_id: 734
+categories:
+- Java
+tag:
+- Java
+- jetty
+- servlet
+---
+
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 问题现象 </strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p>Java进程存在，Servlet服务存在，cpu使用率低，未发现死锁。重启服务器，问题得到解决。</p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 问题分析 </strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p>&nbsp; &nbsp; 根据tomcat的解压部署方式，发现jetty中设置为：-Djava.io.tmpdir=/tmp ， 根据返回的错误搜索/tmp jetty，发现linux存在watchdong自动清理tmp目录。</p>
+	<div style="border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 9px 0pt 9px 16px; background-color: #000;">
+		<p><span style="color:#fff0f5;">[root@updata jetty]# <strong>cat /etc/cron.daily/tmpwatch</strong></span></p>
+		<p><span style="color:#fff0f5;">#! /bin/sh</span></p>
+		<p><span style="color:#fff0f5;">flags=-umc</span></p>
+		<p><span style="color:#fff0f5;">/usr/sbin/tmpwatch &quot;$flags&quot; -x /tmp/.X11-unix -x /tmp/.XIM-unix \</span></p>
+		<p><span style="color:#fff0f5;">&nbsp; &nbsp; &nbsp; &nbsp; -x /tmp/.font-unix -x /tmp/.ICE-unix -x /tmp/.Test-unix \</span></p>
+		<p><span style="color:#fff0f5;">&nbsp; &nbsp; &nbsp; &nbsp; -X &#39;/tmp/hsperfdata_*&#39; 10d /tmp</span></p>
+		<p><span style="color:#fff0f5;">/usr/sbin/tmpwatch &quot;$flags&quot; 30d /var/tmp</span></p>
+		<p><span style="color:#fff0f5;">for d in /var/{cache/man,catman}/{cat?,X11R6/cat?,local/cat?}; do</span></p>
+		<p><span style="color:#fff0f5;">&nbsp; &nbsp; if [ -d &quot;$d&quot; ]; then</span></p>
+		<p><span style="color:#fff0f5;">&nbsp; &nbsp; &nbsp; &nbsp; /usr/sbin/tmpwatch &quot;$flags&quot; -f 30d &quot;$d&quot;</span></p>
+		<p><span style="color:#fff0f5;">&nbsp; &nbsp; fi</span></p>
+		<p><span style="color:#fff0f5;">done</span></p>
+	</div>
+	<p>系统默认每10天清理一次/tmp目录。</p>
+	<p>Spring会在系统启动加载类到内存中，但是不会加载servlet的相关内容。查看jetty的文档，<strong><a href="http://docs.codehaus.org/display/JETTY/Temporary+Directories">Temporary Directories</a></strong> 有如下说明：</p>
+	<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+		<p>【本段文字为翻译】Jetty 本身没有临时目录，每个应用在war解压的时候指定temp目录，JSPs在运行是编译。</p>
+		<p>确定一个应用临时目录的算法如下：</p>
+		<p>1：尝试使用这个应用明确指定的目录：</p>
+		<ul>
+			<li>如果 webapp.getTempDirectory() 设置了，则使用它，在JVM运行时不要删除这个目录。</li>
+			<li>如果web应用的javax.servlet.context.tempdir这个上下文属性设置，这个目录存在，并且可写。则使用它，在JVM运行时不要删除它。</li>
+		</ul>
+		<p>2：基于全局设置创建一个目录。这个目录中在war解压后产生的目录是这样的： &quot;Jetty_&quot;host&quot;&quot;port&quot;&quot;context&quot;&quot;+virtualhost</p>
+		<ul>
+			<li>如果 $(jetty.home)/work 存在，不要在JVM运行的时候删除，不能在文件夹存在的时候删除里面的内容</li>
+			<li>如果WEB-INF/work存在，不能在jvm运行的时候删除，不能删除文件夹中的内容。</li>
+			<li>或者是创建目录 $(java.io.tmpdir) ，在JVM退出的时候删除这个目录，如果该目录存在，删除该目录的内容。</li>
+		</ul>
+		<p>一个重要的提示：webapp的临时目录只能在它停止的时候删除里面的内容。</p>
+		<p>一旦临时目录被分配，它将作为一个web应用的javax.servlet.context.tempdir的文件实例被设置和检索。</p>
+	</div>
+	<p>&nbsp;</p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 解决问题的方法： </strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p><strong><span style="color:#b22222;">方法1：在jetty.home目录下面创建一个可写的文件夹work，去掉davinci.sh中的-Djava.io.tmpdir=/tmp 设置。</span></strong></p>
+	<p>方法2：修改davinci.sh中的-Djava.io.tmpdir=/tmp为-Djava.io.tmpdir=指定的目录 ，然后在davinci.sh的stop函数中设置删除该目录中的内容。重要提示：每个应用设置的目录不能相同</p>
+</div>

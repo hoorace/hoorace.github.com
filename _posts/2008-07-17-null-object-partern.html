@@ -1,0 +1,67 @@
+---
+comments: true
+date: 2008-07-17 09:18:30
+layout: post
+slug: '%e5%af%b9null-object%e7%9a%84%e4%bd%bf%e7%94%a8%e7%9a%84%e8%ae%a4%e8%af%86%e5%92%8c%e6%80%9d%e8%80%83'
+title: 对null Object的使用的认识和思考
+wordpress_id: 45
+categories:
+- Java
+tag:
+- Java
+---
+
+<p>本次编码的时候犯了一个愚蠢的错误，在几乎所有的biz和manager层加了一个public static final String NULL = null;以此来作为统一的空对象，而这个完全是多次一举，因为null就可以直接代替，就此看来自己完全没有一点点面向对象的概念。为了防止犯类似的错误，决定查询资料好好讨论一下null Object的使用。 <br />
+<br />
+<strong>1：返回一个空的域对象而不是null；</strong> <br />
+在基于领域模型的设计中，在底层定义的domain Object在数据库查询的时候可以返回为空，在此我们先定义一个Do对象。 <br />
+<span style="font-family: Comic Sans MS">public class Tree{ <br />
+&nbsp; private Integer height; <br />
+&nbsp; private Integer age; <br />
+&nbsp; private String name; <br />
+&nbsp; private Double diameter; <br />
+&nbsp; //树叶的域对象； <br />
+&nbsp; private Leaves leaves; <br />
+&nbsp; // get set methods&hellip;&hellip; <br />
+} <br />
+</span><strong>2：在DAO层封装和数据库交互的基本方法后，我们在business层开始对业务逻辑进行简单的封装。</strong>当我们提供一个findTree的方法的时候，如果在数据库中查询一个年龄为16岁的tree对象为空，一般的情况下我们返回为null对象，这样就会导致程序在要取值的时候必须判断是否为空，实例如下： <br />
+<span style="font-family: Comic Sans MS">public class TreeBiz{ <br />
+&nbsp; public Tree findTree(Tree tree){ <br />
+&nbsp;&nbsp;&nbsp; //在这个地方思考一下，如果返回的tree为空的话，下面的方法调用的问题； <br />
+&nbsp;&nbsp;&nbsp; // treeDao.findTree(tree)&hellip;&hellip;&nbsp;<br />
+&nbsp; }&nbsp;<br />
+&nbsp; public String treeName(Tree tree){ <br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return tree.getName(); <br />
+&nbsp; } <br />
+} <br />
+</span><strong>3：如果获取的tree对象为空的话，就会报空指正的错误。</strong>所以必须加上if(tree != null)&hellip;&hellip;而这样就会导致程序中过多的判断了空，不够简洁，同时也很容易出错。 <br />
+如果我们在域对象中重新定义一个空的对象，然后在dao层封装一下，代码的健壮性就会增强了很多。示例如下： <br />
+<span style="font-family: Comic Sans MS">public class Tree{ <br />
+&nbsp; //增加一个空的tree对象 <br />
+&nbsp; public static final Tree NULL = new Tree(); <br />
+&nbsp; private Integer height; <br />
+&nbsp; private Integer age; <br />
+&nbsp; private String name; <br />
+&nbsp; private Double diameter; <br />
+&nbsp; //树叶的域对象； <br />
+&nbsp; private Leaves leaves; <br />
+&nbsp; // get set methods&hellip;&hellip; <br />
+} <br />
+</span><strong>4：在DAO层封装一下获取tree对象的方法 <br />
+</strong><span style="font-family: Comic Sans MS">public class TreeDao{ <br />
+&nbsp; public Tree findTree(Tree tree){&nbsp;<br />
+&nbsp;&nbsp;&nbsp; Tree tree = &hellip;&hellip;&nbsp;<br />
+&nbsp;&nbsp;if(tree == null){ <br />
+&nbsp;&nbsp; &nbsp;//返回一个空的Tree对象 <br />
+&nbsp;&nbsp; &nbsp;return Tree.NULL; <br />
+&nbsp; }else{ <br />
+&nbsp;&nbsp;&nbsp; return tree; <br />
+} <br />
+} <br />
+} <br />
+</span>这样在业务逻辑层调用TreeDao方法的时候就很不会出现对象空指针的问题，增强了程序的健壮性。 <br />
+有人或许会问，为什么在为空的时候不直接 new Tree()， 首先：new一个对象需要分配新的内存开销，而static final的NULL对象则在内存中有一块无法改变的存储空间，降低了系统的开销；其次，NULL对象在执行期就被初始化，返回NULL只用指向该内存地址，而不是重新分配地址，提高的性能。 <br />
+使用NULL Object模式可以确保在DAO层返回有效的对象，及时在查询失败的时候也是如此。这些代表失败的对象&ldquo;什么也没有做&rdquo;！ <br />
+<br />
+<br />
+&nbsp;</p>

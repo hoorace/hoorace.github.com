@@ -1,0 +1,38 @@
+---
+comments: true
+date: 2010-10-25 01:22:14
+layout: post
+slug: '%e6%82%a8%e6%9c%ac%e6%9d%a5%e5%8f%af%e4%bb%a5%e6%9b%b4%e5%bf%ab%e7%9a%84'
+title: 您本来可以更快的
+wordpress_id: 625
+categories:
+- Java
+- python
+---
+
+<p>&nbsp;&nbsp;&nbsp; 升级系统的时候，我看到同事用vi编辑器做相关的操作，有大概20行的配置需要注释掉，这个同事就一个一个的&ldquo;#&rdquo;号操作，注释的过程中，我有些不耐烦，在10行以内这样操作当日也算是靠谱的了，但是多行的时候，这样做的效率的确太低。还有的时候，我们会在vi中不断的&ldquo;dd&rdquo;来删除多行，或者多次的ctrl + c然后ctrl + v，这样最简单，但是量大的时候，效率何在？</p>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp; VI操作</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p>1：注释。命令模式：set nu 找到需要注释的行，然后，：起始行,结束行s/^/#/g。示例：15,27s/^/#/g</p>
+	<p>2：删除多行。其实行-结束行=行数，行数dd。示例：删除光标以下23行，23dd</p>
+	<p>3：删除多个字符。很多人都是直接光标删除，需要习惯性的 9x，转到某个字符，你懂得&hellip;&hellip;</p>
+	<p>4：替换。配置中的多个IP替换的时候,不要粘贴复制。示例：%s/10.1.1.1/10.1.1.2/g</p>
+	<p>5：基本操作，表说你用到的时候查看，这些都是应该记住的。</p>
+	<p>简单的列出几条谈谈效率问题，当然，你可以BS我，如果你有更高效的。追求效率，所以欢迎，也乐意接受BS。</p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp;eclipse的那几个快捷键 </strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p>1：alt + / 。每次看到有多年工作经验的人System.out.println(),或者public static void main(String[] args){}的时候，我很想告诉他其实可以更快的。前面一个需要在windows&gt;preferences&gt;java&gt;edit&gt;templates中设置一下，我设置的是print，然后alt + /，很快就出来你想要的结果了。后面直接输入main，然后alt + /，提示就出来了。引入接口，类等，你也可以输入一部分字符后alt + /，你懂的&hellip;&hellip;您应该上班时间提高效率，而后早点下班，为什么拒绝这些呢？</p>
+	<p>2：ctrl+shift+o。这个可以引人没有导入的类，当然，也可以删除多余的引入。看到有人去掉多余行手动操作的时候，我表示路过。</p>
+	<p>3：ctrl + 1。何必点击那个提示的红色问号？</p>
+	<p>4：alt+shift+s。更快的get和set去吧！表告诉我你还喜欢手写。</p>
+	<p>5：F11,ctrl+F11,alt+shift+x。我就不说了，你真的没有必要去点击按钮或者右键操作的。</p>
+	<p>6：alt+shift+r。点击类名后重命名，或许没有右键好用，习惯了就好。</p>
+	<p>&nbsp;&nbsp;&nbsp; 还有很多操作能够提高效率，当然大家应该都懂的，只是有时候一些XDJM觉得太麻烦，觉得记住这些东西和自己的智商不相符，也罢了。记得一次面试一个应聘者和我说：java除了IO那块，其他我都熟悉。我就问了下：concurrent,jndi,rmi+jms,jpa,jdbc的原理,jce等模块，这个应聘者哑口无言。简单的你都不懂，难点的就别说了。通过IDE提高自己的开发效率都不思考，你写的代码的效率到底如何同样也是个问题！</p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 脚本代码解决，你懂得</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p>&nbsp;&nbsp;&nbsp; 以前同事给我一个ID列表，告诉我把这个里面的数据的状态修改一下。然后就是用UE来行操作，写sql语句，比起某些人一点点操作，我自以为是的发现自己的效率其实很高的。一次，我接到了一个1000多行的操作，而且，里面的id的长度不相同，这个时候，我傻眼了。于是，我尝试用python来解决这个问题，写出一段update的脚本来，写脚本，测试，花费了我20分钟，而后我发现，以后有类似的任务过来，就简单了很多。</p>
+	<p>&nbsp;&nbsp;&nbsp; python脚本代码少，效果好，可谓低买高卖的好语言。</p>
+</div>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 写这个博文，仅仅是有感而发，我的编码水平也是处于社会主义初级阶段，想达到中等发达程序员水平还有很长的路要走，欢迎大家批评我说的不对的地方，和我探讨软件开发。</p>

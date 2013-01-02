@@ -1,0 +1,22 @@
+---
+comments: true
+date: 2010-12-04 07:52:23
+layout: post
+slug: twitter%e5%b0%86%e5%81%9c%e6%ad%a2%e5%af%b9%e8%bf%94%e5%9b%9exml%e6%a0%bc%e5%bc%8f
+title: Twitter Stream将停止支持返回XML
+wordpress_id: 649
+categories:
+- Web Service
+tag:
+- json
+- Web Service
+---
+
+<p><span style="font-size: 14px;">&nbsp;&nbsp; Twitter的开发团队公布消息称这个月6日将停止stream.twitter.com的APIs将停止支持xml格式，仅仅支持json格式；REST，Search APIs不会受到影响。由于现在使用xml来开发twitter api的人较少，所以波及的范围很小，大家估计都感受不到。具体消息点击<strong><a href="http://groups.google.com/group/twitter-development-talk/browse_thread/thread/6959dc497e4dc546/d8f58c013dc29f4e?pli=1">这里</a></strong><br />
+	</span></p>
+<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; 相对json而言，xml格式占用的流量的确大了很多，由于各种开发语言对json的支持逐步完善，json在http传输层取代xml是一种趋势。数据通过后台通过json返回个前台，直接通过模板渲染成页面。通过xml来处理相关的返回就要复杂的多，当然你可以用xslt来把你的xml转化为希望得到的页面结果。<br />
+	</span></p>
+<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; 目前流行的web service一般支持返回xml和json两种格式，twitter这种潮流网站宣布停止支持xml格式必定会让xml的牛人们有点不爽，James Clark就是其中之一，在他的博文《<strong><a href="http://blog.jclark.com/2010/11/xml-vs-web_24.html">XML vs the Web</a></strong>》中分析xml的一些方便的地方：文本类型（非二进制）的数据格式化，开放的标注数据格式化，数据持久性，数据重用性，内容和表现分离。列举了xml在结构化数据方面的优势，json无法替代html，而xml可以完成这部分工作。最后指出：html5将更像xml，后面xml将会更好的为HTML,JOSN,JAVASCRIPT提供服务。<br />
+	</span></p>
+<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; 通过分析数据，twitter做出相关的决定提供open api的厂商具有借鉴意义。在做相关的产品时，需要通过分析不断的给系统瘦身，减少开发成本的同时，给用户提供高效的服务（我个人认为单纯提供json是帮助用户与时俱进）。期待更多的互联网大厂商效仿！<br />
+	</span></p>

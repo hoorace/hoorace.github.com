@@ -1,0 +1,117 @@
+---
+comments: true
+date: 2010-10-09 22:31:36
+layout: post
+slug: '%e6%95%b0%e7%bb%84%e6%8e%92%e5%ba%8f%e7%ae%97%e6%b3%95-counting-sort'
+title: 数组排序算法--Counting Sort
+wordpress_id: 616
+categories:
+- Java
+tag:
+- algorithms
+- counting sorting
+- Java
+- linear-time sorting
+---
+
+<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; 江湖中又现阿里的算法面试题目：<strong>找出数组中重复次数最多的元素并打印</strong>。我碰巧在《编程珠玑》中看到了，javaeye上的帖子的各种实现效率或多或少的有性能问题，更是有人好高骛远的讨论到mapreduce了，明显的把裝B的难度从&ldquo;芙蓉姐姐&rdquo;直接转到&ldquo;小月月&rdquo;。</span></p>
+<p><span style="font-size: 14px;">&nbsp; &nbsp; 涉及到重复元素的问题，在<a href="http://http://www.personal.kent.edu/~rmuhamma/Algorithms/MyAlgorithms/Sorting/linearTimeIntro.htm">线性时间排序算法（Linear-Time Sorting）</a>中到<a href="http://www.personal.kent.edu/~rmuhamma/Algorithms/MyAlgorithms/Sorting/countingSort.htm">计数排序（Counting Sorting）</a>或许是解决这个问题的。简单介绍下计数排序：</span></p>
+<ol>
+	<li><span style="font-size: 14px;"><strong>输入数组A[n]，需要确认元素是1...k之间的数值，如果不知道K的值，则需要遍历求出最大值。</strong></span></li>
+	<li><span style="font-size: 14px;"><strong>建立数组B[k]，初始化的数值为0</strong></span></li>
+	<li><span style="font-size: 14px;"><strong>遍历数组A[n]，如果A[i]=j，则B[j] + 1</strong></span></li>
+	<li><span style="font-size: 14px;"><strong>遍历数组B[k]，根据B[j]的值决定j打印多少次。</strong></span></li>
+</ol>
+<p><span style="font-size: 14px;">&nbsp;&nbsp; 计数排序算法的时间复杂度是O(k) + O(n) + O(k) + O(n) = O(k + n)，在数组中的元素重复较少的时候，和快速排序比起来效率较低。 这个题目只是求出B[j]的最大值，最后一步遍历B[k]都可以省去，在遍历A[n]的时候可以直接记录就可以了。</span></p>
+<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; 具体算法的java实现如下：</span></p>
+<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+	<p><span style="font-size: 14px;">package com.longtask.algorithms;<br />
+		<br />
+		import java.util.Arrays;<br />
+		import java.util.Random;<br />
+		<br />
+		public class CountingSort {<br />
+		&nbsp;&nbsp;&nbsp; private static final int N= 10000;<br />
+		&nbsp;&nbsp;&nbsp; private static final int K= 1000;<br />
+		&nbsp;&nbsp;&nbsp; /**<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;* 得到计数数组<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;* @param num<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;* @return<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;*/<br />
+		&nbsp;&nbsp;&nbsp; public static int[] computeCountingNum(int[] num){<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int maxAppearNum = 0;<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int count = 0;<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int[] countingNum = new int[K];<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int value,countTmpValue;<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for(int i=0;i&lt;N;i++){<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; value = num[i];<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; countTmpValue = countingNum[value];<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //查找出现次数最多的数字<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if(countTmpValue &gt; count){<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; count = countTmpValue;<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; maxAppearNum = value;<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; countingNum[value] = countingNum[value] + 1; <br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //打印出满足阿里面试要求到数据<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; System.out.println(&quot;\n&quot;+maxAppearNum);<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; System.out.println(count);<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return countingNum;<br />
+		&nbsp;&nbsp;&nbsp; }<br />
+		&nbsp;&nbsp;&nbsp; /**<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;* 遍历计数数组，得到排序结果<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;* @param num<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;* @return<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;*/<br />
+		&nbsp;&nbsp;&nbsp; public static int[] sortedNum(int[] num){<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int[] countingNum = computeCountingNum(num);<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int[] sortedNum = new int[N];<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int value;<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int j = 0;<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for(int i=0;i&lt;K;i++){<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; value = countingNum[i];<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if(value &gt; 0){<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; while(value &gt; 0){<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; sortedNum[j] = i;<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; --value;<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ++j;<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return sortedNum;<br />
+		&nbsp;&nbsp;&nbsp; }<br />
+		&nbsp;&nbsp;&nbsp; /**<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;* 产生随机数<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;* @return<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;*/<br />
+		&nbsp;&nbsp;&nbsp; public static int[] randomNumber(){<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int[] num = new int[N];<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Random random = new Random();<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for(int i=0;i&lt;N;i++){<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int m = random.nextInt(K);<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; num[i] = m;<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; return num;<br />
+		&nbsp;&nbsp;&nbsp; }<br />
+		&nbsp;&nbsp;&nbsp; <br />
+		&nbsp;&nbsp;&nbsp; public static void main(String[] args) {<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int[] num = CountingSort.randomNumber();<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //计数排序耗时<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; long t1 = System.currentTimeMillis();<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; CountingSort.sortedNum(num);<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; long t2 = System.currentTimeMillis();<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; System.out.print(t2-t1);<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; System.out.println();<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; //快速排序耗时<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; long t3 = System.currentTimeMillis();<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Arrays.sort(num);<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; long t4 = System.currentTimeMillis();<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; System.out.print(t4-t3);<br />
+		&nbsp;&nbsp;&nbsp; }<br />
+		}<br />
+		</span></p>
+</div>
+<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; 最后测试了下快速排序和技术排序在重复数值较多的情况下的效率，明显技术排序更加靠谱。不同的场景选择不同的算法。</span></p>
+<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; 线性时间排序算法（Linear-Time Sorting）合计有3种算法，如果你对文字感兴趣点击<span style="font-size: 16px;"><strong><a href="http://www.personal.kent.edu/~rmuhamma/Algorithms/algorithm.html">这里</a></strong></span><strong></strong></span></p>
+<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; 当然，一边喝点酒，一边听课是不是更爽，看这段视频吧！</span></p>
+<p style="text-align: center;"><span style="font-size: 14px;"><embed allowfullscreen="true" allowscriptaccess="always" height="400" src="http://www.tudou.com/v/qDFyn7zQKKc/v.swf" type="application/x-shockwave-flash" width="480" wmode="opaque"></embed></span></p>

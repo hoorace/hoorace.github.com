@@ -1,0 +1,87 @@
+---
+comments: true
+date: 2012-03-31 23:32:41
+layout: post
+slug: linux-kernel-%e6%80%a7%e8%83%bd%e5%8e%8b%e5%8a%9b%e4%b8%8b%e7%9a%84%e4%bc%98%e5%8c%96%e5%ae%9e%e8%b7%b5v0-1
+title: Linux kernel 性能压力下的优化实践(V0.1)
+wordpress_id: 750
+categories:
+- Linux
+tag:
+- conntrack_max
+- kernel
+- linux
+- sysctl
+---
+
+<p>&nbsp;&nbsp;&nbsp;&nbsp; 做benchmark测试的过程中，总是会涉及到linux操作系统底层的设置导致无法充分利用机器的性能，在调试的过程中，不少资料没能和linux kernel版本对应上导致一些参数的设置错误。根据现有服务器的硬件条件和软件版本做相关优化，把一些实践的心得分享出来。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Kernel version ： 2.6.32-71.el6.x86_64</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Cpu：Intel(R) Xeon(R) CPU&nbsp;&nbsp;&nbsp; E5606&nbsp; @ 2.13GHz</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Memory：8G</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Release notes ： v0.1&nbsp; 2012-03-31&nbsp; 句柄数&nbsp; ， 网络参数</p>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 问题1：句柄数的问题 </strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p>&nbsp;&nbsp;&nbsp; 使用webbench在Linux下做varlish访问压力测试的时候，遇到Socket/File: Can&rsquo;t open so many files的问题，原因是linux下所有的东西都是文件，包括socket接口，对于大量的网络连接，不仅仅消耗socket文件描述符，对于进程本身还打开相当多的文件，Linux的默认句柄数是1024。</p>
+	<p><strong>解决方式：</strong></p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">修改/etc/security/limits.conf<br />
+		&nbsp;&nbsp;&nbsp;&nbsp; 你的用户名&nbsp; soft nofile 65535&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ##ulimit -Sn<br />
+		&nbsp;&nbsp;&nbsp;&nbsp; 你的用户名 hard nofile 65535&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ##ulimit -Hn<br />
+		unlimt -n 查看</div>
+	<p><strong>参考资料：<br />
+		</strong></p>
+	<ol>
+		<li><a href="http://www.ibm.com/developerworks/cn/linux/l-cn-ulimit/" target="_blank">通过ulimit改善系统性能<br />
+			</a></li>
+	</ol>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 问题2：网络参数 </strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 使用ab或者webbench做压力测试，如果并发数开到1000的时候，无法完成测试。到晚上查看资料发现是linux网络参数设置。<br />
+		<br />
+		<strong>解决方式：</strong></p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">[longhao@longhao etc]# vi /etc/sysctl.conf<br />
+		<u>在kernel2.6之前的添加项：</u><br />
+		net.ipv4.netfilter.ip_conntrack_max = 655360<br />
+		net.ipv4.netfilter.ip_conntrack_tcp_timeout_established = 180<br />
+		<br />
+		<u>kernel2.6之后的添加项：</u><br />
+		net.nf_conntrack_max = 655360&nbsp; # net.nf_conntrack_max = 655360 也可以<br />
+		net.netfilter.nf_conntrack_tcp_timeout_established = 1200<br />
+		<br />
+		[longhao@longhao etc]# sysctl -p /etc/sysctl.conf
+		<p>如果报错：error: &quot;net.nf_conntrack_max&quot; is an unknown key 则需要使用modprobe载入ip_conntrack模块，lsmod查看模块已载入。<br />
+			[longhao@longhao etc]# modprobe&nbsp; ip_conntrack</p>
+	</div>
+	<p><strong>后续说明：</strong><br />
+		&nbsp;&nbsp;&nbsp;&nbsp; --CONNTRACK_MAX 允许的最大跟踪连接条目，是在内核内存中netfilter可以同时处理的&ldquo;任务&rdquo;（连接跟踪条目）<br />
+		&nbsp;&nbsp;&nbsp;&nbsp; --HASHSIZE 存储跟踪连接条目列表的哈西表的大小<br />
+		<br />
+		CONNTRACK_MAX和HASHSIZE的默认值<br />
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 一般来说，CONNTRACK_MAX和HASHSIZE都会设置在&ldquo;合理&rdquo;使用的值上，依据可使用的RAM的大小来计算这个值。<br />
+		<br />
+		<strong>CONNTRACK_MAX的默认值</strong><br />
+		&nbsp;&nbsp;&nbsp;&nbsp; 在i386架构上，CONNTRACK_MAX = RAMSIZE (以bytes记) / 16384 =RAMSIZE (以MegaBytes记) * 64，因此，一个32位的带512M内存的PC在默认情况下能够处理512*1024^2/16384 = 512*64 = 32768个并发的netfilter连接。<br />
+		&nbsp;&nbsp;&nbsp;&nbsp; 但是真正的公式是：CONNTRACK_MAX = RAMSIZE (in bytes) / 16384 / (x / 32) 这里x是指针的bit数，（例如，32或者64bit）<br />
+		<br />
+		请注意：<br />
+		&nbsp;&nbsp;&nbsp;&nbsp; －默认的CONNTRACK_MAX值不会低于128<br />
+		&nbsp;&nbsp;&nbsp;&nbsp; －对于带有超过1G内存的系统，CONNTRACK_MAX的默认值会被限制在65536（但是可以手工设置成更大的值）<br />
+		<br />
+		<strong>HASHSIZE的默认值</strong><br />
+		&nbsp;&nbsp;&nbsp;&nbsp; 通常，CONNTRACK_MAX = HASHSIZE * 8。这意味着每个链接的列表平均包含8个conntrack的条目（在优化的情况并且CONNTRACK_MAX达到的情况下），每个链接的列表就是一个哈西表条目（一个桶）。<br />
+		&nbsp;&nbsp;&nbsp;&nbsp; 在i386架构上，HASHSIZE = CONNTRACK_MAX / 8 =RAMSIZE (以bytes记) / 131072 = RAMSIZE (以MegaBytes记) * 8。举例来说，一个32位、带512M内存的PC可以存储512*1024^2/128/1024 =512*8 = 4096 个桶（链接表）<br />
+		&nbsp;&nbsp;&nbsp;&nbsp; 但是真正的公式是：HASHSIZE = CONNTRACK_MAX / 8 = RAMSIZE (以bytes记) / 131072 / (x / 32)这里x是指针的bit数，（例如，32或者64bit）<br />
+		<br />
+		请注意：<br />
+		&nbsp;&nbsp;&nbsp;&nbsp; －默认HASHSIZE的值不会小于16<br />
+		&nbsp;&nbsp;&nbsp;&nbsp; －对于带有超过1G内存的系统，HASHSIZE的默认值会被限制在8192（但是可以手工设置成更大的值）</p>
+	<p><strong>参考资料：<br />
+		</strong></p>
+	<ol>
+		<li><a href="http://wiki.khnet.info/index.php/Conntrack_tuning" target="_blank">Conntrack tuning</a></li>
+		<li><a href="http://blog.yorkgu.me/2012/02/09/kernel-nf_conntrack-table-full-dropping-packet/" target="_blank">kernel nf_conntrack: table full, dropping packet 解决办法</a></li>
+		<li><a href="http://blog.csdn.net/dog250/article/details/7107537" target="_blank">不要盲目增加ip_conntrack_max-理解Linux内核内存 <br />
+			<br />
+			</a></li>
+	</ol>
+</div>

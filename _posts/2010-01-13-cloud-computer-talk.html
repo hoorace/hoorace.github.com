@@ -1,0 +1,63 @@
+---
+comments: true
+date: 2010-01-13 09:04:17
+layout: post
+slug: '%e8%a2%ab%e4%ba%91%e8%ae%a1%e7%ae%97%e5%92%8c%e8%a2%ab%e2%80%9c%e4%ba%91%e2%80%9d%e5%8c%96'
+title: 被云计算和被“云”化
+wordpress_id: 399
+categories:
+- web-style
+tag:
+- 云计算
+---
+
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font size="3">云计算应该是2009年炒作最火的IT概念，不仅各大厂商争相跟进，更有些&ldquo;散户&rdquo;也参与到炒作之中，七彩云笼罩在IT人的头上，由于需要研究云计算，后续或许会写很多关于云计算的博文，还是开个头来谈谈云计算。</font></p>
+<p><big><font size="4"><b>云计算的产生（问题驱动型）</b></font></big></p>
+<p style="text-align: center;"><font size="3">&nbsp;&nbsp; &nbsp;<img alt="" src="http://farm5.static.flickr.com/4071/4271800142_9a12fe3442.jpg" /><br />
+	&nbsp;&nbsp;&nbsp; 云计算的代表性企业有3家：Salesforce.com;amazonaws.com;appengine.google.com。他们都是遇到了不同的问题，在解决不同问题的过程中，统一到了一个概念：云！</font></p>
+<p><font size="3"><br />
+	&nbsp;&nbsp;&nbsp; 首先谈salesforce：它的CEO贝尼奥夫这个&quot;软件终结者&quot;把SaaS(Software-as-a-service)理念付诸于CRM系统上， 但是SaaS这个概率似乎谁都可以炒作，一个20人的小公司都可以说他们是SaaS的公司。salesforce为了说明自己和这类小字辈的差别，加上自 己的一点分布式计算和分布式存储的基础，号称自己是云计算提供商了。由于云计算是从SaaS演进来的，所以不得不提这家公司。</font></p>
+<p><font size="3"><br />
+	&nbsp;&nbsp;&nbsp; 其次谈amazon：2003年，amazon的某员工发现他们遇到访问量猛增的时候，不断的加机器，而后加上的机器很长一段时间处于低使用率状态，为了 达到70-75%的计算机CPU使用率，他们把一部分资源作为虚拟机的形式租借给没有分布式服务中心的用户，让他们可以在amazon的集群上做自己想做 的事情。从amazonaws.com的域名上来看，amazon其实后续希望在虚拟主机的基础上提供web service服务。amazon提供的服务很好的满足了中小用户的分布式计算和分布式存储的服务，某种意义上说是云计算的典范，可惜它不是云计算的提出 者。</font></p>
+<p><font size="3"><br />
+	&nbsp;&nbsp;&nbsp; 最后谈google：他们在大的集群（以gfs,mapreduce,bigtable基础）上专门做某方面的应用，处理能力提升了很多，2006 年，google内部把这种集群称之为&ldquo;云&rdquo;。当时他们碰到一个问题：如果提高大集群的能力，让它能够超过任何小集群的能力。高级软件工程师克里斯托夫&middot; 比希利亚开启了&ldquo;google 101&rdquo;计划，让高校的学生参与到云的开发中，后来就演变为了google appengine，不过这是google的小云，更大的云是google的全面的服务：gmail,google docs等。有了google的云，你可以在网上做日常的任何事情。</font></p>
+<p><font size="3"><br />
+	&nbsp;&nbsp;&nbsp; 后来，云计算这个概念引起了硬件厂商的兴趣，这样太好了，你们炒作概念，我们顶一下，然后大规模的卖硬件。所以才有了今天的天下一片&ldquo;云&rdquo;的现象。<br />
+	</font></p>
+<p><font size="3"><br />
+	<big><b><font size="4">用户受到云计算的哪些诱惑</font></b></big></font></p>
+<p><font size="3"><br />
+	&nbsp;&nbsp;&nbsp; （1）<strong>省钱</strong>：按需购买计算的资源的确是很好的注意，这样可以很好的提高服务器的使用率，节省硬件和网络的开销。不用的时候则停止租用，节约使用开支。<br />
+	&nbsp;&nbsp;&nbsp; （2）<strong>易拓展</strong>：随时购买新的服务，得到新的资源。<br />
+	&nbsp;&nbsp;&nbsp; （3）<strong>易开发</strong>：在提供的web service的服务的基础上开发应用程序比自己搭建环境要快了很多。<br />
+	&nbsp;&nbsp;&nbsp; 在节省了硬件成本和软件成本的基础上，很多企业都投入到云的怀抱中，目前投入amazon 云计算怀抱的有以下企业：<br />
+	&nbsp;&nbsp;&nbsp; twitter,slideshare,Time&hellip;&hellip;<br />
+	</font></p>
+<p><font size="3"><br />
+	<big><b><font size="4">我理解的云计算组成部分</font></b></big></font></p>
+<p><font size="3"><br />
+	&nbsp;&nbsp;&nbsp; （1）<strong>硬件服务：虚拟机</strong>。通过web的方式租用虚拟机资源，按照自己的需求在虚拟机上跑相关的应用，在处理完相关的业务后，停止租用即可。amazon在这方面拥有优势。<br />
+	&nbsp;&nbsp;&nbsp; （2）<strong>软件服务：webservice</strong>。通过提供webservice来让用户在云计算提供商的集群上实现自己的需求。google在这方面拥有优势。<br />
+	&nbsp;&nbsp;&nbsp; 所谓的分布式存储（magicFS,key-value database）和分布式计算(hadoop)都是可以站在巨人的肩上完成的事情。<br />
+	<br />
+	<big><font size="4"><b>被云计算的中国</b></font></big><font size="4"><b><br />
+	<br />
+	</b></font>&nbsp;&nbsp;&nbsp; 中国的云计算跟进者们，并不是效仿amazon和google来解决系统的问题，提高系统资源的利用率，大部分都是炒作概念，给硬件厂商送钱去了。<br />
+	&nbsp;&nbsp;&nbsp; <strong>（1）移动服务商</strong>：<a href="http://news.csdn.net/a/20091116/214806.html" id="o3hw" title="中国移动的云计算">中国移动的云计算</a>，其实就是一个用hadoop搭建的分布式系统，目前还是科研阶段，有1024个cpu和256个节点，号称是为了提升内部高性能计算需求，其实就是跟进炒作，或许还是为了提升某些人的KPI，这些机器用来实验，硬件厂商开始笑了。<br />
+	&nbsp;&nbsp;&nbsp; <strong>（2）互联网企业</strong>：<a href="http://sae.sina.com.cn/" id="azg7" title="sina的云计算">sina的云计算</a>就是一个webservice而已，和google的有些类似。提供php的语言支持和mysql的数据库支持。没有任何迹象表明sina的云平台和自己的什么服务有关联性，完全是为了云计算而云计算。<br />
+	&nbsp;&nbsp;&nbsp; <strong>（3）地方政府</strong>：不谈了，就是把纳税人的钱扔给国外的巨头，没有技术人员搞什么云计算？完全是在开玩笑！例如：<a href="http://it.sohu.com/20090531/n264245672.shtml" id="l7s3" title="华南首个云计算落户佛山">华南首个云计算落户佛山</a><br />
+	&nbsp;&nbsp;&nbsp; <strong>（4）小企业参与炒作</strong>：戴尔和语音服务提供商<a href="http://www.infobird.com.cn/" id="ndnp" title="讯鸟">讯鸟</a>结成联盟来提供云计算服务，我靠，这真是个云计算上的笑话。修改为&ldquo;云呼叫&rdquo;或许更靠谱<br />
+	&nbsp;&nbsp;&nbsp; 在国内，都是为了云计算而云计算了，看似跟随了时代的潮流，却没有给把服务质量提高到一个层次。没有技术，只能被云计算玩。所以目前在中国没有云计算的厂商，只有被云计算的厂商。<br />
+	</font></p>
+<p><font size="3"><br />
+	<big><b><font size="4">被&ldquo;云&rdquo;化</font></b></big></font></p>
+<p><font size="3"><br />
+	&nbsp;&nbsp;&nbsp; 这方面：杀毒软件提供商瑞星和360安全卫士走到了前列，前者提出了&ldquo;云安全&rdquo;，后者也结合自身优势提出了&ldquo;云木马查杀&rdquo;。一直没有搞明白，我的软件为什么还在升级，而且还在本机上有继续的安装。没有以服务的姿态提供出来，&ldquo;云&rdquo;化是不是太早了？<br />
+	</font></p>
+<p><font size="3"><br />
+	<big><b><font size="4">人人都来云计算</font></b></big><b><font size="4"><br />
+	</font></b>&nbsp;&nbsp;&nbsp; 我家有3台电脑，符合搭建linux集群的条件，想玩一下云计算，有么高招？当然，有开源的云计算软件帮你完成心愿。接触开源软件能够更快的帮你了解云计算。<br />
+	</font></p>
+<p><font size="3">&nbsp;&nbsp;&nbsp; （1） <a href="http://www.eucalyptus.com/" id="ddii" title="Eucalyptus"><strong>Eucalyptus</strong></a><strong> 项目</strong>(Elastic Utility Computing Architecture for Linking Your Programs To Useful Systems)是Amazon EC2 的一个开源实现，它与商业服务接口兼容。和EC2 一样，Eucalyptus 依赖于Linux 和Xen 进行操作系统虚拟化。Eucalyptus 是加利福尼亚大学(Santa Barbara)为进行云计算研究而开发的。您可以从该大学的网站上下载它，或者通过 Eucalyptus Public Cloud 体验它，不过后者有一些限制。</font></p>
+<p><font size="3">&nbsp;&nbsp;&nbsp; （2） <a href="http://www.enomaly.com/" id="ehw6" title="Enomalism"><strong>Enomalism</strong></a><strong> 云计算平台</strong>。Enomalism 是一个开放源代码项目，它提供了一个功能类似于 EC2 的云计算框架。Enomalism 基于 Linux，同时支持 Xen 和 Kernel Virtual Machine(KVM)。Enomalism 提供了一个基于 TurboGears Web 应用程序框架和 Python 的软件栈。 </font></p>
+<p><font size="3">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </font><strong><font size="3">到最后还是很难给云计算下个定义，炒作者太多了，眼花缭乱，期待google出来给一个定义。</font></strong></p>

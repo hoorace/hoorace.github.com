@@ -1,0 +1,29 @@
+---
+comments: true
+date: 2011-05-18 07:49:22
+layout: post
+slug: '%e8%87%aa%e5%8a%a8%e5%8c%96%e4%bb%a3%e7%a0%81%e7%94%9f%e6%88%90%e5%b7%a5%e5%85%b7'
+title: 自动化代码生成工具
+wordpress_id: 679
+categories:
+- Java
+tag:
+- dao
+- ibatis
+- spring
+---
+
+<p><span style="font-size:14px;">&nbsp;&nbsp; &nbsp;我有些不习惯手写Dao层和Domain层的同事的工作方式，或许是我自己太懒了吧！在上个东家有个代码自动生成工具，配置起来较为复杂，但是比手动写还是快了很多的。过来要过支付宝和alimama的java代码生成工具，其实都是无一例外的配置复杂，生成了一些不想要的东西。网上的工具不适合我们业务层的开发，所以就有了写一个简单代码生成工具的想法。</span></p>
+<p><span style="font-size:14px;">&nbsp;&nbsp; &nbsp;一些细节：</span></p>
+<ol>
+	<li><span style="font-size:14px;">支持主流：spring+ibatis的业务开发代码生成，仅仅生成Dao层相关的内容；<br />
+		</span></li>
+	<li><span style="font-size:14px;">配置简单：第一次配置，需要包结构，数据库地址，表名称；第二次仅需要修改表名称；<br />
+		</span></li>
+	<li><span style="font-size:14px;">修改方便：相关的配置参数可以直接添加到yaml，然后在模板中读取；<br />
+		</span></li>
+	<li><span style="font-size:14px;">数据库支持：目前只支持mysql，后面逐步测试支持其他数据库；<br />
+		</span></li>
+</ol>
+<p><span style="font-size:14px;">&nbsp;&nbsp; &nbsp;由于apache在公司当时被限制访问，所以选择freemarker作为模板生成的框架，熟悉velocity的勿怪。目前的实现：可以根据yaml的配置，直接从数据库读取表，然后生成dao层，domain层代码，ibatis mapping和其他一些配置信息。这样基本满足了我们部门开发代码生成需求。</span></p>
+<p><span style="font-size:14px;">&nbsp;&nbsp; &nbsp;由于写的仓促，代码质量较差，暂时不提供代码共享，有需要的联系：longtask@gmail.com</span></p>

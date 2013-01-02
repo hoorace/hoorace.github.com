@@ -1,0 +1,106 @@
+---
+comments: true
+date: 2011-11-12 02:10:29
+layout: post
+slug: '%e7%bb%93%e5%af%b9%e7%bc%96%e7%a8%8b%e5%ae%9e%e8%b7%b5'
+title: 结对编程实践
+wordpress_id: 714
+categories:
+- Java
+tag:
+- eclipse
+- Java
+- refactor
+---
+
+<p><span class="Apple-style-span" style="font-size: 14px; ">&nbsp; &nbsp; 不少程序员会说&ldquo;代码写的太烂了&rdquo;，说很容易，然后您能告诉别人什么地方需要改进么？其实我也有这样的毛病，单个人代码写的好时偶然的，写的烂是必然的，所以需要借助团队的力量来告诉成员需要改进的地方。由于业务编码工作接近尾声，业务开发人员和我主要从测试代码开始入手来改善代码质量，优化业务流程。</span></p>
+<p><span style="font-size:14px;">&nbsp; &nbsp; 流程：由我通过mock的方式写service层的测试代码（仅仅测试复杂的业务流程，仅仅简单调用DAO层流程不用走mock测试），发现代码问题，由业务开发人员来修改代码满足我的需求，在走测试流程中，遇到重复的代码，很容易被发现，由业务开发人员来负责修改（我也会修改一点点）。然后由我继续测试，递归至整个service测试通过。这个流程理论上应该称谓&ldquo;乒乓结对编程&rdquo;。我的编码经验相对丰富，可以适当指导结对开发的同学。</span></p>
+<p><span style="font-size:14px;"><strong>&nbsp; &nbsp; 原则：以人为本，不随意修改别人代码，尊重别人的中间地带的习惯。</strong></span></p>
+<p><span style="font-size:14px;">&nbsp; &nbsp; 实践过程中的一些感想：</span></p>
+<p><span style="font-size:14px;">&nbsp; &nbsp; <strong>1：单个类中重复代码的提取。</strong>Ctrl+C and Ctrl + V对不少人而言都习惯了，复制一下，修改一点东西，一个功能就出来了。也不用考虑未来的维护成本，所以重复代码在系统中就越来越多。在方法中发现类似重复代码，选择这段代码，使用eclipse的refactor快捷键 Alt + Shift + m 可以自动提取方法，eclipse会自动发现其他地方重复的，并用提取的方法代替。</span></p>
+<p><span style="font-size:14px;">&nbsp; &nbsp; <strong>2：Service层方法参数尽量为对象或者接口。</strong>在方法中，如果new出一个对象，就无法mock相关对象，导致测试无法进行先去。在方法参数中传入对象或者接口是很有必要的。</span></p>
+<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+	<p><span style="font-size:14px;">&nbsp; &nbsp; eg：2.1</span></p>
+	<p><span style="font-size:14px;">&nbsp; &nbsp; public Long addUser(String name , String passwd){</span></p>
+	<p><span style="font-size:14px;">&nbsp; &nbsp; &nbsp; &nbsp; User user = new User();</span></p>
+	<p><span style="font-size:14px;">&nbsp; &nbsp; &nbsp; &nbsp; // set method ! &nbsp;这个地方导致mock不能用</span></p>
+	<p><span style="font-size:14px;">&nbsp; &nbsp; &nbsp; &nbsp; //do something!</span></p>
+	<p><span style="font-size:14px;">&nbsp; &nbsp; }</span></p>
+	<p><span style="font-size:14px;">&nbsp; &nbsp; 修改为</span></p>
+	<p><span style="font-size:14px;">&nbsp; &nbsp; public Long addUser(User user){</span></p>
+	<p><span style="font-size:14px;">&nbsp; &nbsp; &nbsp; &nbsp; //do somethings!</span></p>
+	<p><span style="font-size:14px;">&nbsp; &nbsp; }</span></p>
+</div>
+<p><strong>3：代码中不少地方可以重构。</strong>如果发现一个方法中有很多的if-else，那么这个代码明显的抽象的不够。有些if过长，可以通过提取boolean变量来方便代码阅读。某些变量可以使用enum的尽量不要在接口中定义。</p>
+<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+	<p>&nbsp;</p>
+	<p><span class="Apple-style-span" style="font-size: 14px;">eg3.1： &nbsp;&nbsp;</span></p>
+	<p><span class="Apple-style-span" style="font-size: 14px;">&nbsp; &nbsp; if(pvs.getRefererUrl().equals(UrlUtils.getItemUrl(tmpItem.toString() ,&nbsp;</span></p>
+	<p>UrlUtils.ItemUrlType.Original))&nbsp;</p>
+	<p>|| pvs.getRefererUrl().equals(UrlUtils.getItemUrl(tmpItem.toString() ,&nbsp;</p>
+	<p>UrlUtils.ItemUrlType.Simplify)))</p>
+	<p>&amp;&amp; tmpItem &gt; 0){</p>
+	<p>&nbsp; &nbsp;//do someting!<span class="Apple-tab-span" style="white-space:pre"> </span></p>
+	<p>}</p>
+	<p><span class="Apple-style-span" style="font-size: 14px;">&nbsp; &nbsp; 可以修改为：</span></p>
+	<p><span class="Apple-style-span" style="font-size: 14px;">&nbsp; &nbsp; boolean needUpdateFlag = pvs.getRefererUrl().equals(UrlUtils.getItemUrl(tmpItem.toString() ,&nbsp;</span></p>
+	<p>UrlUtils.ItemUrlType.Original))&nbsp;</p>
+	<p>|| pvs.getRefererUrl().equals(UrlUtils.getItemUrl(tmpItem.toString() ,&nbsp;</p>
+	<p>UrlUtils.ItemUrlType.Simplify)))</p>
+	<p>&amp;&amp; tmpItem &gt; 0;</p>
+	<p>if(needUpdateFlag){</p>
+	<p>&nbsp; &nbsp;//do something!</p>
+	<p>} &nbsp;&nbsp;</p>
+	<p><span class="Apple-style-span" style="font-size: 14px;"><br />
+		</span></p>
+	<p><span class="Apple-style-span" style="font-size: 14px;">&nbsp; &nbsp; eg3.2:</span></p>
+	<p><span class="Apple-style-span" style="font-size: 14px;">&nbsp; &nbsp; public interface User{</span></p>
+	<p><span class="Apple-style-span" style="font-size: 14px;">&nbsp; &nbsp; &nbsp; &nbsp; public int BUYER = &quot;0&quot;;</span></p>
+	<p><span class="Apple-style-span" style="font-size: 14px;">&nbsp; &nbsp; &nbsp; &nbsp; public int SELLER = &quot;1&quot;;</span></p>
+	<p><span class="Apple-style-span" style="font-size: 14px;">&nbsp; &nbsp; &nbsp; &nbsp; //else</span></p>
+	<p><span class="Apple-style-span" style="font-size: 14px;">&nbsp; &nbsp; }</span></p>
+	<p><span class="Apple-style-span" style="font-size: 14px;">&nbsp; &nbsp; 可以修改为：</span></p>
+	<p><span class="Apple-style-span" style="font-size: 14px;">&nbsp; &nbsp; public enum UserRole{</span></p>
+	<p><span class="Apple-style-span" style="font-size: 14px;">&nbsp; &nbsp; &nbsp; &nbsp; BUYER(0) , SELLER(1);</span></p>
+	<p><span class="Apple-style-span" style="font-size: 14px;">&nbsp; &nbsp; &nbsp; &nbsp; private UserRole(int num){</span></p>
+	<p><span class="Apple-style-span" style="font-size: 14px;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; this.num = num;</span></p>
+	<p><span class="Apple-style-span" style="font-size: 14px;">&nbsp; &nbsp; &nbsp; &nbsp; }</span></p>
+	<p><span class="Apple-style-span" style="font-size: 14px;">&nbsp; &nbsp; &nbsp; &nbsp; private int num;</span></p>
+	<p><span class="Apple-style-span" style="font-size: 14px;">&nbsp; &nbsp; &nbsp; &nbsp; public int getNum(){</span></p>
+	<p><span class="Apple-style-span" style="font-size: 14px;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; return this.num;</span></p>
+	<p><span class="Apple-style-span" style="font-size: 14px;">&nbsp; &nbsp; &nbsp; &nbsp; }</span></p>
+	<p><span class="Apple-style-span" style="font-size: 14px;">&nbsp; &nbsp; }</span></p>
+	<p><span class="Apple-style-span" style="font-size: 14px;">&nbsp; &nbsp; eg3.3：代码块中if的抽象</span></p>
+	<p><span class="Apple-style-span" style="font-size: 14px;">&nbsp; &nbsp; if(a &gt; 0){</span></p>
+	<p><span class="Apple-style-span" style="font-size: 14px;">&nbsp; &nbsp; &nbsp; &nbsp; throw new RuntimeException(&quot;a &gt; 0&quot;);</span></p>
+	<p><span class="Apple-style-span" style="font-size: 14px;">&nbsp; &nbsp; }</span></p>
+	<p><span class="Apple-style-span" style="font-size: 14px;">&nbsp; &nbsp; if(b &gt; a){</span></p>
+	<p><span class="Apple-style-span" style="font-size: 14px;">&nbsp; &nbsp; &nbsp; &nbsp; throw new RuntimeException(&quot;b &gt; a&quot;);</span></p>
+	<p><span class="Apple-style-span" style="font-size: 14px;">&nbsp; &nbsp; }</span></p>
+	<p><span class="Apple-style-span" style="font-size: 14px;">&nbsp; &nbsp; 可以抽象一个方法</span></p>
+	<p><span class="Apple-style-span" style="font-size: 14px;">&nbsp; &nbsp; public void check(boolean flag , String prompt){</span></p>
+	<p><span class="Apple-style-span" style="font-size: 14px;">&nbsp; &nbsp; &nbsp; &nbsp; if(flag)</span></p>
+	<p><span class="Apple-style-span" style="font-size: 14px;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; throw new RuntimeException(prompt);</span></p>
+	<p><span class="Apple-style-span" style="font-size: 14px;">&nbsp; &nbsp; }</span></p>
+</div>
+<p><strong>4：测试驱动开发。</strong>有些代码会导致Mock测试非常的麻烦，这类代码需要放在小模块中，然后分而治之的去测试。</p>
+<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+	<p><span style="font-size:14px;">&nbsp; &nbsp; eg：4.1</span></p>
+	<p><span style="font-size:14px;">&nbsp; &nbsp; public boolean checkPassword(Long memberId, String password, String ip){</span></p>
+	<p><span style="font-size:14px;">&nbsp; &nbsp; &nbsp; &nbsp; ////以下代码写在一起的</span></p>
+	<p><span style="font-size:14px;">&nbsp; &nbsp; &nbsp; &nbsp; //验证用户的代码</span></p>
+	<p><span style="font-size:14px;">&nbsp; &nbsp; &nbsp; &nbsp; //验证用户登录次数的代码</span></p>
+	<p><span style="font-size:14px;">&nbsp; &nbsp; &nbsp; &nbsp; //验证用户密码的代码</span></p>
+	<p><span style="font-size:14px;">&nbsp; &nbsp; }</span></p>
+	<p><span style="font-size:14px;">&nbsp; &nbsp; 可以尝试修改为：</span></p>
+	<p><span style="font-size:14px;">&nbsp; &nbsp; public boolean checkPassword(Long memberId, String password, String ip){</span></p>
+	<p><span style="font-size:14px;">&nbsp; &nbsp; &nbsp; &nbsp; checkMember(memberId);</span></p>
+	<p><span style="font-size:14px;">&nbsp; &nbsp; &nbsp; &nbsp; checkLoginTimes(memberId);</span></p>
+	<p><span style="font-size:14px;">&nbsp; &nbsp; &nbsp; &nbsp; checkPasswd(memberId , &nbsp;password , ip);</span></p>
+	<p><span style="font-size:14px;">&nbsp; &nbsp; }</span></p>
+</div>
+<p><span style="font-size:14px;">&nbsp; &nbsp; <strong>5：工具设置和IDE快捷键。</strong>还是想说下，宽屏时代的&ldquo;margin column&rdquo;应该设置为120而不是eclipse默认的80。具体方法：Window &gt; Perferences &gt; General &gt; Editors &gt; show print margin修改80到120。编码中超过120个字符就尽量换行处理。IDE的快捷键尽量多用，不要问我为什么！</span></p>
+<p><span style="font-size:14px;">&nbsp; &nbsp;<strong> 6：争执。</strong>独立思考的能力一个具体体现就是与人争执，我鼓励大家与我争论某个代码，同时希望有人能够说&ldquo;老子觉得就应该这样写&rdquo;。如果能够拿出证据或者就是想装逼，我觉得应该尊重别人的想法。</span></p>
+<p><span style="font-size:14px;">&nbsp; &nbsp; 和同事们结对编程过程中，很容易看到别人不好的编码习惯，也很容易学到别人的优良的编码习惯。既然编程界存在5%的神话(http://is.gd/bWjI5m , http://is.gd/Ic8RU0)，如何成为那5%呢？结对编程为我们提供了相互学习编码习惯的条件。思考习惯只能靠自己独立努力去学习！</span></p>
+<div><span style="font-size:14px;"><br />
+	</span></div>

@@ -1,0 +1,79 @@
+---
+comments: true
+date: 2010-10-30 21:58:06
+layout: post
+slug: java%e4%b8%adassert%e7%9a%84%e7%94%9f%e4%ba%a7%e7%8e%af%e5%a2%83%e5%8f%82%e6%95%b0%e6%a0%a1%e9%aa%8c%e4%b8%ad%e7%9a%84%e5%ba%94%e7%94%a8
+title: Java中Assert的生产环境参数校验中的应用
+wordpress_id: 629
+categories:
+- Java
+tag:
+- Java
+- Web Service
+---
+
+<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="http://baike.baidu.com/view/1308664.html?fromTaglist">Tony Hoare爵士</a>有这样一个观点：&quot;<strong>在测试时使用断言，而在产品发布时将断言关闭的程序员，就像是在岸上操练时穿着救生衣，而下海时将救生衣脱掉的水手。</strong>&quot; 在java生产系统中，很少看到断言的存在，即使在用Junit测试，多数情况下也是System.out.println来获取结果，断言被束之高阁。存在即合理，jdk（1.4以后的版本）既然把assert作为他的关键字，肯定是系统应用中有相关的场景。</span></p>
+<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; java中的assert的语法：assert booleanvalue : error info。如果是返回false，则抛出java.lang.AssertionError，这个类继承了Error类（Error 是 Throwable 的子类，用于指示合理的应用程序不应该试图捕获的严重问题），所以系统抛出这类异常的时候，你可以不处理（这不代表你不能catch）。生产系统的多数异常都是需要处理并返回给用户，所以我们可以在系统设计的核心业务调用的位置catch AssertionError错误。</span></p>
+<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+	<p><span style="font-size: 14px;">public void assertor(){<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int x =1;<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; assert x==1?true:false;<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; System.out.println(&quot;print yes&quot;);<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; assert x==2?true:false : &quot;有错误！&quot;;<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; System.out.println(&quot;no print&quot;);<br />
+		&nbsp;&nbsp;&nbsp; }</span></p>
+</div>
+<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 在eclipse执行这段代码，可以正常的执行完毕，并没有发现问题。这是因为eclipse默认是关闭断言的，通过添加参数<strong> -ea</strong> 来打开断言，就发现有以下错误：<br />
+	<strong>java.lang.AssertionError:</strong> 有错误！<br />
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 在代码中添加捕获异常的代码，然后可以做相关的处理。</span></p>
+<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+	<p><span style="font-size: 14px;">public void assertor(){<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; int x =1;<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; assert x==1?true:false;<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; System.out.println(&quot;print yes&quot;);<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; try {<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; assert x==2?true:false : &quot;有错误！&quot;;<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; } catch (AssertionError e) {<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; System.out.println(&quot;has error&quot;);<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; System.out.println(&quot;no print&quot;);<br />
+		&nbsp;&nbsp;&nbsp; }</span></p>
+</div>
+<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 在web service系统API中，请求过程中会有很多的参数校验，多数参数需要判断参数是否为空，程序中会有这样的代码：</span></p>
+<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+	<p><span style="font-size: 14px;">if(StringUtils.isBlank(&quot;name&quot;)){<br />
+		&nbsp;&nbsp;&nbsp; //doing someting<br />
+		}<br />
+		if(StringUtils.isBlank(&quot;age&quot;)){<br />
+		&nbsp;&nbsp;&nbsp; //doing someting<br />
+		}</span></p>
+</div>
+<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 或者是重构一把，把参数放入map中，统一的去遍历map来解决这个问题。</span></p>
+<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+	<p><span style="font-size: 14px;">Map&lt;String,String&gt; map = new HashMap&lt;String, String&gt;();<br />
+		map.put(&quot;name&quot;,name);<br />
+		//通过map来遍历处理抛出错误来校验。<br />
+		public void VolicateNull(Map&lt;String,String&gt; map){<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; for(Entry&lt;String,String&gt; entry:map.entrySet()){<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if(StringUtils.isBlank(entry.getValue())){<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; throw new NullPointerException(entry.getKey());<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br />
+		}</span></p>
+</div>
+<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 在我们new 对象的时候创建了系统资源，虽然jdk可以自动回收，但是也造成了相关的系统浪费，因为assert可以帮你完成相关操作的。我们可以在系统中这样：<br />
+	</span></p>
+<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+	<p><span style="font-size: 14px;"><strong>assert StringUtils.isBlank(&quot;name&quot;) : &quot;some message&quot;;<br />
+		assert StringUtils.isBlank(&quot;age&quot;) : &quot;some message&quot;;</strong><br />
+		</span></p>
+</div>
+<p><span style="font-size: 14px;">而后捕获错误，做出相关的处理。</span></p>
+<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 也许你觉得JDK中的异常用的不爽，这些都是Error的东东，看着觉得头痛，那你可以常识用Sprint中的org.springframework.util.Assert类来做相关的处理，这个类抛出IllegalArgumentException异常，做参数的校验再好也不过了。里面的方法很全，可以看源码了解，例如为空的判断。</span></p>
+<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+	<p><span style="font-size: 14px;">public static void isNull(Object object, String message) {<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; if (object != null) {<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; throw new IllegalArgumentException(message);<br />
+		&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; }<br />
+		}</span></p>
+</div>

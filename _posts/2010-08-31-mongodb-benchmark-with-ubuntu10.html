@@ -1,0 +1,104 @@
+---
+comments: true
+date: 2010-08-31 07:54:28
+layout: post
+slug: mongodb%e5%9c%a8ubuntu10-04%e4%b8%8b%e7%9a%84%e5%8d%95%e6%9c%ba%e6%80%a7%e8%83%bd%e6%b5%8b%e8%af%95
+title: MongoDB在Ubuntu10.04下的单机性能测试
+wordpress_id: 586
+categories:
+- Linux
+- python
+tag:
+- linux
+- mongodb
+- python
+- ubuntu
+---
+
+<p><span style="font-size: 14px;"><a href="http://www.mongodb.org/">MongoDB</a>是一个基于分布式文件存储的数据库开源项目。由C++语言编写。旨在为WEB应用提供可护展的高性能数据存储解决方案。它比纯noSQL数据库查询功能强悍，比关系数据库更面向集合。</span></p>
+<p><span style="font-size: 14px;">测试的硬件：酷睿双核3.0G，2G内存，7200转普通硬盘，Ubuntu10.04 32bit，MongoDB1.61</span></p>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 安装&amp;启动</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<div style="padding: 9px 0pt 9px 16px; background-color: rgb(0, 0, 0); color: rgb(255, 255, 255);">
+		<p><span style="font-size: 14px;">longhao@aliyun:~$&nbsp;sudo apt-get install mongodb</span></p>
+		<p><span style="font-size: 14px;">#添加一个so，否则启动不了mongodb</span></p>
+		<p><span style="font-size: 14px;">longhao@aliyun:~$&nbsp; sudo ln -s /usr/lib/xulrunner-devel-1.9.2.8/lib/libmozjs.so /usr/lib/libmozjs.so</span></p>
+		<p><span style="font-size: 14px;">#启动</span></p>
+		<p><span style="font-size: 14px;">longhao@aliyun:~$ sudo service mongodb start</span></p>
+	</div>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 安装python库</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p><span style="font-size: 14px;">&nbsp;&nbsp; &nbsp;到<a href="http://github.com/mongodb/mongo-python-driver">github上</a>去下载mongodb到python driver或者 git clone git://github.com/mongodb/mongo-python-driver.git pymongo</span></p>
+	<div style="padding: 9px 0pt 9px 16px; background-color: rgb(0, 0, 0); color: rgb(255, 255, 255);">
+		<p><span style="font-size: 14px;">longhao@aliyun:~$ tar zxvf pymongo.*.tar.gz</span></p>
+		<p><span style="font-size: 14px;">longhao@aliyun:~$ cd pymongo</span></p>
+		<p><span style="font-size: 14px;">longhao@aliyun:~$ python setup.py install</span></p>
+	</div>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 编写测试代码</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p><span style="font-size: 14px;">#!/usr/bin/env python<br />
+			from pymongo import Connection<br />
+			import time,datetime<br />
+			<br />
+			connection = Connection(&#39;127.0.0.1&#39;, 27017)<br />
+			db = connection[&#39;testdb&#39;]<br />
+			&#39;&#39;&#39;<br />
+			test program execute time,use python decorator!<br />
+			&#39;&#39;&#39;<br />
+			def func_time(func):<br />
+			&nbsp;&nbsp;&nbsp; def _wrapper(*args,**kwargs):<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; start = time.time()<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; func(*args,**kwargs)<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; print func.__name__,&#39;run:&#39;,time.time()-start<br />
+			&nbsp;&nbsp;&nbsp; return _wrapper<br />
+			<br />
+			@func_time<br />
+			def insert(num):<br />
+			&nbsp;&nbsp;&nbsp; posts = db.posts<br />
+			&nbsp;&nbsp;&nbsp; for x in range(num):<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; post = {&quot;author&quot;: str(x)+&quot;Mike&quot;,<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;text&quot;: &quot;My first blog post!&quot;,<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;tags&quot;: [&quot;mongodb&quot;, &quot;python&quot;, &quot;pymongo&quot;],<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;date&quot;: datetime.datetime.utcnow()}<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; posts.insert(post)<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br />
+			@func_time<br />
+			def find():<br />
+			&nbsp;&nbsp;&nbsp; posts = db.posts<br />
+			&nbsp;&nbsp;&nbsp; print posts.find_one()<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br />
+			@func_time&nbsp;&nbsp;&nbsp; <br />
+			def remove():<br />
+			&nbsp;&nbsp;&nbsp; posts = db.posts<br />
+			&nbsp;&nbsp;&nbsp; print &#39;count before remove:&#39;,posts.count();<br />
+			&nbsp;&nbsp;&nbsp; posts.remove({});&nbsp; <br />
+			&nbsp;&nbsp;&nbsp; print &#39;count after remove:&#39;,posts.count();<br />
+			&nbsp;&nbsp;&nbsp; <br />
+			if __name__ == &quot;__main__&quot;:<br />
+			&nbsp;&nbsp;&nbsp; num = 1000000<br />
+			&nbsp;&nbsp;&nbsp; insert(num)<br />
+			&nbsp;&nbsp;&nbsp; find()<br />
+			&nbsp;&nbsp;&nbsp; remove()</span></p>
+	</div>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 测试结果</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<div style="padding: 9px 0pt 9px 16px; background-color: rgb(0, 0, 0); color: rgb(255, 255, 255);">
+		<p><span style="font-size: 14px;">longhao@aliyun:~$&nbsp;&nbsp;python mongodb.py</span></p>
+		<p><span style="font-size: 14px;">insert run: 211.037979126<br />
+			{u&#39;date&#39;: datetime.datetime(2010, 8, 31, 12, 59, 30, 456000), u&#39;text&#39;: u&#39;My first blog post!&#39;, u&#39;_id&#39;: ObjectId(&#39;4c7cfcb28cb52a3eec00002e&#39;), u&#39;author&#39;: u&#39;46Mike&#39;, u&#39;tags&#39;: [u&#39;mongodb&#39;, u&#39;python&#39;, u&#39;pymongo&#39;]}<br />
+			find run: 0.0865120887756<br />
+			count before remove: 1000000<br />
+			count after remove: 0<br />
+			remove run: 9.01437902451</span></p>
+	</div>
+	<p><span style="font-size: 14px;"><strong>测试显示向数据库中插入100W条数据耗时211.038秒，删除100W条数据耗时9.014秒，数据库文件总大小为1G（这个和保持的对象大小有关系）</strong></span></p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 遇到到问题：</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p><span style="font-size: 14px;">1：数据库文件大小在清空库后不能自动更改；</span></p>
+	<p><span style="font-size: 14px;">2：单线程测试的结果，多线程效率会怎样还需要测试！</span></p>
+</div>

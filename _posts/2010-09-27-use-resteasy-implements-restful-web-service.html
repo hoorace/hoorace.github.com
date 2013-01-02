@@ -1,0 +1,342 @@
+---
+comments: true
+date: 2010-09-27 04:56:05
+layout: post
+slug: '%e7%94%a8resteasy%e5%ae%9e%e7%8e%b0restful-web-service'
+title: 用Resteasy实现restful web service
+wordpress_id: 610
+categories:
+- Java
+- Web Service
+tag:
+- jersey
+- rest
+- resteasy
+- restful
+- Web Service
+---
+
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; REST简介</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p><span style="font-size: 14px;">&nbsp;&nbsp; &nbsp;REST（Representational State Transfer）中文解释为&ldquo;表述性状态转移&rdquo;，是2000年由Roy Fielding 在他的博士论文 《 <a href="http://www.redsaga.com/opendoc/REST_cn.pdf">Architectural Styles and the Design of Network-based Software Architectures </a>》中提出的架构风格。REST是基于HTTP，URI，XML，JSON等协议或者标准，它促使了http协议的更加正确使用。相对于SOAP和WSDL提供的web service方案，REST显得更加简单。</span></p>
+	<p><span style="font-size: 14px;">&nbsp;&nbsp; &nbsp;基于REST的web service应该遵守一些基本的原则：</span></p>
+	<p><span style="font-size: 14px;">&nbsp;&nbsp; &nbsp;1：<strong>资源的识别</strong>：系统中的每一个对象或是资源都可以通过一个唯一的 URI 来进行寻址，URI 的结构应该简单、可预测且易于理解，比如定义目录结构式的 URI。</span></p>
+	<p><span style="font-size: 14px;">&nbsp;&nbsp; &nbsp;2：<strong>协议：</strong> 以遵循<a href="http://www.w3.org/Protocols/rfc2616/rfc2616.html"> HTTP/1.1 RFC2616</a> 所定义的协议的方式显式地使用 HTTP 方法，建立创建、检索、更新和删除（CRUD：Create, Retrieve, Update and Delete）操作与 HTTP 方法之间的一对一映射：</span></p>
+	<ul>
+		<li><span style="font-size: 14px;">POST：&nbsp; 在服务器上创建资源；</span></li>
+		<li><span style="font-size: 14px;">GET：&nbsp; 检索某个资源；</span></li>
+		<li><span style="font-size: 14px;">PUT：&nbsp; 更改资源状态或对其进行更新；</span></li>
+		<li><span style="font-size: 14px;">DELETE：&nbsp; 删除某个资源。</span></li>
+	</ul>
+	<p><span style="font-size: 14px;">&nbsp;&nbsp; &nbsp;3：<strong>自描述的消息：</strong>URI 所访问的每个资源都可以使用不同的形式加以表示（比如 XML 或者 JSON），具体的表现形式取决于访问资源的客户端，客户端与服务提供者使用一种内容协商的机制（请求头与 MIME 类型）来选择合适的数据格式，最小化彼此之间的数据耦合。</span></p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; Java Rest Framework</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p><span style="font-size: 14px;">&nbsp;&nbsp; &nbsp;1：<a href="http://www.restlet.org/">Restlet</a>：&nbsp;出现的较早，在JAX-RS之前就有了，支持的框架较多，但是使用起来不够简单。</span></p>
+	<p><span style="font-size: 14px;">&nbsp;&nbsp; &nbsp;1：<a href="http://cxf.apache.org/">CXF</a>：&nbsp;是Celtix 和 XFire合并后的项目，支持SOAP,WSDL,JSR-WS,REST，配置较为复杂，侵入性太强，单纯构建restful web service显得较重。</span></p>
+	<p><span style="font-size: 14px;">&nbsp;&nbsp; &nbsp;2：<a href="http://www.jboss.org/resteasy/">Resteasy</a>：&nbsp;是jboss下面一个对<a href="http://jsr311.dev.java.net/">JAX-RS</a>（JSR311）的一个实现，使用起来简单方便，支持spring，oauth等。</span></p>
+	<p><span style="font-size: 14px;">&nbsp;&nbsp; &nbsp;3：<a href="https://jersey.dev.java.net/">Jersey</a>：&nbsp;是sun公司对<a href="http://jsr311.dev.java.net/">JAX-RS</a>（JSR311）的一个参考实现，不过现在在逐渐的摆脱参考实现的阴影，逐渐渗透到企业应用，和sun的glassfish和netbeans结合使用可以很方便的构建restful web service。</span></p>
+	<p><span style="font-size: 14px;">&nbsp;&nbsp; &nbsp;实现restful web service使用CXF和restlet都显得太重，使用Jersey总是觉得这个是官方的参考实现，看看Easyrest的文档还是较为全面，所以选择Easyrest来作为rest api的java框架。</span></p>
+	<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; 注：JSR 311 或 JAX-RS（用于 RESTful Web Services 的 Java API）的提议开始于 2007 年，1.0 版本到 2008 年 10 月定稿。目前，JSR 311 版本 1.1 还处于草案阶段。该 JSR 的目的是提供一组 API 以简化 REST 样式的 Web 服务的开发。</span></p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; RESTEasy的一些功能点</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<ol>
+		<li><span style="font-size: 14px;">实现中遵守 JAX-RS 规范</span></li>
+		<li><span style="font-size: 14px;">需要 JDK 5 或者以上版本的应用服务器中运行</span></li>
+		<li><span style="font-size: 14px;">支持在应用服务器中作 junit 测试</span></li>
+		<li><span style="font-size: 14px;">使用annotations更简单的写客户端应用 (JAX-RS 只定义了服务器端的)</span></li>
+		<li><span style="font-size: 14px;">支持HTTP 1.1缓存语义包括缓存。</span></li>
+		<li><span style="font-size: 14px;">支持多种格式: XML, JSON, YAML, Fastinfoset, Multipart, XOP, Atom, etc.</span></li>
+		<li><span style="font-size: 14px;">支持JAXB 和XML, JSON, Jackson, Fastinfoset, and Atom 互转</span></li>
+		<li><span style="font-size: 14px;">支持GZIP ，JBoss Web, Tomcat 6, and Servlet 3.0，EJB, Seam, Guice, Spring, and Spring MVC integration</span></li>
+	</ol>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 使用Resteasy构建 restful web service</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p><span style="font-size: 14px;">&nbsp;&nbsp; 把对图书馆的书籍的操作作为例子，讨论使用resteasy构建restful web service的方法。中间包括pom.xml的配置，web.xml的配置，相关上下文类的实现，核心类中到一些方法。</span></p>
+	<p><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp; 1：创建工程，配置pom.xml</strong></span></p>
+	<p><span style="font-size: 14px;">mvn archetype:create -DgroupId=com.longtask.rest.easyrest -DartifactId=easyrest -DarchetypeArtifactId=maven-archetype-webapp</span></p>
+	<p><span style="font-size: 14px;">mvn eclipse:eclipse</span></p>
+	<p><span style="font-size: 14px;">导入maven工程到eclipse，然后添加如下内容到pom.xml中：</span></p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p><span style="font-size: 14px;">&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot; xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;<br />
+			&nbsp;&nbsp;&nbsp; xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd&quot;&gt;<br />
+			&nbsp;&nbsp;&nbsp; &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;<br />
+			&nbsp;&nbsp;&nbsp; &lt;groupId&gt;com.longtask.rest.easyrest&lt;/groupId&gt;<br />
+			&nbsp;&nbsp;&nbsp; &lt;artifactId&gt;easyrest&lt;/artifactId&gt;<br />
+			&nbsp;&nbsp;&nbsp; &lt;packaging&gt;war&lt;/packaging&gt;<br />
+			&nbsp;&nbsp;&nbsp; &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;<br />
+			&nbsp;&nbsp;&nbsp; &lt;name&gt;easyrest Maven Webapp&lt;/name&gt;<br />
+			&nbsp;&nbsp;&nbsp; &lt;url&gt;http://maven.apache.org&lt;/url&gt;<br />
+			&nbsp;&nbsp;&nbsp; &lt;repositories&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;repository&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;id&gt;jboss&lt;/id&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;url&gt;http://repository.jboss.org/maven2&lt;/url&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;/repository&gt;<br />
+			&nbsp;&nbsp;&nbsp; &lt;/repositories&gt;<br />
+			&nbsp;&nbsp;&nbsp; &lt;dependencies&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;!-- core library --&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;dependency&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;groupId&gt;org.jboss.resteasy&lt;/groupId&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;artifactId&gt;resteasy-jaxrs&lt;/artifactId&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;version&gt;2.0.1.GA&lt;/version&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;/dependency&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;!-- resteasy-jaxb-provider --&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;dependency&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;groupId&gt;org.jboss.resteasy&lt;/groupId&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;artifactId&gt;resteasy-jaxb-provider&lt;/artifactId&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;version&gt;2.0.1.GA&lt;/version&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;/dependency&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;dependency&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;groupId&gt;org.jboss.resteasy&lt;/groupId&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;artifactId&gt;jaxrs-api&lt;/artifactId&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;version&gt;2.0.1.GA&lt;/version&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;/dependency&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;dependency&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;groupId&gt;org.jboss.resteasy&lt;/groupId&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;artifactId&gt;resteasy-oauth&lt;/artifactId&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;version&gt;2.0-beta-2&lt;/version&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;/dependency&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;dependency&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;groupId&gt;org.jboss.resteasy&lt;/groupId&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;artifactId&gt;resteasy-atom-provider&lt;/artifactId&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;version&gt;2.0-beta-2&lt;/version&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;/dependency&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;dependency&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;groupId&gt;org.jboss.resteasy&lt;/groupId&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;artifactId&gt;resteasy-cache-core&lt;/artifactId&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;version&gt;2.0-beta-2&lt;/version&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;/dependency&gt;</span></p>
+		<p><span style="font-size: 14px;"><br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;dependency&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;groupId&gt;junit&lt;/groupId&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;artifactId&gt;junit&lt;/artifactId&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;version&gt;3.8.1&lt;/version&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;scope&gt;test&lt;/scope&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;/dependency&gt;<br />
+			&nbsp;&nbsp;&nbsp; &lt;/dependencies&gt;<br />
+			<br />
+			&nbsp;&nbsp;&nbsp; &lt;build&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;finalName&gt;easyrest&lt;/finalName&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;plugins&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;plugin&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;artifactId&gt;maven-compiler-plugin&lt;/artifactId&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;configuration&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;source&gt;1.6&lt;/source&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;target&gt;1.6&lt;/target&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;/configuration&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;/plugin&gt;<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &lt;/plugins&gt;<br />
+			&nbsp;&nbsp;&nbsp; &lt;/build&gt;<br />
+			&lt;/project&gt;<br />
+			</span></p>
+	</div>
+	<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 需要把相关到JAX-RS规范实现的包和相关的使用到的resteasy的包添加进去。</span></p>
+	<p><span style="font-size: 14px;"><strong>2：web.xml的配置</strong></span></p>
+	<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; RESTeasy 实现了部署为WAR文件的 Servlet ， 在 WEB-INF/web.xml 需要配置相关到信息。具体配置如下：</span></p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p><span style="font-size: 14px;">&nbsp;&nbsp; &lt;web-app&gt;<br />
+			&nbsp;&nbsp; &nbsp;&lt;display-name&gt;easyrest&lt;/display-name&gt;<br />
+			<br />
+			&nbsp;&nbsp; &nbsp;&lt;context-param&gt;<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;param-name&gt;javax.ws.rs.core.Application&lt;/param-name&gt;<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;param-value&gt;com.longtask.rest.resteasy.EasyRestApplication&lt;/param-value&gt;<br />
+			&nbsp;&nbsp; &lt;/context-param&gt;<br />
+			<br />
+			&nbsp;&nbsp; &lt;context-param&gt;<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;param-name&gt;resteasy.servlet.mapping.prefix&lt;/param-name&gt;<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;param-value&gt;/services&lt;/param-value&gt;<br />
+			&nbsp;&nbsp; &lt;/context-param&gt;<br />
+			<br />
+			&nbsp;&nbsp; &lt;listener&gt;<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;listener-class&gt;<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; org.jboss.resteasy.plugins.server.servlet.ResteasyBootstrap<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/listener-class&gt;<br />
+			&nbsp;&nbsp; &lt;/listener&gt;<br />
+			<br />
+			&nbsp;&nbsp; &lt;servlet&gt;<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;servlet-name&gt;Resteasy&lt;/servlet-name&gt;<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;servlet-class&gt;<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/servlet-class&gt;<br />
+			&nbsp;&nbsp; &lt;/servlet&gt;<br />
+			<br />
+			&nbsp;&nbsp; &lt;servlet-mapping&gt;<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;servlet-name&gt;Resteasy&lt;/servlet-name&gt;<br />
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;url-pattern&gt;/services/*&lt;/url-pattern&gt;<br />
+			&nbsp;&nbsp; &lt;/servlet-mapping&gt;<br />
+			<br />
+			&lt;/web-app&gt;</span></p>
+	</div>
+	<p><span style="font-size: 14px;"><strong>3：应用的实现</strong></span></p>
+	<p><span style="font-size: 14px;"><strong>应用：</strong>按照JSR-RS的规范，在web.xml中的配置的类，需要通过继承javax.ws.rs.core.Application实现一个类来告知有哪些应用。</span></p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p><span style="font-size: 14px;">&nbsp;&nbsp; public class EasyRestApplication extends Application {<br />
+			<br />
+			&nbsp;&nbsp; &nbsp;HashSet&lt;Object&gt; singletons = new HashSet&lt;Object&gt;();<br />
+			<br />
+			&nbsp;&nbsp; &nbsp;public EasyRestApplication() {<br />
+			&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;singletons.add(new Library());<br />
+			&nbsp;&nbsp; &nbsp;}<br />
+			<br />
+			&nbsp;&nbsp; &nbsp;@Override<br />
+			&nbsp;&nbsp; &nbsp;public Set&lt;Class&lt;?&gt;&gt; getClasses() {<br />
+			&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;HashSet&lt;Class&lt;?&gt;&gt; set = new HashSet&lt;Class&lt;?&gt;&gt;();<br />
+			&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;//set.add(Library.class);<br />
+			&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return set;<br />
+			&nbsp;&nbsp; &nbsp;}<br />
+			<br />
+			&nbsp;&nbsp; &nbsp;@Override<br />
+			&nbsp;&nbsp; &nbsp;public Set&lt;Object&gt; getSingletons() {<br />
+			&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return singletons;<br />
+			&nbsp;&nbsp; &nbsp;}<br />
+			}</span></p>
+	</div>
+	<p><span style="font-size: 14px;"><strong>POJO对象：</strong>用来传递相关内容，使用javax.xml.bind.annotation将Java pojo定制成XML 模式映射，提供给resteasy返回内容的时候调用。<strong>对象必须有相关到构造函数，否则报错。</strong></span></p>
+	<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; JAX-RS 支持使用 JAXB (Java API for XML Binding) 将 JavaBean 绑定到 XML 或 JSON，反之亦然。JavaBean 必须使用 @XmlRootElement 注释。清单 8 使用 Contact bean 作为示例。没有明确 @XmlElement 注释的字段将包含一个名称与之相同的 XML 元素。<br />
+		</span></p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p><span style="font-size: 14px;">&nbsp;&nbsp; @XmlRootElement(name = &quot;book&quot;)<br />
+			public class Book {<br />
+			&nbsp;&nbsp; &nbsp;private String name;<br />
+			&nbsp;&nbsp; &nbsp;private String content;<br />
+			<br />
+			&nbsp;&nbsp; &nbsp;public Book() {<br />
+			&nbsp;&nbsp; &nbsp;}<br />
+			<br />
+			&nbsp;&nbsp; &nbsp;public Book(String name, String content) {<br />
+			&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this.name = name;<br />
+			&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this.content = content;<br />
+			&nbsp;&nbsp; &nbsp;}<br />
+			<br />
+			&nbsp;&nbsp; &nbsp;@XmlElement<br />
+			&nbsp;&nbsp; &nbsp;public String getName() {<br />
+			&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return name;<br />
+			&nbsp;&nbsp; &nbsp;}<br />
+			<br />
+			&nbsp;&nbsp; &nbsp;public void setName(String name) {<br />
+			&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this.name = name;<br />
+			&nbsp;&nbsp; &nbsp;}<br />
+			<br />
+			&nbsp;&nbsp; &nbsp;@XmlElement<br />
+			&nbsp;&nbsp; &nbsp;public String getContent() {<br />
+			&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return content;<br />
+			&nbsp;&nbsp; &nbsp;}<br />
+			<br />
+			&nbsp;&nbsp; &nbsp;public void setContent(String content) {<br />
+			&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this.content = content;<br />
+			&nbsp;&nbsp; &nbsp;}<br />
+			}</span></p>
+	</div>
+	<p><span style="font-size: 14px;"><strong>应用访问路径的设置：</strong></span></p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p><span style="font-size: 14px;">&nbsp;&nbsp; @Path(&quot;/library&quot;)<br />
+			public class Library{}</span></p>
+	</div>
+	<p><span style="font-size: 14px;">注：@Path表示访问到路径，必须存在于类或者是资源方法中，如果不存在，则通过相对路径来关联类或者方法。如果有@Path，而没有HTTP方法，则该方法为JAXRSResourceLocators。</span></p>
+	<p><span style="font-size: 14px;"><strong>GET：获取一个资源</strong></span></p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p><span style="font-size: 14px;">&nbsp;&nbsp; public static List&lt;Book&gt; books = new ArrayList&lt;Book&gt;();<br />
+			&nbsp;&nbsp; &nbsp;static{<br />
+			&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;books.add(new Book(&quot;huhu&quot;,&quot;huhu&quot;));<br />
+			&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;books.add(new Book(&quot;haha&quot;,&quot;haha&quot;));<br />
+			&nbsp;&nbsp; &nbsp;}<br />
+			&nbsp;&nbsp; &nbsp;<br />
+			&nbsp;&nbsp; &nbsp;@GET<br />
+			&nbsp;&nbsp; &nbsp;@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})<br />
+			&nbsp;&nbsp; &nbsp;@Path(&quot;/books&quot;)<br />
+			&nbsp;&nbsp; &nbsp;<br />
+			&nbsp;&nbsp; &nbsp;public List&lt;Book&gt; listBooks(){<br />
+			&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return books;<br />
+			&nbsp;&nbsp; &nbsp;}<br />
+			&nbsp;&nbsp; &nbsp;<br />
+			&nbsp;&nbsp; &nbsp;@GET<br />
+			&nbsp;&nbsp; &nbsp;@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})<br />
+			&nbsp;&nbsp; &nbsp;@Path(&quot;/book/{id}&quot;)<br />
+			&nbsp;&nbsp; &nbsp;public Book getBook(@PathParam(&quot;id&quot;) String id){<br />
+			&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if(&quot;1&quot;.equals(id))<br />
+			&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return new Book(&quot;huhu&quot;,&quot;huhu&quot;);<br />
+			&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;else<br />
+			&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;return new Book(&quot;haha&quot;,&quot;haha&quot;);<br />
+			&nbsp;&nbsp; &nbsp;}</span></p>
+	</div>
+	<p><span style="font-size: 14px;">通过启动tomcat后，通过访问：curl -i -H &quot;Accept: application/json&quot; http://localhost:8081/easyrest/services/library/books 可以获取相关到返回结果。相关参数到一些说明：</span></p>
+	<p><span style="font-size: 14px;">@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})：返回的内容格式设置</span></p>
+	<p><span style="font-size: 14px;">@PathParam ：访问到路径对于到参数<br />
+		</span></p>
+	<p><span style="font-size: 14px;"><strong>PUT：</strong></span></p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p><span style="font-size: 14px;">&nbsp;&nbsp; @PUT<br />
+			&nbsp;&nbsp; &nbsp;@Path(&quot;/book/{name}&quot;)<br />
+			&nbsp;&nbsp; &nbsp;public void updateBook(@PathParam(&quot;name&quot;) PathSegment book){<br />
+			&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Iterator&lt;Book&gt; it = books.iterator();<br />
+			&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;String name = String.valueOf(book.getMatrixParameters().get(&quot;name&quot;));<br />
+			&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;String content = String.valueOf(book.getMatrixParameters().get(&quot;content&quot;));<br />
+			&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;while(it.hasNext()){<br />
+			&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Book booktmp = it.next();<br />
+			&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if(name.equals(booktmp.getName())){<br />
+			&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;booktmp.setContent(content);<br />
+			&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;break;<br />
+			&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br />
+			&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br />
+			&nbsp;&nbsp; &nbsp;}</span></p>
+	</div>
+	<p><span style="font-size: 14px;">PathSegment是传递多个参数的接口，可以在POST方法后面添加多个参数传入给相关方法中。</span></p>
+	<p><span style="font-size: 14px;"><strong>POST：</strong></span></p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p><span style="font-size: 14px;">&nbsp;&nbsp; @POST<br />
+			&nbsp;&nbsp; &nbsp;@Path(&quot;/book/{name}/{content}&quot;)<br />
+			&nbsp;&nbsp; &nbsp;public void addBook(@PathParam(&quot;name&quot;) String name,@PathParam(&quot;name&quot;) String content){<br />
+			&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;books.add(new Book(name,content));<br />
+			&nbsp;&nbsp; &nbsp;}</span></p>
+	</div>
+	<p><span style="font-size: 14px;"><strong>DELETE：</strong></span></p>
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p><span style="font-size: 14px;">@DELETE<br />
+			&nbsp;&nbsp;&nbsp; @Path(&quot;/book/{name}&quot;)<br />
+			&nbsp;&nbsp;&nbsp; public void delBook(@PathParam(&quot;name&quot;) String name){<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;Iterator&lt;Book&gt; it = books.iterator();<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;while(it.hasNext()){<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;Book book = it.next();<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;if(name.equals(book.getName())){<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;it.remove();<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br />
+			&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;}<br />
+			&nbsp;&nbsp;&nbsp; } &nbsp;</span></p>
+	</div>
+	<p><span style="font-size: 14px;">使用mvn package命名打包工程，把工程放到tomcat webapps目录下面。目前的应用只是简单到测试，涉及到和Spring等框架的交互，OAUTH协议等内容暂时不考虑。更多到内容请参<a href="http://http://docs.jboss.org/resteasy/docs/2.0.0.GA/userguide/html/index.html">考官方文档</a>。<br />
+		</span></p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 用cURL简单测试restful web service</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
+		<p><span style="font-size: 14px;">#test GET<br />
+			curl -i -H &quot;Accept: application/json&quot; http://localhost:8081/easyrest/services/library/books<br />
+			curl -i -H &quot;Accept: application/json&quot; http://localhost:8081/easyrest/services/library/book/1<br />
+			<br />
+			#test POST<br />
+			curl -i -H &quot;Accept: application/json&quot; -X POST http://localhost:8081/easyrest/services/library/book/lala/lala<br />
+			curl -i -H &quot;Accept: application/json&quot; http://localhost:8081/easyrest/services/library/books<br />
+			<br />
+			#test DELETE<br />
+			curl -i -H &quot;Accept: application/json&quot; -X DELETE http://localhost:8081/easyrest/services/library/book/lala<br />
+			<br />
+			#test PUT not success<br />
+			curl -i -H &quot;Accept: application/json&quot;&nbsp; -X PUT http://localhost:8081/easyrest/services/library/book;name=haha;content=xiugai&nbsp;&nbsp;</span></p>
+	</div>
+	<p><span style="font-size: 14px;">注：Curl 是一个流行的命令行工具，可以向使用 HTTP 和 HTTPS 协议的服务器发送请求。这是一个与 RESTful Web 服务通讯的好工具，因为它可以通过任何 HTTP 方法发送内容。Curl 已经在 Linux 和 Mac 中自带。</span></p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 参考资料</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+	<p><span style="font-size: 14px;">1：<a href="http://docs.jboss.org/resteasy/docs/2.0.0.GA/userguide/html/index.html">RESTeasy官方文档</a></span></p>
+	<p><span style="font-size: 14px;">2：<a href="http://http://www.infoq.com/cn/news/2008/10/jaxrs-comparison">比较各JAX-RS实现</a></span></p>
+	<p><span style="font-size: 14px;">3：<a href="http://www.ibm.com/developerworks/cn/java/j-lo-jaxrs/?S_TACT=105AGX52&amp;S_CMP=tec.cto">使用 JAX-RS 简化 REST 应用开发</a></span></p>
+	<p><span style="font-size: 14px;">4：<a href="http://http://www.ibm.com/developerworks/cn/web/wa-aj-tomcat/">使用 Jersey 和 Apache Tomcat 构建 RESTful Web 服务</a></span></p>
+	<p><span style="font-size: 14px;">5：<a href="http://www.redsaga.com/opendoc/REST_cn.pdf">架构风格与基于网络的软件架构设计&nbsp;&nbsp; <br />
+		</a></span></p>
+	<p><span style="font-size: 14px;">6：<a href="http://http://jcp.org/en/jsr/summary?id=311">JSR311规范页面<br />
+		</a></span></p>
+</div>

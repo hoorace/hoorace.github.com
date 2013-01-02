@@ -1,0 +1,31 @@
+---
+comments: true
+date: 2010-09-09 06:40:39
+layout: post
+slug: '%e5%a6%82%e6%9e%9c%e8%ae%a9%e4%bd%a0%e5%81%9atwitter%e5%a5%bd%e5%8f%8b%e5%9c%a8%e7%ba%bf%e5%8a%9f%e8%83%bd'
+title: 如果让你做twitter好友在线功能
+wordpress_id: 595
+categories:
+- web-style
+tag:
+- memcached
+- twitter
+---
+
+<p><span style="font-size:14px;">&nbsp;&nbsp; &nbsp;编程珠玑的习题上谈到电话的排序和电话是否占线到问题，当然，我们可以把问题分开，简单到讨论用户是否在线的功能实现，问题是：如果用户超过1亿，这就不是一个简单到问题了。</span></p>
+<p><span style="font-size:14px;"><strong>&nbsp;&nbsp; &nbsp;需求：<br />
+	</strong></span></p>
+<ul>
+	<li><span style="font-size:14px;">1.5亿用户，传入ID，给出是否在线。<br />
+		</span></li>
+	<li><span style="font-size:14px;">分布式系统；<br />
+		</span></li>
+	<li><span style="font-size:14px;">每台计算机尽量多的支持用户；<br />
+		</span></li>
+</ul>
+<p><span style="font-size:14px;">&nbsp;&nbsp; &nbsp;第一时间想到的：</span></p>
+<p><span style="font-size:14px;">&nbsp;&nbsp; &nbsp; memcached，用这个就可以了，问题是，我只需要存储bit，memcached存储的是对象。如果采用它，肯定造成资源浪费，而且浪费是巨大的。代码还是要自己写的。</span></p>
+<p><span style="font-size:14px;"><strong>&nbsp;&nbsp; &nbsp;思路：（就不分析需求了）</strong></span></p>
+<p><span style="font-size:14px;">&nbsp;&nbsp; &nbsp;按照需求应该通过计算硬件的带宽，内存，cpu来给出一个合理的配置，开发应该在配置到基础上开发产品。状态数据不需要保存，数据肯定放在内存中，这样，带宽就是性能瓶颈了。</span></p>
+<p><span style="font-size:14px;">&nbsp;&nbsp; &nbsp;每个key对应一个bit位，通过服务暴露出去的可以直接是true或者false。开发语言用C较为合适。</span></p>
+<p><span style="font-size:14px;">&nbsp;&nbsp; &nbsp;如何分布可以参考memcached的实现原理，这方面的实现方法应该是一样的&hellip;&hellip;</span></p>

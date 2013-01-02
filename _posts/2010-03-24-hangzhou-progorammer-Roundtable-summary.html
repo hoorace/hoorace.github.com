@@ -1,0 +1,54 @@
+---
+comments: true
+date: 2010-03-24 05:22:00
+layout: post
+slug: '%e6%9d%ad%e7%a8%8b%e5%9c%86%e6%a1%8c%e8%81%9a%e4%bc%9a%e7%9a%84%e4%b8%80%e4%ba%9b%e5%b0%8f%e7%bb%93'
+title: 杭程圆桌聚会的一些小结
+wordpress_id: 482
+categories:
+- Java
+- life-style
+tag:
+- concurrent
+- 并发编程
+---
+
+<p>&nbsp;&nbsp;&nbsp; 这次活动的组织是需求驱动的，同时借鉴了广州的<a href="http://timyang.net" target="_blank">杨老师</a>，<a href="http://blog.csdn.net/lanphaday" target="_blank">赖总</a>组织的珠三角活动的经验，<a href="http://bluedavy.com/" target="_blank">林昊</a>和我把活动讨论的话题范围做了限制，同时要求参加者需要相关经验，所以这个活动是一次讨论，不是一次培训。由于所有的讨论的PPT我没有收集完全，导致我对这次活动质量比较担心，从结果来看，这完全没有必要，因为大家分享的都很精彩。</p>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 10px;"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp; 聚会话题的范围</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px;">
+	<p>&nbsp;&nbsp;&nbsp; 随着多核CPU的普及，并发编程是一种趋势，按照温少PPT上的总结，2009-2012年将是并发编程飞入寻常百姓家的时间，不懂多线程，并发编程，2012年后想找个好工作都是一件困难的事情（2012人类还能编程么？）。我们讨论这个话题，一是和工作相关，二是还算够时髦。</p>
+	<p>&nbsp;&nbsp;&nbsp; 仅仅限制在并发这个话题上，当大家讨论进入状态后发现这个地方原来也是一片新大陆，等待我们去实践总结的东西仍然很多。协程(Coroutine)和无锁编程其实仍然可以作为一个单独的聚会话题来讨论。</p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 10px;"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp;分享的内容&nbsp;&nbsp;&nbsp; 点击<span style="font-size: 20px;"><a href="http://cid-738a71b87370853d.skydrive.live.com/self.aspx/.Public/juc.rar" target="_blank">这里下载</a></span></strong></span><strong>全部PPT</strong></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px;">
+	<ol>
+		<li>Java多线程常见陷阱&nbsp;&nbsp; <a href="http://www.blogjava.net/killme2008" target="_blank">@killme2008</a></li>
+		<li>Java Concurrent Programming&nbsp;&nbsp;&nbsp; 邹廷明</li>
+		<li>SEDA与Java并行编程点滴&nbsp;&nbsp; @tanbamboo</li>
+		<li>并发编程交流&nbsp;&nbsp; <a href="http://bluedavy.com/" target="_blank">@bluedavy</a></li>
+		<li>Java并发编程实践&nbsp;&nbsp; <a href="http://www.longtask.com" target="_blank">@hoorace</a></li>
+		<li>线程飞扬&nbsp;&nbsp; 杨海波</li>
+		<li>并发程序设计&nbsp;&nbsp; <a href="http://www.blogjava.net/jobs" target="_blank">温少</a></li>
+	</ol>
+	<p>&nbsp;&nbsp;&nbsp; 点击<a href="http://bluedavy.com/?p=18" target="_blank"><span style="font-size: 14px;"><strong>这里</strong></span></a>看@bluedavy的精彩点评。活动的内容未录音，录像不是缺少设备，而是我的不自信。在这里还是总结一下我的分享内容：我主要是想将一下同步器（闭锁，关卡，信号量，交换器，Future）和我的一些实践。同步器的问题前面基本都提到了，由于实践问题，我就只是简单讲了我的实践。从结果来看，做开发方面的分享最好别没事贴太多的图片，贴代码才靠谱，后续的其他分享，我会调整一下坐PPT的风格。</p>
+	<p>&nbsp;&nbsp;&nbsp; 如果您在编程的过程中遇到我PPT上的场景，可以联系我讨论。非常感谢大家对我那个计算类案例的建议，如果我还在卓望，一定要重构那段代码。</p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 10px;"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp;需要改进的地方</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px;">
+	<ol>
+		<li>邀请机制带来的好处是：活动质量可以控制的。所以下期活动会做视频分享，这对参与分享者做PPT的质量又提高到了一个新的要求，乐于学习和分享的同学们去接受挑战吧！</li>
+		<li>每个参与分享的人最好提前2天把ppt发送到组织者手中，组织者可以按照先易后难的顺序来安排演讲。PPT的内容尽量做到不重复，每个人尽量去深入的讲一块内容，共用的内容由一个人引导来讲解。</li>
+		<li>改进一下报名条件，参与者可以带2个以下的人过来当听众，以提高人气。当然，学生可以继续参加。</li>
+		<li>尝试在不同的地点组织活动，公司能够赞助当然最好。</li>
+		<li>建议以后分享者：多贴代码和分析图，这样会帮助听众理解内容。</li>
+	</ol>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 10px;"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp;致歉</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px;">
+	<p>&nbsp;&nbsp;&nbsp; 在给<a href="http://hangzhou.koubei.com/huodong/10610100000004750" target="_blank">口碑网</a>上报名参加者打电话通知的时候，如果没有分享主题的我都拒绝他们过来参加（学生除外）。没有做到真正的开放的原因：1：不要让没有经验的人一头雾水，你们需要先看书；2：让有分享内容的人也有其他收获。3：人多了，不好组织。</p>
+	<p>&nbsp;&nbsp;&nbsp; 由于这次活动最后合影都忘记了，所以需要向所有参加者致歉，这个bug真是太大了。</p>
+</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 10px;"><span style="font-size: 14px;"><strong>&nbsp;&nbsp;&nbsp;第二次圆桌会议话题预告</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px;">
+	<p>&nbsp;&nbsp;&nbsp; 由于第一次圆桌会议大家收获都不小，所以都觉得有组织第二次圆桌会议的必要。第二次活动的话题：<span style="font-size: 14px;"><strong>JVM的那些事</strong></span>。具体内容请关注近期口碑网上发布的活动。</p>
+</div>

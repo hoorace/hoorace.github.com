@@ -1,0 +1,59 @@
+---
+comments: true
+date: 2010-08-12 06:22:02
+layout: post
+slug: '%e9%9a%8f%e6%83%b3%e7%bc%96%e7%a8%8b%ef%bc%9a%e5%86%991g%e7%9a%84%e9%9a%8f%e6%9c%ba%e6%95%b4%e6%95%b0%e5%88%b0%e7%a1%ac%e7%9b%98%e7%9a%84%e6%97%b6%e9%95%bf'
+title: 随想编程：写1G的随机整数到硬盘的时长
+wordpress_id: 584
+categories:
+- Java
+---
+
+<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; 产品部的小朋友告诉我，他写1G的随机数到硬盘，竟然回full gc，那肯定是代码中产生的对象没有回收。该小朋友写1G内容到硬盘需要的市场是95秒左右，很明显效率很低。还是整理一下需求吧！</span></p>
+<p><strong><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; 目标：最快的速度向硬盘写1G的随机数。</span></strong></p>
+<p><strong><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; 注意事项：</span></strong></p>
+<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; 1：申请的空间不要大于新生代的大小(jdk通过-Xmn来设置)；</span></p>
+<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; 2：每次对象写到硬盘后，注意清理对象；</span></p>
+<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; 我写的一个版本：（我测试的最快速度在15.396秒）</span></p>
+<div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);"><span style="font-size: 14px;">public class WriteFile {<br />
+	&nbsp;&nbsp; &nbsp;public static void main(String[] args) throws Exception{<br />
+	&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;long start = System.currentTimeMillis();<br />
+	&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;WriteFile.generateFile(1024 * 1024 * 1024);<br />
+	&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;long end = System.currentTimeMillis();<br />
+	&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;System.out.println(end - start);<br />
+	&nbsp;&nbsp; &nbsp;}<br />
+	&nbsp;&nbsp; &nbsp;public static void generateFile(int size) throws Exception{<br />
+	&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;RandomAccessFile raf = new RandomAccessFile(&quot;d:/random&quot;,&quot;rw&quot;);<br />
+	&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;FileChannel channel = raf.getChannel();<br />
+	&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;int count = size/allocateSize;<br />
+	&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;long start = System.currentTimeMillis();<br />
+	&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;ByteBuffer buffer = ByteBuffer.allocate(allocateSize);<br />
+	&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;long end = System.currentTimeMillis();<br />
+	&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;System.out.println(end - start);<br />
+	&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;for(int i=0;i&lt;count;i++){<br />
+	&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;long aa = System.currentTimeMillis();<br />
+	&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; for(int j=0;j&lt;allocateSize/4;j++){<br />
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int num= random.nextInt(100000000);<br />
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; buffer.putInt(num);<br />
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br />
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; buffer.flip();<br />
+	&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;channel.write(buffer);<br />
+	&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;long xx = System.currentTimeMillis();<br />
+	&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;System.out.println(xx - aa);<br />
+	&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;buffer.clear();//别忘了clear<br />
+	&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;}<br />
+	&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;channel.close();<br />
+	&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;raf.close();<br />
+	&nbsp;&nbsp; &nbsp;}<br />
+	&nbsp;&nbsp; &nbsp;private static Random random = new Random();<br />
+	&nbsp;&nbsp; &nbsp;//需要申请的空间，大小不要查过-xmn<br />
+	&nbsp;&nbsp; &nbsp;private static final int allocateSize = 30 * 1024 * 1024;<br />
+	}</span></div>
+<p><strong><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; 需要思考的问题：<br />
+	</span></strong></p>
+<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; 1：一边生成一边写如何？这是不是要考虑生产者消费者模式？</span></p>
+<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; 2：如果申请的空间大小超过-xmn设置的值，会报什么错？<br />
+	</span></p>
+<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; 3：如何对这个文件中的整数排序？（应该有重复的数字）<br />
+	</span></p>
+<p><span style="font-size: 14px;">&nbsp;&nbsp;&nbsp; 4：有没有更快的方法写随机数到硬盘？</span></p>

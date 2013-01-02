@@ -1,0 +1,40 @@
+---
+comments: true
+date: 2008-10-14 20:13:04
+layout: post
+slug: '%e5%ad%a6%e4%b9%a0python%e7%9a%84%e9%82%a3%e7%82%b9%e4%ba%8b'
+title: 学习python的那点事
+wordpress_id: 64
+categories:
+- python
+tag:
+- python
+---
+
+        为了响应程序员界的“学习第二门语言是必须”的号召，结合google发布了Google App Engine的框架，我买了本《Python核心编程》，主要目的还是想好好的看看面向对象的动态语言的威力。首先感谢宋吉广能够联合python社区的人能够帮助我们这些英语差劲的广大国民，不过看了一般我就像骂人了，NND，书中的错误如此之多，后来我看了一下网上的讨论，才知道此人是一个剽窃大家劳动成果者，鄙视了一把（证据：<a target="_blank" href="http://bbs.chinaunix.net/viewthread.php?tid=1165704">chinaunix</a>，<a target="_blank" href="http://www.douban.com/subject/3112503/">豆瓣</a>，<a target="_blank" href="http://openbookproject.googlecode.com/svn/trunk/CorePython_zh/">原稿</a>）。为此，我不得不把书上的案例一个个的执行，防止这本书误导了我。学习python真是出师不利！
+
+       在blog中只想简单谈谈输入输出：首先是输入的问题，如果 str = raw_input('Enter you words:')的话，在windows按下回车后，总是不能正确的获取到输入结果，因为程序会带上结束符。所以代码应该写为：str = raw_input('Enter you words:').strip()才可以争取的获取。实例：
+
+        str = raw_input('Enter you words:').strip()
+
+        while True:
+
+                if str == '.':
+
+                    print 'Python input ended!'
+
+                    break
+
+                else:
+
+                      print 'You are press string is %s' % str
+
+        输出的代码和C语言的基本是一致的，不过有一点动态语言的优势就是：可以超级简单的打印出N个重复的字符出来，例如：print "- " * 100 就是打印出一行分割线。
+
+         后面的python的对象，函数，字符串，序列，元组，映射，集合，文件操作，异常控制这几张都读完了，书上的例子虽然有好多执行结果和书上的结果不一致的地方，这让我在不断的从怀疑的角度读书，第一次看书疑心这么重，也算是比较投入。目前还属于摸索阶段，还没有写一个应用程序出来，Django还没有看一个示例，后面学习的路虽然还很长，相信自己有了java的一点基础，应该在理解方面不是很困难。
+
+         今天在javaeye上看到有python的社区开设了，以后没事还是把自己的心得写一下发表上去。今天的写的内容是一个标记，看看一年后能够发多少python相关的有质量的帖子。
+
+---------------分割线--------------------------------------------------------------------
+
+        没事看唐浩明写的《曾国藩》，现在还剩下两个章节就结束了。现在仔细回头看看初中的历史，一群王八蛋+无知之徒，竟然把国家栋梁描述的和实际情况有天壤之别。曾国藩对清政府的两大贡献：1，镇压了天平天国；2：培养人才和实事求是的办洋务；对整个民族的贡献：为官者的楷模（清廉，有学识，有远见，知人善用，敬忠职守，大度……），如果共和国……（不谈政治）。尤其是高傲的左宗棠也这样说：知人之明，谋国之忠，自愧不如沅辅……
