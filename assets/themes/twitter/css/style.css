@@ -75,4 +75,5 @@ html, body {
 #scrollTop a, #scrollTop a:hover { margin:0; padding:0; width:84px; height:54px; display:block; text-decoration:none; }
 
 .artice_bottom{color:#c00; padding:3px 0 3px 0; font-weight:bolder; border-bottom:1px dashed #c00; border-top:1px dashed #c00; margin-bottom:10px;}
+.forkme{position: absolute; top: 40px; right: 0; border: 0;}
 	
