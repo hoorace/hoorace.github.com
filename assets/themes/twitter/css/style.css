@@ -68,5 +68,11 @@ html, body {
 	border:1px solid #4C964D;
 	color:#FFF;
 }
+#scrollTop { margin:0; _margin-bottom:30px; padding:0; width:84px; height:54px; position:fixed; _position:absolute; right:10px; bottom:30px; 
+	_bottom:0; 
+	_top:expression(eval(document.documentElement.scrollTop+document.documentElement.clientHeight-this.offsetHeight-(parseInt(this.currentStyle.marginTop,10)||0)-(parseInt(this.currentStyle.marginBottom,10)||0))); z-index:20000; 
+	background:url(/images/scroll_top.jpg) no-repeat; }
+#scrollTop a, #scrollTop a:hover { margin:0; padding:0; width:84px; height:54px; display:block; text-decoration:none; }
+
 .artice_bottom{color:#c00; padding:3px 0 3px 0; font-weight:bolder; border-bottom:1px dashed #c00; border-top:1px dashed #c00; margin-bottom:10px;}
 	
