@@ -5,7 +5,7 @@
     <title>{{ page.title }}</title>
     {% if page.description %}<meta name="description" content="{{ page.description }}">{% endif %}
     <meta name="author" content="{{ site.author.name }}">
-
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
     <!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
     <!--[if lt IE 9]>
       <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
@@ -56,6 +56,8 @@
       </footer>
 
     </div> <!-- /container -->
+    <div id="scrollTop"><a href="javascript:;">&nbsp;</a></div>
+    <script type="text/javascript" src="{{ ASSET_PATH }}/bootstrap/js/scrolltop.js"></script>
     <a href="https://github.com/hoorace"><img style="position: absolute; top: 40px; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png" alt="Fork me on GitHub"></a>
 
     {% include JB/analytics %}
