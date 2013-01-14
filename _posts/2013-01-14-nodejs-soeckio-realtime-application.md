@@ -1,3 +1,19 @@
+---
+comments: true
+date: 2013-01-14 09:52:19
+layout: post
+slug: nodejs-soeckio-realtime-application 
+title: Node.JS Web长连接开发实践
+categories:
+- review
+tag:
+- node.js 
+- socket.io
+- websocket
+- LXC
+- Nginx-mem-module
+---
+
 2012年在架构设计上，个人觉得最有价值的表现在3个方面：<br />
 1. **LXC**半虚拟化技术在线上环境的使用，解决了Java的端口的问题；<br />
 2. **Nginx-mem-module**解决活动期间的并发问题；<br />
