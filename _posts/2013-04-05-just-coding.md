@@ -3,13 +3,11 @@ comments: true
 date: 2013-04-05 11:52:19
 layout: post
 slug: just-coding
-title: 挽起袖子写代码？
+title: 挽起袖子写代码!
 categories:
 - review
 tag:
-- code
-- objective-c
-- node.js
+- PDCA
 
 ---
 
