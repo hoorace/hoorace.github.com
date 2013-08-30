@@ -14,10 +14,12 @@ tag:
 ---
  
 <p> &nbsp;&nbsp;&nbsp;&nbsp; 不少程序员操作linux就如同他们操作vim是一样的，会用的就是移动键，前后左右移动，输入内容，使用backspace删除相关的内容，然后号称自己会vim。而随便问几个简单的问题，就不知道了。而vim的命令甚多，需要不断积累，不是一朝一日可以操作熟练的。而linux的terminal的快捷键较少，掌握起来较为方便，所以值得快速传播一下。</p>
-<p> &nbsp;&nbsp;&nbsp;&nbsp; <b style="color:#cc0000;">0：搜索操作</b> </p>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 0：搜索操作
+</strong></span></p>
 <p> &nbsp;&nbsp;&nbsp;&nbsp; 搜索历史命令的快捷键： <b style="border:1px #ccc solid;padding:3px 8px;">Ctrl + r</b> 当然，不是你想要的命令的时候，你可以继续 <b style="border:1px #ccc solid;padding:3px 8px;">Ctrl + r</b> ，搜索到相关命令，请按<i style="border:1px #ccc solid;padding:3px 8px;"><b>Enter</b></i>。如果想增加命令记录保存的数量，请到.bash_profile下面去设置 HISTFILESIZE 和 HISTSIZE 两个参数。</p>
-<p> &nbsp;&nbsp;&nbsp;&nbsp; <b style="color:#cc0000;">1：移动操作</b>
-	<ul>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 1：移动操作
+</strong></span></p>
+<p><ul>
 		<li style="padding-bottom:10px;"><b style="border:1px #ccc solid;padding:3px 8px;">Ctrl + f</b> -- 向右移动一个字符，当然多数人用 <b style="border:1px #ccc solid;padding:3px 5px;">→</b></li>
 		<li style="padding-bottom:10px;"><b style="border:1px #ccc solid;padding:3px 8px;">Ctrl + b</b> -- 向左移动一个字符， 多数人用 <b style="border:1px #ccc solid;padding:3px 5px;">←</b></li>
 		<li style="padding-bottom:10px;"><b style="border:1px #ccc solid;padding:3px 8px;">ESC + f</b> -- 向右移动一个单词，MAC下建议用 <b style="border:1px #ccc solid;padding:3px 8px;">ALT + →</b></li>
@@ -26,7 +28,9 @@ tag:
 		<li style="padding-bottom:10px;"><b style="border:1px #ccc solid;padding:3px 8px;">Ctrl + e</b> -- 跳到行尾</li>
 	</ul>
 </p>
-<p> &nbsp;&nbsp;&nbsp;&nbsp; <b style="color:#cc0000;">2：删除操作</b>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 2：删除操作
+</strong></span></p>
+<p>
 	<ul>
 		<li style="padding-bottom:10px;"><b style="border:1px #ccc solid;padding:3px 8px;">Ctrl + d</b> -- 向右删除一个字符</li>
 		<li style="padding-bottom:10px;"><b style="border:1px #ccc solid;padding:3px 8px;">Ctrl + h</b> -- 向左删除一个字符</li>
@@ -35,13 +39,17 @@ tag:
 		<li style="padding-bottom:10px;"><b style="border:1px #ccc solid;padding:3px 8px;">Ctrl + w</b> -- 删除从光标到当前单词开头</li>
 	</ul>
 </p>
-<p> &nbsp;&nbsp;&nbsp;&nbsp; <b style="color:#cc0000;">3：命令切换操作</b>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 3：命令切换操作
+</strong></span></p>
+<p>
 	<ul>
 		<li style="padding-bottom:10px;"><b style="border:1px #ccc solid;padding:3px 8px;">Ctrl + p</b> -- 上一个命令，也可以用 <b style="border:1px #ccc solid;padding:3px 5px;">↑</b></li>
 		<li style="padding-bottom:10px;"><b style="border:1px #ccc solid;padding:3px 8px;">Ctrl + n</b> -- 下一个命令，也可以用 <b style="border:1px #ccc solid;padding:3px 5px;">↓</b></li>
 	</ul>
 </p>
-<p> &nbsp;&nbsp;&nbsp;&nbsp; <b style="color:#cc0000;">4：其他操作</b>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 4：其他操作
+</strong></span></p>
+<p>
 	<ul>
 		<li style="padding-bottom:10px;"><b style="border:1px #ccc solid;padding:3px 8px;">Ctrl + y</b> -- 插入最近删除的单词</li>
 		<li style="padding-bottom:10px;"><b style="border:1px #ccc solid;padding:3px 8px;">Ctrl + c</b> -- 终止操作</li>
