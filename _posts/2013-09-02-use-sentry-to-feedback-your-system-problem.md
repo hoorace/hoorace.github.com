@@ -90,7 +90,7 @@ ALLOWED_HOSTS=['*']
 https://sentry.readthedocs.org/en/latest/quickstart/index.html</p>
 
 <p> &nbsp;&nbsp;&nbsp;&nbsp;2.2：添加用户:</p>
-
+![添加工程](http://longtask.com/images/sentry_account.png)
 <div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
 sentry --config=/etc/sentry.conf.py createsuperuser
 </div>
@@ -98,9 +98,10 @@ sentry --config=/etc/sentry.conf.py createsuperuser
 
 <p style="padding-top:6px;"> &nbsp;&nbsp;&nbsp;&nbsp;2.3：添加teams</p>
 <p> &nbsp;&nbsp;&nbsp;&nbsp;到右边菜单中，添加不同的团队的分组；</p>
-
+![添加工程](http://longtask.com/images/sentry_team.png)
 
 <p> &nbsp;&nbsp;&nbsp;&nbsp;2.4：添加工程</p>
+![添加工程](http://longtask.com/images/sentry_project.png)
 <p> &nbsp;&nbsp;&nbsp;&nbsp;每个团队下属的工程，各自添加，然后每个工程会有自己的API keys，拿着这个key配置不同模块的日志；</p>
 
 <p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 3：JAVA环境配置日志到sentry
@@ -184,7 +185,9 @@ sentry --config=/etc/sentry.conf.py createsuperuser
 ```
 <p> &nbsp;&nbsp;&nbsp;&nbsp;如果系统有错误日志产生，就会在sentry中看到相关的错误日志的分析结果了。</p>
 
-<p> &nbsp;&nbsp;&nbsp;&nbsp;错误日志的展示结果：</p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;错误日志的展示结果：
+</p>
+![错误日志展示](http://longtask.com/images/sentry_1.jpg)
 
 <p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 4：nginx的配置
 </strong></span></p>
