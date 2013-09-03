@@ -102,7 +102,7 @@ sentry --config=/etc/sentry.conf.py createsuperuser
 
 <p> &nbsp;&nbsp;&nbsp;&nbsp;2.4：添加工程</p>
 ![添加工程](http://longtask.com/images/sentry_project.png)
-<p> &nbsp;&nbsp;&nbsp;&nbsp;每个团队下属的工程，各自添加，然后每个工程会有自己的API keys，拿着这个key配置不同模块的日志；</p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;<b style="background-color:#cc0000;color:#fff;">注意：</b>每个团队下属的工程，各自添加，然后每个工程会有自己的API keys，拿着这个key配置不同模块的日志；</p>
 
 <p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 3：JAVA环境配置日志到sentry
 </strong></span></p>
@@ -159,7 +159,7 @@ sentry --config=/etc/sentry.conf.py createsuperuser
 ```
 <p> &nbsp;&nbsp;&nbsp;&nbsp;3.2：log4j的配置添加</p>
 
-<p> &nbsp;&nbsp;&nbsp;&nbsp;注意，dsn就是工程的API Keys，每个工程的都不一样。</p>
+<p> &nbsp;&nbsp;&nbsp;&nbsp;<b style="background-color:#cc0000;color:#fff;">注意：</b>dsn就是工程的API Keys，每个工程的都不一样。</p>
 
 ```
 <appender name="SentryAppender" class="net.kencochrane.raven.log4j.SentryAppender">
