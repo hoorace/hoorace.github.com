@@ -204,7 +204,5 @@ sentry --config=/etc/sentry.conf.py createsuperuser
 
 <p> &nbsp;&nbsp;&nbsp;&nbsp; 在project的setting中可以找到相关模块的不同语言的example，可以通过案例来配置不同的语言，其他语言后续会不断补充……</p>
 <p> &nbsp;&nbsp;&nbsp;&nbsp; </p>
-<p> &nbsp;&nbsp;&nbsp;&nbsp; </p>
-<p> &nbsp;&nbsp;&nbsp;&nbsp; </p>
 
 
