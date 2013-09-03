@@ -107,8 +107,8 @@ sentry --config=/etc/sentry.conf.py createsuperuser
 </strong></span></p>
 <p> &nbsp;&nbsp;&nbsp;&nbsp;3.1：pom文件的修改</p>
 <p> &nbsp;&nbsp;&nbsp;&nbsp;各项目根目录下面的 pom.xml文件的依赖:</p>
-```xml
-<!-- raven 依赖的maven服务器地址 -->
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&lt;!-- raven 依赖的maven服务器地址 --&gt;</p>
+```
 <repositories>
         <repository>
             <id>sonatype-nexus-snapshots</id>
@@ -124,21 +124,21 @@ sentry --config=/etc/sentry.conf.py createsuperuser
 </repositories>
 ```
 <p> &nbsp;&nbsp;&nbsp;&nbsp;dependencyManagement中添加raven的依赖 </p>
-```xml
+```
 <dependency>
-              <groupId>net.kencochrane.raven</groupId>
-              <artifactId>raven</artifactId>
-              <version>4.0</version>
-            </dependency>
-            <dependency>
-                <groupId>net.kencochrane.raven</groupId>
-                <artifactId>raven-log4j</artifactId>
-                <version>4.0</version>
-            </dependency>
+	<groupId>net.kencochrane.raven</groupId>
+	<artifactId>raven</artifactId>
+	<version>4.0</version>
+</dependency>
+<dependency>
+	<groupId>net.kencochrane.raven</groupId>
+	<artifactId>raven-log4j</artifactId>
+	<version>4.0</version>
+</dependency>
 ```
 <p> &nbsp;&nbsp;&nbsp;&nbsp;因为没有相关的应用，所以需要在跟pom.xml中添加dependencies来保证把raven的jar打到我们的发布包中；</p>
 
-```xml
+```
 <dependencies>
             <dependency>
               <groupId>net.kencochrane.raven</groupId>
@@ -154,13 +154,13 @@ sentry --config=/etc/sentry.conf.py createsuperuser
                     </exclusion>
                 </exclusions>
             </dependency>
-        </dependencies>
+</dependencies>
 ```
 <p> &nbsp;&nbsp;&nbsp;&nbsp;3.2：log4j的配置添加</p>
 
 <p> &nbsp;&nbsp;&nbsp;&nbsp;注意，dsn就是工程的API Keys，每个工程的都不一样。</p>
 
-```xml
+```
 <appender name="SentryAppender" class="net.kencochrane.raven.log4j.SentryAppender">
         <param name="dsn" value="http://e61a0d19d87743bd9e0b7499b720c2a5:df28df39628e4dd5a4986eecf4923851@192.168.100.11:9000/1" />
         <layout class="org.apache.log4j.PatternLayout">
@@ -169,12 +169,12 @@ sentry --config=/etc/sentry.conf.py createsuperuser
 </appender>
 ```
 <p> &nbsp;&nbsp;&nbsp;&nbsp;在相关的error日志配置中添加：</p>
-```xml
+```
 <appender-ref ref="SentryAppender" />
 ```
 
 <p> &nbsp;&nbsp;&nbsp;&nbsp;例如：</p>
-```xml
+```
 <logger name="com.okhqb.canvas" additivity="false">
         <level value="INFO" />
         <appender-ref ref="CANVAS-DEFAULT-APPENDER" />
