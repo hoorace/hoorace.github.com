@@ -33,5 +33,3 @@ tag:
 <p> &nbsp;&nbsp;&nbsp;&nbsp;主动解决问题的人是永远的赢家！！！</p>
 
 <p> &nbsp;&nbsp;&nbsp;&nbsp;</p>
-
-</div>
