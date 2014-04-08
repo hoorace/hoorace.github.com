@@ -11,14 +11,20 @@ tag:
 - nagios
 - cacti
 - sentry
+- jenkins
 - rsync
 - django
 
 ---
 <p>&nbsp;&nbsp;&nbsp;&nbsp;作坊式的开发的重点是围绕业务开展工作，系统开发出来之后，优化的工作一般都是针对用户端，出现问题一段时间后，有用户反馈才能够发现系统中的业务问题，而有些业务问题其实看看错误日志就可以解决。开发在没有日志反馈的开发环境中，发现问题是被动的。运维人员在这个过程中，也只能被开发驱动去被动解决问题，可能这个问题只是linux配置的问题。为何运维不能及时发现问题通知开发做出相关的调整呢？</p>
 <p>&nbsp;&nbsp;&nbsp;&nbsp;为了更好的反馈问题，我们需要对现有的系统监控做好的同时，做好日志监控。界面化的发布系统目的是降低手动操作错误。</p>
-<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 1：监控系统</strong></span></p>
-<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">&nbsp;&nbsp;&nbsp;&nbsp;监控分为系统监控(Nagios)，网络监控（Cacti）和业务监控（自主开发）。当系统磁盘满了，I/O的过于频繁，CPU使用率过高，我们通过Nagios的监控给运维人员发送短信提醒来迅速的定位并解决问题。Cacti很好的帮助我们查看系统之间的访问流量情况。业务是否可用，我们是在一个界面查看使用情况，由于我们的系统上有2个集群，把所有的服务列到一个界面，很直观的展示了线上服务的可用性，方便我们在某集群故障的时候做切换。</div>
+<p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 1：硬件监控系统和业务监控</strong></span></p>
+<div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
+<p>&nbsp;&nbsp;&nbsp;&nbsp;监控分为系统监控(Nagios)，网络监控（Cacti）和业务监控（自主开发）。当系统磁盘满了，I/O的过于频繁，CPU使用率过高，我们通过Nagios的监控给运维人员发送短信提醒来迅速的定位并解决问题。Cacti很好的帮助我们查看系统之间的访问流量情况。
+</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;由于我们的系统上有2个集群，以前系统出问题老是不能确认是哪个集群出了问题，需要手动切换hosts来发现问题，然后做切换。为了解决这个问题，我们把所有的服务的健康状况通过http访问的方式列到一个界面，很直观的展示了线上服务的可用性，方便我们在某集群故障的时候做切换。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;本来以为业务监控做起来比较复杂，后来砍掉相关复杂需求，只要求监控状况的时候，一周开发就搞定了。界面中发现有红色的圈的时候，代表该系统不可用。简单的不能再简单，好用的不能再好用！</p>
+</div>
 <p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 2：日志系统</strong></span></p>
 <div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
 <p><strong>2.1:系统错误日志的整理</strong></p>
