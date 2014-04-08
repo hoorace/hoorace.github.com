@@ -48,5 +48,6 @@ tag:
 <div style="border-left: 2px solid rgb(204, 204, 204); padding-left: 6px; margin-left: 6px; margin-bottom: 10px;">
 <p>&nbsp;&nbsp;&nbsp;&nbsp;目前运维工作中，还缺少一个统一配置管理的工具，我们考虑用zookeeper来解决这个问题。只是配置方面现在已经很少变动了，整个系统还没有到达必须没有配置服务就经常出错的程度，所以还没有动力去做。目前还没有找到一个可以动手开始的配置项目，为了让系统足够的轻，我们暂时选择配置手动。</p>
 </div>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;在所有的系统运维的工作中，告警机制需要不断的优化，短信，邮件，或者接通其他接口的通知需要及时通知可以处理问题的工作人员，做到监控的实时性。告警的机制需要倾向硬件系统监控和业务监控。</p>
 <p>&nbsp;&nbsp;&nbsp;&nbsp;</p>
 <p>&nbsp;&nbsp;&nbsp;&nbsp;</p>
