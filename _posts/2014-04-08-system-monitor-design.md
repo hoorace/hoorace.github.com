@@ -2,8 +2,8 @@
 comments: true
 date: 2014-04-08 10:32:49
 layout: post
-slug: system-monitor-design
-title: 系统监控的设计实践
+slug: E-commerce-system-administion-design
+title: 电商系统运维的设计实践
 categories:
 - linux
 tag:
