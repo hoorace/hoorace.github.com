@@ -97,7 +97,7 @@ JAVA_OPTS="${JAVA_OPTS}  -verbose:class"
 <p style="padding-top:10px;color:#cc0000;">&nbsp;&nbsp;&nbsp;&nbsp;<b>6.1：去掉类中的反射，发现问题没有解决。空欢喜了一场！！！！</b></p>
 <p style="padding-top:10px;">&nbsp;&nbsp;&nbsp;&nbsp;6.2：反复的测试调用的页面，发现在插入操作的过程中，会出现步骤5中perm class日志的情况。针对</p>
 <div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
-<pre  style = 'border:dashed 0px;'>
+<pre  style = 'border:dashed 0px; background-color: rgb(224, 255, 182);'>
 INSERT INTO bonus_point_detail (
                 &lt;isNotEmpty property="id"&gt;
                 id,
@@ -118,7 +118,7 @@ INSERT INTO bonus_point_detail (
 </div>
 <p style="padding-top:10px;">&nbsp;&nbsp;&nbsp;&nbsp;这样的情况，我们修改为：</p>
 <div style="border-top: 1px solid rgb(148, 218, 58); border-bottom: 1px solid rgb(148, 218, 58); padding: 9px 0pt 9px 16px; background-color: rgb(224, 255, 182);">
-<pre  style = 'border:dashed 0px;'>
+<pre  style = 'border:dashed 0px; background-color: rgb(224, 255, 182);'>
 INSERT INTO bonus_point_detail (
                 id,
                ……
