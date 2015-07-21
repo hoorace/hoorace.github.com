@@ -46,7 +46,7 @@ make && make install
 
 </div>
 <p>&nbsp;&nbsp;&nbsp;&nbsp;链接openssl <br />
-```sh
+```js
 ln -sf /usr/local/bin/openssl `which openssl`
 
 ```
