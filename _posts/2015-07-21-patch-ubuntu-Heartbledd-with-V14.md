@@ -13,12 +13,10 @@ tag:
 
 ---
 <p>&nbsp;&nbsp;&nbsp;&nbsp;在安装某linux软件的时候，提示我们的服务器上的openssl是有漏洞的版本，需要重新安装一下。到linuxe服务器上查看一下：
-<pre>
-<pre><code>
+{% highlight language linenos %}
 dpkg -l | grep "openssl”
 openssl                                  1.0.1f-1ubuntu2.8                amd64
-</code></pre>
-</pre>
+{% endhighlight %}
 </p>
 <p>&nbsp;&nbsp;&nbsp;&nbsp;1.0.1f 是HeartBleed的版本之一，需要修复问题。</p>
 <p style="background-color: rgb(230, 230, 250); height: 25px; width: 100%; padding-top: 9px; font-family: arial,helvetica,sans-serif; font-size: 14px; color: rgb(0, 0, 0);"><span style="font-size:14px;"><strong>&nbsp;&nbsp;&nbsp;&nbsp; 1：卸载旧版本的openssl</strong></span></p>
