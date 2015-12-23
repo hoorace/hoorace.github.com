@@ -10,7 +10,6 @@ tag:
 - mac
 - cache
 - itunes
-
 ---
 
 
@@ -41,7 +40,6 @@ tag:
     rm -rf *
 
     <p>3.4 清理Xcode的模拟器文件</p>
-    ``` shell
     cd /Users/longhao/Library/Developer/Xcode/iOS\ DeviceSupport
-    ```
     选择需要删除的模拟器信息
+
